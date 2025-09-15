@@ -1,0 +1,15 @@
+**/*/*.json
+**/*.html
+build
+dist
+node_modules
+.cache
+.env
+.git
+.svn
+.hg
+.npmrc
+*.lock
+*.log
+*.md
+*.svg

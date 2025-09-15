@@ -13,17 +13,39 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyCJfWS4uoY3OPycHGr43KcmMvNiwtVJX1g"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We use your location to show nearby services and set your address."
+      },
+      "bundleIdentifier": "com.anmolratnpandey.homekrewuser"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCJfWS4uoY3OPycHGr43KcmMvNiwtVJX1g"
+        }
+      },
+      "package": "com.anmolratnpandey.homekrewuser"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-maps"
+    ]
   }
 }
