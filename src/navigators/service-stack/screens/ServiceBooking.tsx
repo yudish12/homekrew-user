@@ -7,6 +7,8 @@ import {
     FlatList,
     Alert,
     Dimensions,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { COLORS, WEIGHTS } from "../../../constants";
@@ -27,6 +29,8 @@ import { AppDispatch, RootState } from "../../../types";
 import { setSelectedAddress } from "../../../redux/actions";
 import CustomIcon from "../../../components/CustomIcon";
 import { BookingData, TimeSlot } from "../../../types/services/orders";
+import { OrdersServices } from "../../../services/orders";
+import { showErrorToast } from "../../../components/Toast";
 
 // Types
 export interface UserLocation {
@@ -89,6 +93,7 @@ export const ServiceBooking: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<string>(dates[0].fullDate);
     const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
     const [specialRequirements, setSpecialRequirements] = useState<string>("");
+    const [isLoading, setIsLoading] = useState(false);
 
     // navigation hooks
     const navigation = useNavigation<any>();
@@ -109,24 +114,32 @@ export const ServiceBooking: React.FC = () => {
         }, ${address.city}, ${address.state} ${address.postalCode}`;
     };
 
-    const handleBookService = () => {
+    const handleBookService = async () => {
+        setIsLoading(true);
         if (!selectedDate || !selectedTimeSlot || !selectedAddress) {
             Alert.alert("Error", "Please select date, time slot, and address");
             return;
         }
-
         const bookingData: BookingData = {
-            serviceId: params.serviceId,
+            serviceId: params.serviceTemplateId,
             serviceTemplate: params.serviceTemplateId,
             date: selectedDate,
             timeSlot: selectedTimeSlot,
-            address: {
-                _id: selectedAddress._id,
-                formattedAddress: formatAddress(selectedAddress),
-                location: selectedAddress.location,
-            },
+            address: selectedAddress._id,
             specialRequirements: specialRequirements,
         };
+    const response = await OrdersServices.bookService(bookingData);
+        if(response.success){
+            navigation.navigate("PostBooking", {bookingId: response.data?.bookingId});
+        }else{
+            showErrorToast("Error","Something went wrong. Please try again.",{
+                onDismiss: () => {
+                    console.log("Error toast dismissed");
+                },
+            });
+        }
+        
+        setIsLoading(false);
     };
 
     const handleAddNewAddress = () => {
@@ -212,138 +225,155 @@ export const ServiceBooking: React.FC = () => {
     };
 
     return (
-        <SafeAreaView style={{ marginVertical: 20 }}>
+        <SafeAreaView style={{ paddingTop: 30 }}>
             <BackButton
                 onPress={() => {
                     navigation.goBack();
                 }}
+                backButtonStyle={{ top: 40, left: 4 }}
             />
-
-            <ScrollView
-                style={styles.container}
-                showsVerticalScrollIndicator={false}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{
+                    flex: 1,
+                    justifyContent: "space-between",
+                }}
             >
-                {/* Header */}
-                <View style={styles.header}>
-                    <H3>Book Your Service</H3>
-                    <BodySmall style={styles.subtitle}>
-                        Select your preferred date, time, and service location
-                    </BodySmall>
-                </View>
-
-                {/* Date Selection */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons
-                            name="calendar-outline"
-                            size={20}
-                            color={COLORS.primary}
-                        />
-                        <H4 style={styles.sectionTitle}>Select Date</H4>
-                    </View>
-                    <FlatList
-                        data={dates}
-                        renderItem={renderDateItem}
-                        keyExtractor={item => item.id}
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.datesList}
-                    />
-                </View>
-
-                {/* Time Slot Selection */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons
-                            name="time-outline"
-                            size={20}
-                            color={COLORS.primary}
-                        />
-                        <H4 style={styles.sectionTitle}>Select Time Slot</H4>
-                    </View>
-                    <FlatList
-                        data={timeSlots}
-                        renderItem={renderTimeSlot}
-                        keyExtractor={item => item.id}
-                        numColumns={2}
-                        columnWrapperStyle={styles.timeSlotsRow}
-                        contentContainerStyle={styles.timeSlotsList}
-                    />
-                </View>
-
-                {/* Address Selection */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons
-                            name="location-outline"
-                            size={20}
-                            color={COLORS.primary}
-                        />
-                        <H4 style={styles.sectionTitle}>Service Address</H4>
+                <ScrollView
+                    style={styles.container}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <H3>Book Your Service</H3>
+                        <BodySmall style={styles.subtitle}>
+                            Select your preferred date, time, and service
+                            location
+                        </BodySmall>
                     </View>
 
-                    {/* Add New Address Button */}
-                    <TouchableOpacity
-                        style={styles.addAddressButton}
-                        onPress={handleAddNewAddress}
-                    >
-                        <Ionicons
-                            name="add-circle-outline"
-                            size={24}
-                            color={COLORS.primary}
+                    {/* Date Selection */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons
+                                name="calendar-outline"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                            <H4 style={styles.sectionTitle}>Select Date</H4>
+                        </View>
+                        <FlatList
+                            data={dates}
+                            renderItem={renderDateItem}
+                            keyExtractor={item => item.id}
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.datesList}
                         />
-                        {!selectedAddress ? (
-                            <Body style={styles.addAddressText}>
-                                Choose an address
-                            </Body>
-                        ) : (
-                            <View style={styles.addAddressText}>
-                                <Typography
-                                    variant="body"
-                                    numberOfLines={2}
-                                    color={COLORS.TEXT.DARK}
-                                    style={styles.addAddressText}
-                                >
-                                    {formatAddress(selectedAddress)}
-                                </Typography>
-                            </View>
-                        )}
-                        <Ionicons
-                            name="chevron-forward"
-                            size={20}
-                            color={COLORS.GREY[400]}
-                        />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Special Requirements */}
-                <View style={styles.section}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons
-                            name="document-text-outline"
-                            size={20}
-                            color={COLORS.primary}
-                        />
-                        <H4 style={styles.sectionTitle}>
-                            Special Requirements
-                        </H4>
                     </View>
-                    <Input
-                        placeholder="Any special instructions or requirements..."
-                        value={specialRequirements}
-                        onChangeText={setSpecialRequirements}
-                        multiline={true}
-                        numberOfLines={4}
-                        inputStyle={styles.requirementsInput}
-                    />
-                </View>
 
+                    {/* Time Slot Selection */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons
+                                name="time-outline"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                            <H4 style={styles.sectionTitle}>
+                                Select Time Slot
+                            </H4>
+                        </View>
+                        <FlatList
+                            data={timeSlots}
+                            renderItem={renderTimeSlot}
+                            keyExtractor={item => item.id}
+                            numColumns={2}
+                            columnWrapperStyle={styles.timeSlotsRow}
+                            contentContainerStyle={styles.timeSlotsList}
+                        />
+                    </View>
+
+                    {/* Address Selection */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons
+                                name="location-outline"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                            <H4 style={styles.sectionTitle}>Service Address</H4>
+                        </View>
+
+                        {/* Add New Address Button */}
+                        <TouchableOpacity
+                            style={styles.addAddressButton}
+                            onPress={handleAddNewAddress}
+                        >
+                            <Ionicons
+                                name="add-circle-outline"
+                                size={24}
+                                color={COLORS.primary}
+                            />
+                            {!selectedAddress ? (
+                                <Body style={styles.addAddressText}>
+                                    Choose an address
+                                </Body>
+                            ) : (
+                                <View style={styles.addAddressText}>
+                                    <Typography
+                                        variant="body"
+                                        numberOfLines={2}
+                                        color={COLORS.TEXT.DARK}
+                                        style={styles.addAddressText}
+                                    >
+                                        {formatAddress(selectedAddress)}
+                                    </Typography>
+                                </View>
+                            )}
+                            <Ionicons
+                                name="chevron-forward"
+                                size={20}
+                                color={COLORS.GREY[400]}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Special Requirements */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons
+                                name="document-text-outline"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                            <H4 style={styles.sectionTitle}>
+                                Special Requirements
+                            </H4>
+                        </View>
+                        <Input
+                            placeholder="Any special instructions or requirements..."
+                            value={specialRequirements}
+                            onChangeText={setSpecialRequirements}
+                            multiline={true}
+                            numberOfLines={4}
+                            inputStyle={styles.requirementsInput}
+                        />
+                    </View>
+                </ScrollView>
                 {/* Book Service Button */}
                 <View style={styles.bookingButtonContainer}>
                     <PrimaryButton
                         title="Book Service"
+                        disabled={
+                            !selectedDate ||
+                            !selectedTimeSlot ||
+                            !selectedAddress ||
+                            isLoading
+                        }
                         onPress={handleBookService}
                         fullWidth
+                        loading={isLoading}
                         icon={
                             <Ionicons
                                 name="checkmark"
@@ -354,7 +384,7 @@ export const ServiceBooking: React.FC = () => {
                         iconPosition="left"
                     />
                 </View>
-            </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -532,6 +562,7 @@ const styles = StyleSheet.create({
     // Booking Button Styles
     bookingButtonContainer: {
         marginTop: 20,
-        marginBottom: 40,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
     },
 });

@@ -11,11 +11,7 @@ export interface BookingData {
     serviceTemplate: string;
     date: string;
     timeSlot: string;
-    address: {
-        _id: string;
-        formattedAddress: string;
-        location: UserLocation;
-    };
+    address: string;
     specialRequirements: string;
 }
 

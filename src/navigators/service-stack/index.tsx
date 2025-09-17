@@ -3,6 +3,7 @@ import AllServices from "./screens/AllServices";
 import ServiceDetails from "./screens/ServiceDetails";
 import ServiceTemplate from "./screens/ServiceTemplate";
 import { ServiceBooking } from "./screens/ServiceBooking";
+import PostBooking from "./screens/PostBooking";
 
 const ServiceStack = () => {
     const Stack = createNativeStackNavigator();
@@ -17,6 +18,7 @@ const ServiceStack = () => {
             <Stack.Screen name="ServiceDetails" component={ServiceDetails} />
             <Stack.Screen name="ServiceTemplate" component={ServiceTemplate} />
             <Stack.Screen name="ServiceBooking" component={ServiceBooking} />
+            <Stack.Screen name="PostBooking" component={PostBooking} />
         </Stack.Navigator>
     );
 };
