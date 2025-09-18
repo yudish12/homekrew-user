@@ -5,6 +5,7 @@ import ServiceStack from "../service-stack";
 import ProductStack from "../product-stack";
 import AllAddress from "./screens/AllAddress";
 import PostOrder from "./screens/PostOrder";
+import EditProfileScreen from "../auth-stack/screens/EditProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ const MainAppStack = () => {
             <Stack.Screen name="Services" component={ServiceStack} />
             <Stack.Screen name="Products" component={ProductStack} />
             <Stack.Screen name="PostOrder" component={PostOrder} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen}/>
         </Stack.Navigator>
     );
 };

@@ -10,11 +10,12 @@ import { COLORS, WEIGHTS } from "../../../constants/ui";
 import { Typography } from "../../../components/Typography";
 import { CustomIcon } from "../../../components/CustomIcon";
 import { SafeAreaView } from "../../../components/SafeAreaView";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../types";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../../types";
 import { useNavigation } from "@react-navigation/native";
 import { getUser } from "../../../redux/selectors";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { logout } from "../../../redux/actions";
 
 const QuickAction = ({
     icon,
@@ -77,7 +78,10 @@ const ListItem = ({
 
 const Account = () => {
     const navigation = useNavigation<any>();
+    
     const user = useSelector(getUser);
+    const dispatch = useDispatch<AppDispatch>();
+
     const displayName = user?.name || "Guest";
     const phone = user?.phoneNumber || "";
 
@@ -105,17 +109,32 @@ const Account = () => {
                             </Typography>
                         )}
                     </View>
-                    <TouchableOpacity
-                        style={styles.editBtn}
-                        activeOpacity={0.8}
-                    >
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="create-outline"
-                            size={18}
-                            color={COLORS.TEXT.DARK}
-                        />
-                    </TouchableOpacity>
+                    <View style={styles.rightRow} >
+                        <TouchableOpacity
+                            style={styles.editBtn}
+                            activeOpacity={0.8}
+                            onPress={()=>navigation.navigate("EditProfile", {backEnabled: true})}
+                        >
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="create-outline"
+                                size={18}
+                                color={COLORS.TEXT.DARK}
+                            />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.logoutBtn}
+                            activeOpacity={0.8}
+                            onPress={()=>dispatch(logout())}
+                        >
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="log-out-outline"
+                                size={18}
+                                color={COLORS.TEXT.DARK}
+                            />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {/* Quick actions - removed Native devices */}
@@ -233,6 +252,19 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: COLORS.GREY[100],
+    },
+    logoutBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: COLORS.GREY[100],
+    },
+    rightRow:{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
     },
     quickGrid: {
         paddingHorizontal: 16,

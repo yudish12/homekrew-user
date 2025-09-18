@@ -17,7 +17,7 @@ import Header from "../../../components/header";
 import Modal from "../../../components/Modal";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../types";
-import { setUser, toggleIsAuthenticated } from "../../../redux/actions";
+import { setUser } from "../../../redux/actions";
 import { AuthServices } from "../../../services/auth-services";
 import { showErrorToast } from "../../../components/Toast";
 import { setAuthToken } from "../../../lib";
@@ -75,6 +75,7 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
         setIsLoading(false);
         setShowSuccessModal(true);
         setAuthToken(response.data.accessToken ?? "");
+        console.log(response);
         dispatch(setUser(response.data));
     };
 
