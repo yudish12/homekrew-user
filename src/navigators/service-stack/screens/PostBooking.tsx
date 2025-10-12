@@ -247,7 +247,7 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                         style={{
                             flexDirection: "row",
                             alignItems: "center",
-                            marginTop: 2,
+                            marginTop: 6,
                         }}
                     >
                         <CustomIcon
@@ -266,18 +266,6 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                 </View>
             </View>
 
-            <View style={styles.vendorMetaRow}>
-                <CustomIcon
-                    provider="Ionicons"
-                    name="location"
-                    size={16}
-                    color={COLORS.GREY[500]}
-                />
-                <Caption style={{ marginLeft: 6 }} color={COLORS.GREY[500]}>
-                    {Math.round(vendor.distance / 1000)} km away
-                </Caption>
-            </View>
-
             <View style={{ flexDirection: "row", marginTop: 12 }}>
                 <Button
                     onPress={() => makeCall(vendor.phoneNumber)}
@@ -293,7 +281,6 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                     }
                 />
                 <View style={{ width: 12 }} />
-                <OutlineButton title="Message" style={{ flex: 1 }} />
             </View>
         </View>
     );
@@ -318,12 +305,6 @@ const BookingDetailsCard: React.FC<{ booking: BookingStatusResponse }> = ({
             <View style={styles.detailRow}>
                 <Caption color={COLORS.GREY[500]}>Time</Caption>
                 <Body style={styles.detailValue}>{booking.timeSlot}</Body>
-            </View>
-            <View style={styles.detailRow}>
-                <Caption color={COLORS.GREY[500]}>Amount</Caption>
-                <Body style={styles.detailValue}>
-                    {booking.pricing?.formattedTotal ?? "—"}
-                </Body>
             </View>
             <View style={[styles.detailRow, { alignItems: "center" }]}>
                 <Caption color={COLORS.GREY[500]}>Payment</Caption>
@@ -376,6 +357,8 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
     booking,
 }) => {
     const getStatusTitle = (status: string, hasVendor: boolean) => {
+        if (status === "completed") return "Booking completed";
+        if (status === "arrived") return "Vendor arrived";
         if (hasVendor) return "Vendor assigned";
         if (status === "pending") return "We're finding a trusted vendor";
         return "Processing your booking";
@@ -480,10 +463,14 @@ const PostBooking: React.FC = () => {
     }, [params?.bookingId]);
 
     useEffect(() => {
-        if (bookingData?.assignedVendor && timerRef.current) {
+        if (
+            bookingData?.status === "completed" &&
+            bookingData.paymentStatus === "paid" &&
+            timerRef.current
+        ) {
             clearInterval(timerRef.current);
         }
-    }, [bookingData?.assignedVendor]);
+    }, [bookingData?.status, bookingData?.paymentStatus]);
 
     const handlePayNow = async () => {
         setPaymentLoading(true);
@@ -561,7 +548,13 @@ const PostBooking: React.FC = () => {
                 {bookingData.assignedVendor && (
                     <VendorCard vendor={bookingData.assignedVendor} />
                 )}
-
+                {/* Booking ID Card */}
+                <View style={styles.bookingIdCard}>
+                    <Caption style={styles.bookingIdLabel}>Booking ID</Caption>
+                    <Body style={styles.bookingIdValue}>
+                        #{bookingData._id}
+                    </Body>
+                </View>
                 <BookingDetailsCard booking={bookingData} />
                 <PricingBreakdown pricing={bookingData.pricing} />
                 <AddressSection address={bookingData.address} />
@@ -574,7 +567,9 @@ const PostBooking: React.FC = () => {
                         />
                     )} */}
                     <View style={{ width: 12 }} />
-                    {bookingData.statusFlags?.needsPayment ? (
+                    {bookingData.statusFlags?.needsPayment &&
+                    bookingData.status === "completed" &&
+                    bookingData.paymentStatus === "pending" ? (
                         <Button
                             title="Pay now"
                             style={{ flex: 1 }}
@@ -590,20 +585,7 @@ const PostBooking: React.FC = () => {
                             loading={paymentLoading}
                             onPress={() => handlePayNow()}
                         />
-                    ) : (
-                        <Button
-                            title="Support"
-                            style={{ flex: 1 }}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="help-buoy"
-                                    size={18}
-                                    color={COLORS.WHITE}
-                                />
-                            }
-                        />
-                    )}
+                    ) : null}
                 </View>
             </ScrollView>
             <SuccessModal
@@ -653,6 +635,28 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.primaryLight,
         marginBottom: 10,
     },
+    bookingIdCard: {
+        backgroundColor: COLORS.primaryLight,
+        marginBottom: 16,
+        borderRadius: 12,
+        padding: 16,
+        paddingHorizontal: 8,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderLeftWidth: 4,
+        borderLeftColor: COLORS.primary,
+    },
+    bookingIdLabel: {
+        color: COLORS.TEXT.DARK,
+        fontSize: 12,
+    },
+    bookingIdValue: {
+        color: COLORS.TEXT.DARK,
+        fontWeight: "700",
+        fontSize: 14,
+        letterSpacing: 0.5,
+    },
     pill: {
         flexDirection: "row",
         alignItems: "center",
@@ -683,6 +687,7 @@ const styles = StyleSheet.create({
         shadowColor: COLORS.TEXT.DARK,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.04,
+        gap: 12,
         shadowRadius: 8,
         elevation: 1,
         marginBottom: 16,
@@ -709,6 +714,7 @@ const styles = StyleSheet.create({
     detailValue: {
         color: COLORS.TEXT.DARK,
         flex: 1,
+        width: "90%",
         textAlign: "right",
     },
     searchPulse: {
