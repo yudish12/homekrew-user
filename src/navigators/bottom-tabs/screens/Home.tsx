@@ -416,7 +416,13 @@ const Home = () => {
                                 style={styles.profileIcon}
                             >
                                 {user?.avatar ? (
-                                    <Image source={{ uri: user.avatar }} />
+                                    <Image
+                                        source={{ uri: user.avatar }}
+                                        resizeMode="cover"
+                                        width={36}
+                                        height={36}
+                                        style={{ borderRadius: 100000 }}
+                                    />
                                 ) : (
                                     <CustomIcon
                                         provider="Ionicons"
