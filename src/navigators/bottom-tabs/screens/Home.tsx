@@ -9,7 +9,7 @@ import {
     RefreshControl,
     Image,
 } from "react-native";
-import { COLORS, membershipGradientColors } from "../../../constants/ui";
+import { COLORS } from "../../../constants/ui";
 import { LinearGradient } from "expo-linear-gradient";
 import { Typography } from "../../../components/Typography";
 import { CustomIcon } from "../../../components/CustomIcon";
@@ -486,7 +486,7 @@ const Home = () => {
                             })
                         }
                         onProductPress={product =>
-                            navigation.navigate("Products", {
+                            navigation.navigate("ProductStack", {
                                 screen: "ProductDetail",
                                 params: { productId: product._id },
                             })

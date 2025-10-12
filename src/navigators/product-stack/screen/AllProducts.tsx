@@ -196,15 +196,19 @@ const AllProducts = () => {
 
     // Fetch products with pagination
     const fetchProducts = useCallback(
-        async (pageNum: number = 1, isRefresh: boolean = false) => {
+        async (
+            pageNum: number = 1,
+            isRefresh: boolean = false,
+            filter: ProductCategory | undefined = undefined,
+        ) => {
             try {
                 // Reset pagination error when retrying
                 setPaginationError(false);
-
+                console.log("selectedFilter", filter);
                 const response = await ProductsServices.getProducts(
                     pageNum,
                     ITEMS_PER_PAGE,
-                    selectedFilter?._id ?? "",
+                    filter?._id ?? "",
                 );
 
                 if (!response.success || !response.data) {
@@ -297,13 +301,15 @@ const AllProducts = () => {
     // Handle filter change
     const handleFilterChange = useCallback(
         (filter: ProductCategory | undefined) => {
+            console.log("filter", filter);
             setSelectedFilter(filter);
             setPage(1);
             setHasNextPage(true);
             setPaginationError(false);
             setLoading(true);
+            fetchProducts(1, true, filter);
         },
-        [],
+        [fetchProducts, fetchProductCategories, selectedFilter],
     );
 
     // Handle retry pagination
@@ -318,13 +324,6 @@ const AllProducts = () => {
         fetchProducts(1, true);
         fetchProductCategories();
     }, []);
-
-    // Fetch when filter changes
-    useEffect(() => {
-        if (selectedFilter !== undefined) {
-            fetchProducts(1, true);
-        }
-    }, [selectedFilter, fetchProducts]);
 
     const renderFilterButton = (filter: ProductCategory) => {
         const isSelected = selectedFilter?._id === filter._id;
@@ -399,7 +398,10 @@ const AllProducts = () => {
     };
 
     const handleProductPress = (productId: string) => {
-        navigation.navigate("ProductDetail", { productId });
+        navigation.navigate("ProductStack", {
+            screen: "ProductDetail",
+            params: { productId },
+        });
     };
 
     const handleCartPress = () => {
@@ -870,7 +872,8 @@ const styles = StyleSheet.create({
     },
     endFooter: {
         alignItems: "center",
-        paddingVertical: 20,
+        paddingTop: 20,
+        paddingBottom: 60,
     },
     endText: {
         fontSize: 12,

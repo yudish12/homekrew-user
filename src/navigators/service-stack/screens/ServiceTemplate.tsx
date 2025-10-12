@@ -82,7 +82,7 @@ const ServiceTemplate = () => {
         return (
             <View style={styles.galleryGrid}>
                 {images.map((image, ind) =>
-                    renderGalleryImage(image.url, ind, true),
+                    renderGalleryImage(image, ind, true),
                 )}
             </View>
         );

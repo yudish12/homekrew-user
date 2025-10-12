@@ -34,7 +34,7 @@ const MainAppStack = () => {
                 component={Address}
             />
             <Stack.Screen name="Services" component={ServiceStack} />
-            <Stack.Screen name="Products" component={ProductStack} />
+            <Stack.Screen name="ProductStack" component={ProductStack} />
             <Stack.Screen name="PostOrder" component={PostOrder} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen

@@ -164,5 +164,33 @@ export class AuthServices {
         };
     }
 
+    static async registerFcmToken(
+        token: string,
+        deviceId: string,
+        platform: string,
+    ): Promise<ApiResponse<any>> {
+        const response = await api.post<any>(
+            `${this.BASE_URL}/user/fcm-register`,
+            { fcmToken: token, deviceId, platform },
+        );
+        if (!response.success) {
+            return {
+                success: false,
+                message:
+                    response.error?.message || "FCM token registration failed",
+                error: response.error,
+                data: null,
+                status: response.status,
+            };
+        }
+
+        return {
+            success: true,
+            data: response.data,
+            status: response.status,
+            message: response.message || "FCM token registration successful",
+        };
+    }
+
     static async logout() {}
 }

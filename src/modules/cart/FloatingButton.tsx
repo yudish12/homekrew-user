@@ -19,7 +19,11 @@ const FloatingCartButton = () => {
     if (cartTotalQuantity === 0) return null;
     return (
         <TouchableOpacity
-            onPress={() => navigation.navigate("ProductCheckout")}
+            onPress={() =>
+                navigation.navigate("ProductStack", {
+                    screen: "ProductCheckout",
+                })
+            }
             style={styles.container}
         >
             <View>

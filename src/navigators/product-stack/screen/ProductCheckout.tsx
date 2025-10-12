@@ -528,8 +528,8 @@ const styles = StyleSheet.create({
 
     // Checkout Button Styles
     checkoutButtonContainer: {
-        padding: 20,
-        paddingBottom: 60,
+        paddingHorizontal: 20,
+        paddingTop: 20,
         backgroundColor: COLORS.WHITE,
         borderTopWidth: 1,
         borderTopColor: COLORS.GREY[100],

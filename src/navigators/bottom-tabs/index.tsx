@@ -7,6 +7,7 @@ import { COLORS } from "../../constants/ui";
 import { CustomIcon } from "../../components/CustomIcon";
 import Account from "./screens/Account";
 import ProductStack from "../product-stack";
+import AllProducts from "../product-stack/screen/AllProducts";
 
 const Tab = createBottomTabNavigator();
 
@@ -67,7 +68,7 @@ const BottomTabs = () => {
             />
             <Tab.Screen
                 name="Products"
-                component={ProductStack}
+                component={AllProducts}
                 options={{
                     tabBarLabel: "Products",
                     tabBarIcon: ({ focused }) => (

@@ -21,7 +21,6 @@ import {
     isItemInCart,
     getCartTotalQuantity,
 } from "../../../redux/selectors/cart";
-import { RootState } from "../../../types";
 import CartCounter from "../../../components/CartCounter";
 import { Product } from "../../../types/home-data";
 import { ProductsServices } from "../../../services/products";
@@ -782,7 +781,7 @@ const styles = StyleSheet.create({
     },
     bottomContainer: {
         position: "absolute",
-        bottom: 50,
+        bottom: 0,
         left: 0,
         right: 0,
         backgroundColor: COLORS.WHITE,
