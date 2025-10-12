@@ -2,6 +2,7 @@ import { api } from "../../lib";
 import { ApiResponse } from "../../types";
 import {
     BookingData,
+    BookingHistory,
     BookingResponse,
     BookOrderRequest,
     BookOrderResponse,
@@ -83,8 +84,52 @@ export class OrdersServices {
         bookingId: string,
     ): Promise<ApiResponse<any>> {
         const response = await api.get(
-            `${this.BASE_URL}/bookings/status/${bookingId}`,
+            `https://ao1.onrender.com/api/v1/bookings/status/${bookingId}`,
         );
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Booking status fetched successfully",
+            status: 200,
+        };
+    }
+
+    static async getServiceBookingHistory(
+        id: string,
+    ): Promise<ApiResponse<BookingHistory[]>> {
+        const response = await api.get(`${this.BASE_URL}/bookings/user/${id}`);
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data.bookings,
+            message: "Booking history fetched successfully",
+            status: 200,
+            pagination: response.data.pagination,
+        };
+    }
+
+    static async bookingPayNow(bookingId: string): Promise<ApiResponse<any>> {
+        const response = await api.post(`${this.BASE_URL}/payments/bookings`, {
+            bookingId,
+            paymentMethod: "razorpay",
+        });
         if (!response.success) {
             return {
                 success: false,

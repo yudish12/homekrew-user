@@ -6,10 +6,11 @@ import AuthStack from "./auth-stack";
 import MainAppStack from "./main-app-stack";
 import Header from "../components/header";
 import { useDispatch, useSelector } from "react-redux";
-import { isAuthenticated } from "../redux/selectors";
+import { isAuthenticated, isProfileCompleted } from "../redux/selectors";
 import { AppDispatch } from "../types";
 import { setUser } from "../redux/actions";
 import { AuthServices } from "../services/auth-services";
+import EditProfileScreen from "./auth-stack/screens/EditProfileScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,7 @@ export const AppNavigator: React.FC = () => {
     const [showSplash, setShowSplash] = useState(true);
 
     const userAuth = useSelector(isAuthenticated);
+    const isUserProfileCompleted = useSelector(isProfileCompleted);
 
     const dispatch = useDispatch<AppDispatch>();
 
@@ -74,11 +76,25 @@ export const AppNavigator: React.FC = () => {
                 })}
             >
                 {userAuth ? (
-                    <Stack.Screen
-                        name="MainApp"
-                        component={MainAppStack}
-                        options={{ headerShown: false }}
-                    />
+                    <>
+                        {isUserProfileCompleted ? (
+                            <Stack.Screen
+                                name="MainApp"
+                                component={MainAppStack}
+                                options={{ headerShown: false }}
+                            />
+                        ) : (
+                            <Stack.Screen
+                                name="EditProfile"
+                                initialParams={{
+                                    backEnabled: false,
+                                    isUserNameEditable: false,
+                                }}
+                                options={{ headerShown: false }}
+                                component={EditProfileScreen}
+                            />
+                        )}
+                    </>
                 ) : (
                     <Stack.Screen
                         name="Auth"

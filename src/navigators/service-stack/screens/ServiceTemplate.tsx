@@ -49,11 +49,6 @@ const ServiceTemplate = () => {
         useState<ServiceTemplateType | null>();
     const [loading, setLoading] = useState(true);
 
-    const url = useMemo(
-        () => serviceTemplate?.images.find(image => image.isPrimary)?.url ?? "",
-        [serviceTemplate],
-    );
-
     const handleBookNow = () => {
         // Handle booking logic
         navigation.navigate("ServiceBooking", { serviceId, serviceTemplateId });
@@ -82,34 +77,13 @@ const ServiceTemplate = () => {
         </TouchableOpacity>
     );
 
-    const renderGalleryGrid = () => {
-        const images = serviceData.galleryImages;
-
+    const renderGalleryGrid = (images: string[]) => {
+        console.log(images);
         return (
             <View style={styles.galleryGrid}>
-                {/* Left Column */}
-                <View style={styles.leftColumn}>
-                    {/* Large image (spans 2 rows) */}
-                    {renderGalleryImage(images[0], 0, true)}
-
-                    {/* Middle left image */}
-                    {renderGalleryImage(images[3], 3, false)}
-
-                    {/* Bottom left image */}
-                    {renderGalleryImage(images[4], 4, false)}
-                </View>
-
-                {/* Right Column */}
-                <View style={styles.rightColumn}>
-                    {/* Top right image */}
-                    {renderGalleryImage(images[1], 1, false)}
-
-                    {/* Middle right image */}
-                    {renderGalleryImage(images[2], 2, false)}
-
-                    {/* Bottom right image */}
-                    {renderGalleryImage(images[5], 5, true)}
-                </View>
+                {images.map((image, ind) =>
+                    renderGalleryImage(image.url, ind, true),
+                )}
             </View>
         );
     };
@@ -160,6 +134,7 @@ const ServiceTemplate = () => {
                         shadowRadius: 0,
                         shadowColor: "transparent",
                     }}
+                    titleStyle={{ width: "80%" }}
                     backHandler={() => navigation.goBack()}
                     showLogo={false}
                     backButtonStyle={{ top: 5 }}
@@ -174,7 +149,7 @@ const ServiceTemplate = () => {
                 <View style={styles.headerImageContainer}>
                     <Image
                         source={{
-                            uri: url ?? "",
+                            uri: serviceTemplate?.image ?? "",
                         }}
                         style={styles.headerImage}
                         resizeMode="cover"
@@ -208,18 +183,6 @@ const ServiceTemplate = () => {
                         >
                             {serviceTemplate?.formattedPrice}
                         </Typography>
-                        <TouchableOpacity
-                            style={styles.addButton}
-                            activeOpacity={0.8}
-                        >
-                            <Typography
-                                variant="button"
-                                color={COLORS.WHITE}
-                                style={styles.addButtonText}
-                            >
-                                Add
-                            </Typography>
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -262,7 +225,7 @@ const ServiceTemplate = () => {
                         </TouchableOpacity>
                     </View>
 
-                    {renderGalleryGrid()}
+                    {renderGalleryGrid(serviceTemplate?.images ?? [])}
                 </View>
 
                 {/* Bottom spacing for sticky button */}

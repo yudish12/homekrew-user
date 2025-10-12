@@ -1,5 +1,5 @@
 import { api } from "../../lib";
-import { ApiResponse, AppDispatch } from "../../types";
+import { ApiResponse, UserUpdateBody } from "../../types";
 import { User } from "../../types/user";
 import { setAuthToken } from "../../lib/storage/auth-storage"; // Add this import
 
@@ -38,11 +38,11 @@ export class AuthServices {
         phoneNumber: string,
         otp: string,
     ): Promise<ApiResponse<User>> {
-        console.log(phoneNumber, otp);
         const response = await api.post(`${this.BASE_URL}/verify`, {
             phoneNumber: phoneNumber.replace("+91", ""),
             otp,
         });
+        console.log(response);
         if (!response.success) {
             return {
                 success: false,
@@ -72,7 +72,7 @@ export class AuthServices {
 
     static async selfVerification(): Promise<ApiResponse<User>> {
         const response = await api.get(`${this.BASE_URL}/current-user`);
-
+        console.log(response);
         if (!response.success) {
             return {
                 success: false,
@@ -88,6 +88,79 @@ export class AuthServices {
             data: response.data,
             message: "User data fetched successfully",
             status: 200,
+        };
+    }
+
+    static async editUserProfile(
+        body: UserUpdateBody,
+    ): Promise<ApiResponse<{ user: User }>> {
+        const response = await api.put<{ user: User }>(
+            `${this.BASE_URL}/profile`,
+            body,
+        );
+
+        if (!response.success) {
+            return {
+                success: false,
+                message:
+                    response.error?.message || "User profile update failed",
+                error: response.error,
+                data: null,
+                status: response.status,
+            };
+        }
+
+        return {
+            success: true,
+            data: response.data,
+            status: response.status,
+            message: response.message || "User profile update successful",
+        };
+    }
+
+    static async updateProfilePicture({
+        name,
+        uri,
+        type,
+    }: {
+        name: string;
+        uri: string;
+        type: string;
+    }): Promise<ApiResponse<User>> {
+        // Create FormData for file upload
+        const formData = new FormData();
+        formData.append("image", {
+            uri,
+            name,
+            type,
+        } as any);
+
+        const response = await api.put<any>(
+            `${this.BASE_URL}/profile`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            },
+        );
+
+        if (!response.success) {
+            return {
+                success: false,
+                message:
+                    response.error?.message || "Profile picture update failed",
+                error: response.error,
+                data: null,
+                status: response.status,
+            };
+        }
+
+        return {
+            success: true,
+            data: response.data,
+            status: response.status,
+            message: response.message || "Profile picture update successful",
         };
     }
 

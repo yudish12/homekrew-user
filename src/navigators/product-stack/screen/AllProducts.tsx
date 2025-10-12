@@ -710,6 +710,7 @@ const styles = StyleSheet.create({
     cartButton: {
         position: "relative",
         padding: 8,
+        marginRight: 12,
     },
     cartBadge: {
         position: "absolute",

@@ -38,6 +38,7 @@ export class ProductsServices {
         let url = `${this.BASE_URL}/products?page=${page}&limit=${limit}`;
         if (categoryId) url += `&category=${categoryId}`;
         const response = await api.get(url);
+        console.log("products", response);
         if (!response.success) {
             return {
                 success: false,

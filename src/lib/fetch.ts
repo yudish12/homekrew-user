@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { DEFAULT_CONFIG, ERROR_MESSAGES } from "../constants";
 import { ApiError, ApiResponse, FetchConfig, ErrorCodes } from "../types";
-import { getAuthToken } from "./storage/auth-storage";
+import { getAuthToken, removeAuthToken } from "./storage/auth-storage";
 
 class FetchUtility {
     private instance: AxiosInstance;
@@ -17,24 +17,6 @@ class FetchUtility {
         // Request interceptor
         this.instance.interceptors.request.use(
             async config => {
-                // Add auth token if provided or get from storage
-                if (config.headers.Authorization) {
-                    config.headers.Authorization = `Bearer ${config.headers.Authorization}`;
-                } else {
-                    // Try to get token from storage if no Authorization header
-                    try {
-                        const storedToken = await getAuthToken();
-                        if (storedToken) {
-                            config.headers.Authorization = `Bearer ${storedToken}`;
-                        }
-                        console.log("Token from storage:", storedToken);
-                    } catch (error) {
-                        console.warn(
-                            "Failed to get auth token from storage:",
-                            error,
-                        );
-                    }
-                }
                 return config;
             },
             error => {
@@ -80,6 +62,8 @@ class FetchUtility {
                         details: data,
                     };
                 case 401:
+                    this.removeAuthToken();
+                    removeAuthToken();
                     return {
                         message: ERROR_MESSAGES.UNAUTHORIZED,
                         status,
@@ -120,14 +104,16 @@ class FetchUtility {
     // Generic request method
     async request<T = any>(config: FetchConfig): Promise<ApiResponse<T>> {
         try {
-            const { authToken, ...axiosConfig } = config;
-
+            const { ...axiosConfig } = config;
+            const authToken = await getAuthToken();
+            console.log("Auth token:", authToken);
             // Remove the duplicate Authorization header logic from here
             // Let the interceptor handle it
             const response: AxiosResponse<T> = await this.instance.request({
                 ...axiosConfig,
                 headers: {
                     ...axiosConfig.headers,
+                    Authorization: `Bearer ${authToken}`,
                 },
             });
 
@@ -265,7 +251,24 @@ class FetchUtility {
 
     // Set default auth token
     setAuthToken(token: string): void {
-        this.instance.defaults.headers.common.Authorization = `Bearer ${token}`;
+        this.instance.interceptors.request.use(
+            async config => {
+                // Try to get token from storage if no Authorization header
+                try {
+                    config.headers.Authorization = `Bearer ${token}`;
+                    console.log("Token from storage:", token, config.url);
+                } catch (error) {
+                    console.warn(
+                        "Failed to get auth token from storage:",
+                        error,
+                    );
+                }
+                return config;
+            },
+            error => {
+                return Promise.reject(error);
+            },
+        );
     }
 
     // Remove auth token

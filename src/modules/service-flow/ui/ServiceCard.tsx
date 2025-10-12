@@ -49,7 +49,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         >
             <View style={styles.imageWrap}>
                 <Image
-                    source={image || placeholderImage}
+                    source={{ uri: image }}
                     style={styles.image}
                     resizeMode="cover"
                 />
@@ -141,8 +141,8 @@ const styles = StyleSheet.create({
         backgroundColor: COLORS.GREY[200],
     },
     image: {
-        width: "100%",
-        height: "100%",
+        width: 80,
+        height: 90,
     },
     content: {
         flex: 1,

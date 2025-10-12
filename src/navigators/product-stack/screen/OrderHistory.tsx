@@ -21,6 +21,8 @@ import { OrdersServices } from "../../../services/orders";
 import { OrderHistory } from "../../../types/services/orders";
 import { formatAddress } from "../../../utils";
 import { SafeAreaView } from "../../../components/SafeAreaView";
+import { BackButton } from "../../../components/BackButton";
+import { useNavigation } from "@react-navigation/native";
 
 // Types
 interface OrderItem {
@@ -54,6 +56,8 @@ const OrderHistoryComponent: React.FC = () => {
     const [currentTab, setCurrentTab] = useState<string>("pending");
     const [refreshing, setRefreshing] = useState(false);
     const [orderHistory, setOrderHistory] = useState<OrderHistory[]>([]);
+
+    const navigation = useNavigation<any>();
 
     const onRefresh = async () => {
         setRefreshing(true);
@@ -253,6 +257,7 @@ const OrderHistoryComponent: React.FC = () => {
         <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
+                <BackButton onPress={() => navigation.goBack()} />
                 <H3>Order History</H3>
                 <BodySmall style={styles.subtitle}>
                     Track and manage your orders
@@ -299,7 +304,8 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: 60,
+        position: "relative",
         marginBottom: 20,
     },
     subtitle: {

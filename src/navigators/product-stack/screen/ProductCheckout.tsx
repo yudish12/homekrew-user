@@ -26,8 +26,9 @@ import {
 } from "../../../types";
 import { useDispatch, useSelector } from "react-redux";
 import { removeFromCart, updateQuantity } from "../../../redux/actions";
-import { useNavigation } from "@react-navigation/native";
+import { StackActions, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
+import { BackButton } from "../../../components/BackButton";
 
 const CartCheckout: React.FC = () => {
     const navigation = useNavigation<any>();
@@ -165,31 +166,35 @@ const CartCheckout: React.FC = () => {
 
     if (cartState.items.length === 0) {
         return (
-            <View style={styles.emptyCartContainer}>
-                <Ionicons
-                    name="cart-outline"
-                    size={80}
-                    color={COLORS.GREY[200]}
-                />
-                <H3 style={styles.emptyCartTitle}>Your cart is empty</H3>
-                <BodySmall style={styles.emptyCartSubtitle}>
-                    Add some products to get started
-                </BodySmall>
-                <View style={styles.emptyCartButtonContainer}>
-                    <PrimaryButton
-                        title="Continue Shopping"
-                        onPress={() => navigation.navigate("ProductsLanding")}
-                        icon={
-                            <Ionicons
-                                name="storefront"
-                                size={20}
-                                color={COLORS.WHITE}
-                            />
-                        }
-                        iconPosition="left"
+            <SafeAreaView>
+                <View style={styles.emptyCartContainer}>
+                    <Ionicons
+                        name="cart-outline"
+                        size={80}
+                        color={COLORS.GREY[200]}
                     />
+                    <H3 style={styles.emptyCartTitle}>Your cart is empty</H3>
+                    <BodySmall style={styles.emptyCartSubtitle}>
+                        Add some products to get started
+                    </BodySmall>
+                    <View style={styles.emptyCartButtonContainer}>
+                        <PrimaryButton
+                            title="Continue Shopping"
+                            onPress={() =>
+                                navigation.dispatch(StackActions.pop(1))
+                            }
+                            icon={
+                                <Ionicons
+                                    name="storefront"
+                                    size={20}
+                                    color={COLORS.WHITE}
+                                />
+                            }
+                            iconPosition="left"
+                        />
+                    </View>
                 </View>
-            </View>
+            </SafeAreaView>
         );
     }
 
@@ -197,6 +202,7 @@ const CartCheckout: React.FC = () => {
         <SafeAreaView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
+                <BackButton onPress={() => navigation.goBack()} />
                 <H3>Your Cart</H3>
                 <BodySmall style={styles.subtitle}>
                     {cartState.totalQuantity} item
@@ -317,7 +323,7 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: 60,
         marginBottom: 20,
     },
     subtitle: {
@@ -523,6 +529,7 @@ const styles = StyleSheet.create({
     // Checkout Button Styles
     checkoutButtonContainer: {
         padding: 20,
+        paddingBottom: 60,
         backgroundColor: COLORS.WHITE,
         borderTopWidth: 1,
         borderTopColor: COLORS.GREY[100],

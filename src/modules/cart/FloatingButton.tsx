@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         color: COLORS.WHITE,
         justifyContent: "space-between",
-        bottom: 30,
+        bottom: 100,
         left: "30%",
         backgroundColor: COLORS.primary,
         flexDirection: "row",

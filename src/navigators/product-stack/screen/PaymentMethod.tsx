@@ -105,7 +105,7 @@ const PaymentMethod: React.FC = () => {
                 address: selectedAddress?._id ?? "",
                 paymentMethod: selectedMethod,
                 customer: {
-                    name: user?.name ?? "",
+                    name: user?.firstName ?? "",
                     contact: user?.phoneNumber ?? "",
                 },
             };
@@ -565,6 +565,6 @@ const styles = StyleSheet.create({
     paymentButtonContainer: {
         marginTop: 20,
         paddingHorizontal: 20,
-        marginBottom: 40,
+        marginBottom: 60,
     },
 });

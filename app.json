@@ -55,6 +55,11 @@
     },
     "plugins": [
       "expo-maps"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fd418860-945b-4ee1-ba40-3bd723322a8a"
+      }
+    }
   }
 }

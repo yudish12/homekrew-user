@@ -10,14 +10,16 @@ export class ServiceCategoryUtil {
         parentCategory?: string,
         page?: number,
         limit?: number,
+        isFeatured?: boolean,
     ): Promise<ApiResponse<ServiceCategory[]>> {
         let url = `${this.BASE_URL}/categories?type=service&level=${level}`;
 
         if (parentCategory) url += `&parentCategory=${parentCategory}`;
         if (page) url += `&page=${page}`;
         if (limit) url += `&limit=${limit}`;
-
+        if (isFeatured) url += `&isFeatured=${isFeatured}`;
         const response = await api.get(url);
+        console.log("service", response);
 
         if (!response.success) {
             return {

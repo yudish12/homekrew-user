@@ -165,7 +165,7 @@ const ProductDetail = () => {
                         title="Go Back"
                         variant="outline"
                         size="medium"
-                        onPress={() => navigation.goBack()}
+                        onPress={() => navigation.navigate("ProductsLanding")}
                         style={styles.goBackButton}
                     />
                 </View>
@@ -179,7 +179,16 @@ const ProductDetail = () => {
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.backButton}
-                    onPress={() => navigation.goBack()}
+                    onPress={() => {
+                        const route =
+                            navigation.getState().routes[
+                                navigation.getState().index - 1
+                            ];
+                        navigation.reset({
+                            index: 0,
+                            routes: [{ name: route.name }],
+                        });
+                    }}
                     activeOpacity={0.7}
                 >
                     <CustomIcon
@@ -760,7 +769,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     descriptionSection: {
-        marginBottom: 20,
+        marginBottom: 40,
     },
     sectionTitle: {
         fontWeight: "700",
@@ -773,7 +782,7 @@ const styles = StyleSheet.create({
     },
     bottomContainer: {
         position: "absolute",
-        bottom: 0,
+        bottom: 50,
         left: 0,
         right: 0,
         backgroundColor: COLORS.WHITE,

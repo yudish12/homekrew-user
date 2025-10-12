@@ -10,6 +10,7 @@ import { View } from "react-native";
 import { CartInitialState } from "./redux/reducers/cart";
 import { ToastComponent } from "./components/Toast";
 import { AddressInitialState } from "./redux/reducers";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Create the store instance
 const store = configureStore({
@@ -36,12 +37,14 @@ export default function App() {
     }
 
     return (
-        <GestureHandlerRootView style={{ flex: 1 }}>
-            <Provider store={store}>
-                <AppNavigator />
-                <StatusBar style="auto" />
-                <ToastComponent />
-            </Provider>
-        </GestureHandlerRootView>
+        <SafeAreaProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+                <Provider store={store}>
+                    <AppNavigator />
+                    <StatusBar style="auto" />
+                    <ToastComponent />
+                </Provider>
+            </GestureHandlerRootView>
+        </SafeAreaProvider>
     );
 }

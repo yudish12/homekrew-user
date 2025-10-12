@@ -2,10 +2,11 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, StyleSheet } from "react-native";
 import Home from "./screens/Home";
-import Services from "./screens/Services";
+import Explore from "./screens/Explore";
 import { COLORS } from "../../constants/ui";
 import { CustomIcon } from "../../components/CustomIcon";
 import Account from "./screens/Account";
+import ProductStack from "../product-stack";
 
 const Tab = createBottomTabNavigator();
 
@@ -14,12 +15,6 @@ const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
 
     return (
         <View style={styles.iconContainer}>
-            {focused && (
-                <View
-                    pointerEvents="none"
-                    style={[styles.topIndicator, { top: -20 }]}
-                />
-            )}
             <CustomIcon
                 provider="Ionicons"
                 name={name as any}
@@ -49,7 +44,6 @@ const BottomTabs = () => {
                     height: 72,
                     backgroundColor: COLORS.WHITE,
                     borderTopWidth: 0,
-                    borderRadius: 20,
                     paddingTop: 12,
                     paddingBottom: 8,
                     // shadow
@@ -72,8 +66,18 @@ const BottomTabs = () => {
                 }}
             />
             <Tab.Screen
+                name="Products"
+                component={ProductStack}
+                options={{
+                    tabBarLabel: "Products",
+                    tabBarIcon: ({ focused }) => (
+                        <TabIcon name="cart" focused={focused} />
+                    ),
+                }}
+            />
+            <Tab.Screen
                 name="Explore"
-                component={Services}
+                component={Explore}
                 options={{
                     tabBarLabel: "Explore",
                     tabBarIcon: ({ focused }) => (

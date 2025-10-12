@@ -1,5 +1,12 @@
 import React from "react";
-import { StyleProp, StyleSheet, View, ViewStyle, Platform } from "react-native";
+import {
+    StyleProp,
+    StyleSheet,
+    View,
+    ViewStyle,
+    Platform,
+    TextStyle,
+} from "react-native";
 import { BackButton } from "./BackButton";
 import { Typography } from "./Typography";
 import { COLORS } from "../constants/ui";
@@ -11,6 +18,7 @@ interface HeaderProps {
     backButtonStyle?: StyleProp<ViewStyle>;
     backHandler?: () => void;
     showLogo?: boolean;
+    titleStyle?: StyleProp<TextStyle>;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -20,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({
     backButtonStyle,
     backHandler,
     showLogo = false,
+    titleStyle,
 }) => {
     return (
         <View style={[styles.header, style]}>
@@ -32,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
             <View style={styles.titleContainer}>
                 {showLogo && (
                     <View style={styles.logoContainer}>
-                        <Typography variant="h3" style={styles.logoText}>
+                        <Typography variant="h3" style={[styles.logoText]}>
                             HomeKrew
                         </Typography>
                     </View>
@@ -44,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({
                             marginTop: showLogo ? 4 : 0,
                             textAlign: "center",
                         },
+                        titleStyle,
                     ]}
                     variant="thinHeading"
                     color={COLORS.TEXT.DARK}

@@ -1,102 +1,81 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { Animated, ScrollView, StyleSheet, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+    Animated,
+    Linking,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View,
+} from "react-native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { H3, Body, Caption, H4 } from "../../../components/Typography";
 import { COLORS } from "../../../constants/ui";
 import { Button, OutlineButton } from "../../../components/Button";
 import { CustomIcon } from "../../../components/CustomIcon";
 import { AddressCard } from "../../../components/AddressCard";
-import { BackButton } from "../../../components/BackButton";
+import RazorpayCheckout from "react-native-razorpay";
 import uiUtils from "../../../utils/ui";
 import Header from "../../../components/header";
 import { OrdersServices } from "../../../services/orders";
-import { useRoute } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { showErrorToast } from "../../../components/Toast";
+import { BookingHistory } from "../../../types/services/orders";
+import { ErrorModal, SuccessModal } from "../../../components/Modal";
 
-// Toggle this to preview screens
-const SHOW_VENDOR_ASSIGNED = true;
-
-const MOCK_ADDRESS = {
-    id: "addr_1",
-    addressType: "home",
-    line1: "221B Baker Street",
-    line2: "Near Regent's Park",
-    street: "Marylebone",
-    city: "London",
-    state: "London",
-    postalCode: "NW1 6XE",
-    landmark: "Next to the museum",
-};
-
-const MOCK_FINDING_BOOKING = {
-    _id: "68c50f6ad9d3ade0aacb2415",
-    status: "pending",
-    paymentStatus: "pending",
-    date: "2025-09-14T00:00:00.000Z",
-    timeSlot: "08:00 AM - 10:00 PM",
+// Type for the booking status response
+interface BookingStatusResponse {
+    _id: string;
+    status: string;
+    paymentStatus: string;
+    date: string;
+    timeSlot: string;
     progress: {
-        step: 1,
-        total: 8,
-        percentage: 12.5,
-        nextAction: "Searching for available vendors",
-    },
+        step: number;
+        total: number;
+        percentage: number;
+        nextAction: string;
+    };
     statusFlags: {
-        isPending: true,
-        isSearching: true,
-        hasVendorAssigned: false,
-        isAccepted: false,
-        isConfirmed: false,
-        isOnRoute: false,
-        hasArrived: false,
-        isInProgress: false,
-        isCompleted: false,
-        isCancelled: false,
-        isRejected: false,
-        isFailed: false,
-        isExpired: false,
-        canCancel: true,
-        canRate: false,
-        needsPayment: true,
-    },
-    pricing: {
-        basePrice: 750,
-        totalAmount: 922.5,
-        formattedTotal: "₹922.50",
-        paymentStatus: "pending",
-    },
-    assignedVendor: null,
+        isPending: boolean;
+        isSearching: boolean;
+        hasVendorAssigned: boolean;
+        isAccepted: boolean;
+        isConfirmed: boolean;
+        isOnRoute: boolean;
+        hasArrived: boolean;
+        isInProgress: boolean;
+        isCompleted: boolean;
+        isCancelled: boolean;
+        isRejected: boolean;
+        isFailed: boolean;
+        isExpired: boolean;
+        canCancel: boolean;
+        canRate: boolean;
+        needsPayment: boolean;
+    };
+    pricing: BookingHistory["pricing"];
+    service: {
+        _id: string;
+        name: string;
+        category: string;
+        subCategory: string;
+    };
+    assignedVendor?: {
+        _id: string;
+        name: string;
+        phoneNumber: string;
+        assignedAt: string;
+        acceptedAt: string;
+        distance: number;
+    };
     timing: {
-        bookingDate: "2025-09-14T00:00:00.000Z",
-        timeSlot: "08:00 AM - 10:00 PM",
-        timeUntilBooking: "Today",
-        isExpired: false,
-    },
-    address: MOCK_ADDRESS,
-};
-
-const MOCK_VENDOR_BOOKING = {
-    ...MOCK_FINDING_BOOKING,
-    statusFlags: {
-        ...MOCK_FINDING_BOOKING.statusFlags,
-        isSearching: false,
-        hasVendorAssigned: true,
-        isAccepted: true,
-        canCancel: true,
-        needsPayment: false,
-    },
-    paymentStatus: "paid",
-    pricing: {
-        ...MOCK_FINDING_BOOKING.pricing,
-        paymentStatus: "paid",
-    },
-    assignedVendor: {
-        id: "ven_12",
-        name: "Rahul Sharma",
-        rating: 4.7,
-        jobsCompleted: 128,
-        phone: "+91 98765 43210",
-        eta: "Arriving between 9:00 AM - 10:00 AM",
-    },
-};
+        bookingDate: string;
+        timeSlot: string;
+        timeUntilBooking: string;
+        isExpired: boolean;
+    };
+    address: any;
+}
 
 const StatusPill: React.FC<{ color: string; icon: string; text: string }> = ({
     color,
@@ -179,8 +158,78 @@ const SearchingAnimation: React.FC = () => {
     );
 };
 
+const PricingBreakdown: React.FC<{
+    pricing: BookingHistory["pricing"];
+}> = ({ pricing }) => (
+    <View style={styles.pricingCard}>
+        <View style={styles.pricingRow}>
+            <Body color={COLORS.GREY[500]}>Base Price</Body>
+            <Body style={{ color: COLORS.TEXT.DARK }}>
+                ₹{pricing.basePrice}
+            </Body>
+        </View>
+        {pricing.discountAmount > 0 && (
+            <View style={styles.pricingRow}>
+                <Body color={COLORS.GREEN[700]}>Discount</Body>
+                <Body style={{ color: COLORS.GREEN[700] }}>
+                    -₹{pricing.discountAmount}
+                </Body>
+            </View>
+        )}
+        {pricing.couponDiscount > 0 && (
+            <View style={styles.pricingRow}>
+                <Body color={COLORS.GREEN[700]}>Coupon Discount</Body>
+                <Body style={{ color: COLORS.GREEN[700] }}>
+                    -₹{pricing.couponDiscount}
+                </Body>
+            </View>
+        )}
+        {pricing.taxAmount > 0 && (
+            <View style={styles.pricingRow}>
+                <Body color={COLORS.GREY[500]}>Tax</Body>
+                <Body style={{ color: COLORS.TEXT.DARK }}>
+                    ₹{pricing.taxAmount.toFixed(2)}
+                </Body>
+            </View>
+        )}
+        <View style={styles.pricingRow}>
+            <Body color={COLORS.GREY[500]}>Platform Fee</Body>
+            <Body style={{ color: COLORS.TEXT.DARK }}>
+                ₹{pricing.platformFee}
+            </Body>
+        </View>
+        <View style={[styles.pricingRow, styles.totalRow]}>
+            <H4 style={{ color: COLORS.TEXT.DARK }}>Total</H4>
+            <H4 style={{ color: COLORS.TEXT.DARK }}>
+                ₹{pricing.totalAmount.toFixed(2)}
+            </H4>
+        </View>
+    </View>
+);
+
 const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
     if (!vendor) return null;
+
+    const makeCall = (phoneNumber: string) => {
+        console.log(phoneNumber);
+        let callNumber = phoneNumber;
+        if (Platform.OS !== "android") {
+            callNumber = `telprompt:${phoneNumber}`;
+        } else {
+            callNumber = `tel:${phoneNumber}`;
+        }
+
+        Linking.canOpenURL(callNumber)
+            .then(supported => {
+                if (!supported) {
+                    showErrorToast("Error", "Calling number is not supported");
+                } else {
+                    return Linking.openURL(callNumber);
+                }
+            })
+            .catch(err => showErrorToast("Error", "Something went wrong"));
+    };
+
     return (
         <View style={styles.card}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -203,15 +252,15 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                     >
                         <CustomIcon
                             provider="Ionicons"
-                            name="star"
-                            size={14}
-                            color={COLORS.GREEN[700]}
+                            name="call"
+                            size={12}
+                            color={COLORS.GREY[500]}
                         />
                         <Caption
-                            style={{ marginLeft: 6 }}
+                            style={{ marginLeft: 4 }}
                             color={COLORS.GREY[500]}
                         >
-                            {vendor.rating} • {vendor.jobsCompleted} jobs
+                            {vendor.phoneNumber}
                         </Caption>
                     </View>
                 </View>
@@ -225,12 +274,13 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                     color={COLORS.GREY[500]}
                 />
                 <Caption style={{ marginLeft: 6 }} color={COLORS.GREY[500]}>
-                    {vendor.eta}
+                    {Math.round(vendor.distance / 1000)} km away
                 </Caption>
             </View>
 
             <View style={{ flexDirection: "row", marginTop: 12 }}>
                 <Button
+                    onPress={() => makeCall(vendor.phoneNumber)}
                     title="Call"
                     style={{ flex: 1 }}
                     icon={
@@ -249,10 +299,16 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
     );
 };
 
-const BookingDetailsCard: React.FC<{ booking: any }> = ({ booking }) => {
+const BookingDetailsCard: React.FC<{ booking: BookingStatusResponse }> = ({
+    booking,
+}) => {
     return (
         <View style={styles.card}>
             <H3 style={{ color: COLORS.TEXT.DARK }}>Booking details</H3>
+            <View style={styles.detailRow}>
+                <Caption color={COLORS.GREY[500]}>Service</Caption>
+                <Body style={styles.detailValue}>{booking.service?.name}</Body>
+            </View>
             <View style={styles.detailRow}>
                 <Caption color={COLORS.GREY[500]}>Date</Caption>
                 <Body style={styles.detailValue}>
@@ -316,20 +372,24 @@ const AddressSection: React.FC<{ address: any | null }> = ({ address }) => {
     );
 };
 
-const HeaderStatus: React.FC<{ booking: any }> = ({ booking }) => {
-    const title = booking.assignedVendor
-        ? "Vendor assigned"
-        : "We’re finding a trusted vendor";
-    const subtitle = booking.assignedVendor
-        ? "You’re all set! A professional has been assigned to your booking."
-        : booking.progress?.nextAction ?? "This won’t take long.";
+const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
+    booking,
+}) => {
+    const getStatusTitle = (status: string, hasVendor: boolean) => {
+        if (hasVendor) return "Vendor assigned";
+        if (status === "pending") return "We're finding a trusted vendor";
+        return "Processing your booking";
+    };
 
-    const iconInfo = useMemo(() => {
+    const getStatusSubtitle = (booking: BookingStatusResponse) => {
         if (booking.assignedVendor) {
-            return { icon: "checkmark-circle", color: COLORS.GREEN[700] };
+            return "You're all set! A professional has been assigned to your booking.";
         }
-        return { icon: "search", color: COLORS.primary };
-    }, [booking]);
+        return booking.progress?.nextAction ?? "This won't take long.";
+    };
+
+    const title = getStatusTitle(booking.status, !!booking.assignedVendor);
+    const subtitle = getStatusSubtitle(booking);
 
     return (
         <View style={styles.headerCard}>
@@ -337,9 +397,9 @@ const HeaderStatus: React.FC<{ booking: any }> = ({ booking }) => {
                 {booking.assignedVendor ? (
                     <CustomIcon
                         provider="Ionicons"
-                        name={iconInfo.icon}
+                        name="checkmark-circle"
                         size={26}
-                        color={iconInfo.color}
+                        color={COLORS.GREEN[700]}
                     />
                 ) : (
                     <SearchingAnimation />
@@ -377,33 +437,117 @@ const HeaderStatus: React.FC<{ booking: any }> = ({ booking }) => {
 
 const PostBooking: React.FC = () => {
     const contentPadding = uiUtils.spacing.getHorizontalPadding();
+    const navigation = useNavigation<any>();
+    const [bookingData, setBookingData] =
+        useState<BookingStatusResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [paymentLoading, setPaymentLoading] = useState(false);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const timerRef = useRef<NodeJS.Timeout>(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [showErrorModal, setShowErrorModal] = useState(false);
 
     const params = useRoute()?.params as { bookingId?: string } | undefined;
 
-    const currentBooking = SHOW_VENDOR_ASSIGNED
-        ? MOCK_VENDOR_BOOKING
-        : MOCK_FINDING_BOOKING;
-
     const fetchBookingStatus = async () => {
-        const response = await OrdersServices.getBookingStatus(
-            params?.bookingId ?? "",
-        );
+        try {
+            const response = await OrdersServices.getBookingStatus(
+                params?.bookingId ?? "",
+            );
+            console.log(response);
+            if (response.success && response.data) {
+                setBookingData(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching booking status:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
+        // Fetch immediately
+        fetchBookingStatus();
+
+        // Then set up polling
         timerRef.current = setInterval(fetchBookingStatus, 3000);
+
         return () => {
             if (timerRef.current) {
                 clearInterval(timerRef.current);
             }
         };
-    }, []);
+    }, [params?.bookingId]);
+
+    useEffect(() => {
+        if (bookingData?.assignedVendor && timerRef.current) {
+            clearInterval(timerRef.current);
+        }
+    }, [bookingData?.assignedVendor]);
+
+    const handlePayNow = async () => {
+        setPaymentLoading(true);
+        const resp = await OrdersServices.bookingPayNow(
+            params?.bookingId ?? "",
+        );
+        if (resp.success) {
+            const options = {
+                key: "rzp_test_M1Ad7casmGNZTV",
+                amount: (resp.data?.razorpayOrder?.amount ?? 0) / 100,
+                currency: "INR",
+                theme: {
+                    color: COLORS.primary,
+                    type: "light",
+                },
+                order_id: resp.data?.razorpayOrder.id ?? "",
+                name: "Buy Products",
+                description:
+                    "Payment to buy products delivered right at your registered address ",
+            };
+            const data = await RazorpayCheckout.open(options);
+            setShowSuccessModal(true);
+        } else {
+            setShowErrorModal(true);
+        }
+        setPaymentLoading(false);
+    };
+
+    const handleSuccessClose = () => {
+        setShowSuccessModal(false);
+    };
+
+    const handleErrorClose = () => {
+        setShowErrorModal(false);
+    };
+
+    if (loading || !bookingData) {
+        return (
+            <SafeAreaView>
+                <Header
+                    backHandler={() => navigation.goBack()}
+                    backButton={true}
+                    title="Booking Status"
+                />
+                <View
+                    style={{
+                        flex: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                    }}
+                >
+                    <Body>Loading booking details...</Body>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView>
-            <Header backButton={true} title="Booking Status" />
+            <Header
+                backHandler={() => navigation.goBack()}
+                backButton={true}
+                title="Booking Status"
+            />
             <ScrollView
                 contentContainerStyle={{
                     paddingHorizontal: contentPadding,
@@ -412,21 +556,25 @@ const PostBooking: React.FC = () => {
                     backgroundColor: COLORS.WHITE,
                 }}
             >
-                <HeaderStatus booking={currentBooking} />
-                {currentBooking.assignedVendor && (
-                    <VendorCard vendor={currentBooking.assignedVendor} />
+                <HeaderStatus booking={bookingData} />
+
+                {bookingData.assignedVendor && (
+                    <VendorCard vendor={bookingData.assignedVendor} />
                 )}
-                <BookingDetailsCard booking={currentBooking} />
-                <AddressSection address={currentBooking.address} />
+
+                <BookingDetailsCard booking={bookingData} />
+                <PricingBreakdown pricing={bookingData.pricing} />
+                <AddressSection address={bookingData.address} />
+
                 <View style={{ flexDirection: "row" }}>
-                    {currentBooking.statusFlags?.canCancel && (
+                    {/* {bookingData.statusFlags?.canCancel && (
                         <OutlineButton
                             title="Cancel booking"
                             style={{ flex: 1 }}
                         />
-                    )}
+                    )} */}
                     <View style={{ width: 12 }} />
-                    {currentBooking.statusFlags?.needsPayment ? (
+                    {bookingData.statusFlags?.needsPayment ? (
                         <Button
                             title="Pay now"
                             style={{ flex: 1 }}
@@ -438,6 +586,9 @@ const PostBooking: React.FC = () => {
                                     color={COLORS.WHITE}
                                 />
                             }
+                            disabled={paymentLoading}
+                            loading={paymentLoading}
+                            onPress={() => handlePayNow()}
                         />
                     ) : (
                         <Button
@@ -455,6 +606,23 @@ const PostBooking: React.FC = () => {
                     )}
                 </View>
             </ScrollView>
+            <SuccessModal
+                visible={showSuccessModal}
+                onClose={handleSuccessClose}
+                title="Payment Successful!"
+                message={
+                    "Your payment has been processed successfully. Your order will be prepared and shipped soon."
+                }
+            />
+            {/* Error Modal */}
+            <ErrorModal
+                visible={showErrorModal}
+                onClose={handleErrorClose}
+                title="Payment Failed"
+                message={
+                    "We couldn't process your payment. Please check your payment details and try again."
+                }
+            />
         </SafeAreaView>
     );
 };
@@ -522,7 +690,7 @@ const styles = StyleSheet.create({
     vendorAvatar: {
         width: 36,
         height: 36,
-        borderRadius: 22,
+        borderRadius: 18,
         backgroundColor: COLORS.primary,
         alignItems: "center",
         justifyContent: "center",
@@ -530,8 +698,7 @@ const styles = StyleSheet.create({
     vendorMetaRow: {
         flexDirection: "row",
         alignItems: "center",
-        marginVertical: 8,
-        marginTop: 12,
+        marginTop: 8,
     },
     detailRow: {
         flexDirection: "row",
@@ -541,6 +708,8 @@ const styles = StyleSheet.create({
     },
     detailValue: {
         color: COLORS.TEXT.DARK,
+        flex: 1,
+        textAlign: "right",
     },
     searchPulse: {
         width: 36,
@@ -551,5 +720,23 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         borderWidth: 1,
         borderColor: uiUtils.color.addAlpha(COLORS.primary, 0.35),
+    },
+    pricingCard: {
+        backgroundColor: COLORS.primaryLight,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+    },
+    pricingRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 6,
+    },
+    totalRow: {
+        borderTopWidth: 1,
+        borderTopColor: COLORS.border.light,
+        marginTop: 8,
+        paddingTop: 12,
     },
 });

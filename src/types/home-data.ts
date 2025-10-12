@@ -68,8 +68,8 @@ export interface ServiceTemplate {
     slug: string;
     description: string;
     category: ServiceCategory;
-    primaryImage: string;
-    images: { isPrimary: boolean; url: string }[];
+    image: string;
+    images: string[];
     subCategory: ServiceChildCategory;
     pricingGuidelines: {
         basePrice: number;

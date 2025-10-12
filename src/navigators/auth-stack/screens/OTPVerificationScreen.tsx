@@ -71,11 +71,9 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
             setIsLoading(false);
             return;
         }
-
+        await setAuthToken(response.data.accessToken ?? "");
         setIsLoading(false);
         setShowSuccessModal(true);
-        setAuthToken(response.data.accessToken ?? "");
-        console.log(response);
         dispatch(setUser(response.data));
     };
 

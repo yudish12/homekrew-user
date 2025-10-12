@@ -8,6 +8,7 @@ export interface UserAddress {
     line1: string;
     line2: string;
     street: string;
+    completeAddress?: string;
     city: string;
     state: string;
     country: string;

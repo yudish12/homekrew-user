@@ -1,3 +1,5 @@
+import { ServiceCategory, ServiceTemplate } from "../home-data";
+import { User } from "../user";
 import { UserAddress, UserLocation } from "../user-address";
 
 export interface TimeSlot {
@@ -137,4 +139,142 @@ export interface OrderHistory {
         isCompleted: boolean;
         canReturn: boolean;
     };
+}
+
+export interface BookingHistory {
+    _id: string;
+    user: User;
+    serviceTemplate: ServiceTemplate;
+    category: ServiceCategory;
+    subCategory: ServiceCategory;
+    date: string;
+    timeSlot: string;
+    address: UserAddress;
+    status: string;
+    paymentStatus: string;
+    price: number;
+    pricing: {
+        basePrice: number;
+        discountAmount: number;
+        couponDiscount: number;
+        taxAmount: number;
+        platformFee: number;
+        totalAmount: number;
+    };
+    vendorSearch: {
+        lastSearchAt: "2025-09-20T13:10:51.927Z";
+        assignedVendor: {
+            vendorId: {
+                _id: string;
+                phoneNumber: string;
+                email: string;
+                firstName: string;
+                lastName: string;
+                selfieImage: string;
+            };
+            assignedAt: string;
+            acceptedAt: string;
+            distance: number;
+        };
+    };
+    specialRequirements: string;
+    totalPrice: number;
+    formattedAmount: string;
+    formattedDate: string;
+    canCancel: boolean;
+    canRate: boolean;
+    statusBadge: string;
+    serviceName: string;
+}
+
+export interface BookingHistoryResponse {
+    success: boolean;
+    data: {
+        bookings: BookingHistoryItem[];
+        pagination: {
+            currentPage: number;
+            totalPages: number;
+            totalBookings: number;
+            limit: number;
+            hasNextPage: boolean;
+            hasPrevPage: boolean;
+        };
+    };
+    message: string;
+}
+
+export interface BookingHistoryItem {
+    _id: string;
+    user: {
+        _id: string;
+        phoneNumber: string;
+        avatar: string;
+        firstName: string;
+        lastName: string;
+    };
+    serviceTemplate: {
+        _id: string;
+        title: string;
+        description: string;
+    };
+    category: {
+        _id: string;
+        name: string;
+        description: string;
+    };
+    subCategory: {
+        _id: string;
+        name: string;
+        description: string;
+    };
+    date: string;
+    timeSlot: string;
+    address: {
+        _id: string;
+        city: string;
+        state: string;
+        country: string;
+        landmark: string;
+        completeAddress: string;
+    };
+    status: string;
+    paymentStatus: string;
+    price: number;
+    pricing: {
+        basePrice: number;
+        discountAmount: number;
+        couponDiscount: number;
+        taxAmount: number;
+        platformFee: number;
+        totalAmount: number;
+    };
+    vendorSearch: {
+        lastSearchAt: string;
+        assignedVendor: {
+            vendorId: {
+                _id: string;
+                phoneNumber: string;
+                email: string;
+                firstName: string;
+                lastName: string;
+                selfieImage: string;
+            };
+            assignedAt: string;
+            acceptedAt: string;
+            distance: number;
+        };
+    };
+    specialRequirements: string;
+    additionalItems: any[];
+    totalPrice: number;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    vendor: string;
+    formattedAmount: string;
+    formattedDate: string;
+    canCancel: boolean;
+    canRate: boolean;
+    statusBadge: string;
+    serviceName: string;
 }

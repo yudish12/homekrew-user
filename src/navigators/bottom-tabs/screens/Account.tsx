@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import { getUser } from "../../../redux/selectors";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { logout } from "../../../redux/actions";
+import { ReferralBanner } from "../../../modules/home/ui/ReferralBanner";
 
 const QuickAction = ({
     icon,
@@ -78,21 +79,17 @@ const ListItem = ({
 
 const Account = () => {
     const navigation = useNavigation<any>();
-    
+
     const user = useSelector(getUser);
     const dispatch = useDispatch<AppDispatch>();
-
-    const displayName = user?.name || "Guest";
+    const displayName = user?.firstName || "Guest";
     const phone = user?.phoneNumber || "";
 
     const tabBarheight = useBottomTabBarHeight();
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.WHITE }}>
-            <ScrollView
-                contentContainerStyle={{ paddingBottom: tabBarheight + 20 }}
-                showsVerticalScrollIndicator={false}
-            >
+            <View>
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={{ flex: 1 }}>
@@ -109,11 +106,15 @@ const Account = () => {
                             </Typography>
                         )}
                     </View>
-                    <View style={styles.rightRow} >
+                    <View style={styles.rightRow}>
                         <TouchableOpacity
                             style={styles.editBtn}
                             activeOpacity={0.8}
-                            onPress={()=>navigation.navigate("EditProfile", {backEnabled: true})}
+                            onPress={() =>
+                                navigation.navigate("EditProfile", {
+                                    backEnabled: true,
+                                })
+                            }
                         >
                             <CustomIcon
                                 provider="Ionicons"
@@ -125,7 +126,7 @@ const Account = () => {
                         <TouchableOpacity
                             style={styles.logoutBtn}
                             activeOpacity={0.8}
-                            onPress={()=>dispatch(logout())}
+                            onPress={() => dispatch(logout())}
                         >
                             <CustomIcon
                                 provider="Ionicons"
@@ -170,14 +171,21 @@ const Account = () => {
                 {/* List menu - removed Wallet and My rating */}
                 <View style={styles.list}>
                     <ListItem
+                        iconName="information-circle-outline"
+                        label="My Bookings"
+                        onPress={() =>
+                            navigation.navigate("ServiceBookingHistory")
+                        }
+                    />
+                    <ListItem
                         iconName="pricetags-outline"
-                        label="My Plans"
-                        onPress={() => {}}
+                        label="My Orders"
+                        onPress={() => navigation.navigate("OrderHistory")}
                     />
                     <ListItem
                         iconName="sparkles-outline"
-                        label="Plus membership"
-                        onPress={() => {}}
+                        label="View plans"
+                        onPress={() => navigation.navigate("MembershipDetails")}
                     />
                     <ListItem
                         iconName="location-outline"
@@ -194,42 +202,10 @@ const Account = () => {
                         label="Settings"
                         onPress={() => {}}
                     />
-                    <ListItem
-                        iconName="information-circle-outline"
-                        label="About"
-                        onPress={() => {}}
-                    />
                 </View>
-
-                {/* Refer card */}
-                <View style={styles.referCard}>
-                    <View style={{ flex: 1 }}>
-                        <Typography
-                            variant="h4"
-                            color={COLORS.TEXT.DARK}
-                            style={{ fontWeight: WEIGHTS.SEMI_BOLD }}
-                        >
-                            Refer & earn ₹100
-                        </Typography>
-                        <Typography
-                            variant="bodySmall"
-                            color={COLORS.GREY[500]}
-                            style={{ marginTop: 6 }}
-                        >
-                            Get ₹100 when your friend completes their first
-                            booking
-                        </Typography>
-                    </View>
-                    <View style={styles.giftIcon}>
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="gift-outline"
-                            size={26}
-                            color={COLORS.primary}
-                        />
-                    </View>
-                </View>
-            </ScrollView>
+            </View>
+            {/* Refer card */}
+            <ReferralBanner />
         </SafeAreaView>
     );
 };
@@ -261,7 +237,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         backgroundColor: COLORS.GREY[100],
     },
-    rightRow:{
+    rightRow: {
         flexDirection: "row",
         alignItems: "center",
         gap: 12,

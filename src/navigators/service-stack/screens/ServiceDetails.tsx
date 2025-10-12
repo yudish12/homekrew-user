@@ -60,7 +60,7 @@ const ServiceDetails = () => {
             title={item.title}
             provider={item.description}
             originalPrice={item.formattedPrice}
-            image={item.primaryImage}
+            image={item.image}
             buttonText="Start"
             buttonIconName="calendar-outline"
             onPress={() => handleServicePress(item._id)}

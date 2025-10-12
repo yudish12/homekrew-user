@@ -23,6 +23,15 @@ export const COLORS = {
     RED: {
         500: "#EF4444",
     },
+    GOLD: {
+        400: "#F4D35E", // warm light gold
+        500: "#E2B007", // rich gold
+        600: "#D4AF37", // classic metallic gold
+    },
+    NAVY: {
+        700: "#1D4E89", // dark blue (brighter)
+        800: "#153E75", // dark blue
+    },
     border: {
         light: "#E5E7EB",
         dark: "#111827",
@@ -36,3 +45,9 @@ export const WEIGHTS = {
     SEMI_BOLD: "600" as const,
     BOLD: "700" as const,
 };
+
+export const membershipGradientColors = [
+    "#5DADE2", // lighter sky blue
+    "#66CDAA", // medium aquamarine
+    "#B2F2BB", // pastel mint / very light green
+] as const;

@@ -53,7 +53,7 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
     const scaleValue = useRef(new Animated.Value(0)).current;
     const opacityValue = useRef(new Animated.Value(0)).current;
-
+    console.log(primaryButton);
     useEffect(() => {
         if (visible) {
             Animated.parallel([

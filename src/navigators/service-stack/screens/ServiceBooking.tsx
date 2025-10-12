@@ -67,7 +67,7 @@ const getNext7Days = () => {
     const dates = [];
     const today = new Date();
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 1; i < 8; i++) {
         const date = new Date(today);
         date.setDate(today.getDate() + i);
 
@@ -128,17 +128,20 @@ export const ServiceBooking: React.FC = () => {
             address: selectedAddress._id,
             specialRequirements: specialRequirements,
         };
-    const response = await OrdersServices.bookService(bookingData);
-        if(response.success){
-            navigation.navigate("PostBooking", {bookingId: response.data?.bookingId});
-        }else{
-            showErrorToast("Error","Something went wrong. Please try again.",{
+        console.log(bookingData);
+        const response = await OrdersServices.bookService(bookingData);
+        if (response.success) {
+            navigation.navigate("PostBooking", {
+                bookingId: response.data?.bookingId,
+            });
+        } else {
+            showErrorToast("Error", "Something went wrong. Please try again.", {
                 onDismiss: () => {
                     console.log("Error toast dismissed");
                 },
             });
         }
-        
+
         setIsLoading(false);
     };
 

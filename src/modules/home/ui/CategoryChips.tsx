@@ -40,7 +40,10 @@ const CategoryChips: React.FC<CategoryChipsProps> = ({
                     <View style={styles.iconContainer}>
                         <Image
                             source={{
-                                uri: item.image,
+                                uri:
+                                    item?.image?.length > 0
+                                        ? item?.image
+                                        : "https://e7.pngegg.com/pngimages/348/633/png-clipart-computer-icons-service-icon-design-others-miscellaneous-text.png",
                             }}
                             style={styles.categoryIcon}
                             resizeMode="contain"

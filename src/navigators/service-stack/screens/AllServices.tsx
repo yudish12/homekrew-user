@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     StyleSheet,
     View,
@@ -14,19 +14,36 @@ import { Typography } from "../../../components/Typography";
 import { CustomIcon } from "../../../components/CustomIcon";
 import ServiceCard from "../../../modules/service-flow/ui/ServiceCard";
 import { COLORS } from "../../../constants/ui";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { ServiceCategoryUtil } from "../../../services";
 import { ServiceChildCategory } from "../../../types/home-data";
 
 const AllServices = () => {
+    const params = useRoute().params as
+        | {
+              serviceName: string;
+              serviceId: string;
+          }
+        | undefined;
+    console.log(params);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(false);
     const [filterCategories, setFilterCategories] =
         useState<{ label: string; value: string }[]>();
-    const [selectedFilter, setSelectedFilter] = useState<{
-        label: string;
-        value: string;
-    }>();
+    const [selectedFilter, setSelectedFilter] = useState<
+        | {
+              label: string;
+              value: string;
+          }
+        | undefined
+    >(
+        params?.serviceId
+            ? {
+                  label: params.serviceName,
+                  value: params.serviceId,
+              }
+            : undefined,
+    );
     const [showFilter, setShowFilter] = useState(true);
 
     const [allChildCategories, setAllChildCategories] = useState<
@@ -36,13 +53,16 @@ const AllServices = () => {
     const [filteredChildCategories, setFilteredChildCategories] = useState<
         (ServiceChildCategory & { parentId: string })[]
     >([]);
+    const filtersScrollRef = useRef<ScrollView | null>(null);
+    const [chipX, setChipX] = useState<Record<string, number>>({});
+    const [didAutoScroll, setDidAutoScroll] = useState(false);
 
     const navigation = useNavigation<any>();
 
     const fetchServicesAndCategories = useCallback(async () => {
         setLoading(true);
         const response = await ServiceCategoryUtil.getCategories(1);
-
+        console.log(response);
         let tempChildCategories: (ServiceChildCategory & {
             parentId: string;
         })[] = [];
@@ -66,7 +86,14 @@ const AllServices = () => {
 
         // pick first category by default
         if (filters.length > 0) {
-            setSelectedFilter(filters[0]);
+            setSelectedFilter(
+                params?.serviceId
+                    ? {
+                          label: params.serviceName,
+                          value: params.serviceId,
+                      }
+                    : filters[0],
+            );
         }
 
         setLoading(false);
@@ -75,6 +102,25 @@ const AllServices = () => {
     useEffect(() => {
         fetchServicesAndCategories();
     }, [fetchServicesAndCategories]);
+
+    useEffect(() => {
+        const paramServiceId = params?.serviceId;
+        if (
+            !didAutoScroll &&
+            paramServiceId &&
+            selectedFilter?.value === paramServiceId
+        ) {
+            const x = chipX[paramServiceId];
+            if (typeof x === "number" && filtersScrollRef.current) {
+                // subtract paddingHorizontal: 16 so the chip aligns nicely
+                filtersScrollRef.current.scrollTo({
+                    x: Math.max(0, x - 16),
+                    animated: true,
+                });
+                setDidAutoScroll(true);
+            }
+        }
+    }, [didAutoScroll, params?.serviceId, selectedFilter?.value, chipX]);
 
     useEffect(() => {
         let temp = allChildCategories;
@@ -91,7 +137,6 @@ const AllServices = () => {
                     cat.description?.toLowerCase().includes(query),
             );
         }
-
         setFilteredChildCategories(temp);
     }, [selectedFilter, allChildCategories, searchQuery]);
 
@@ -130,6 +175,12 @@ const AllServices = () => {
                 ]}
                 onPress={() => setSelectedFilter(filter)}
                 activeOpacity={0.8}
+                onLayout={e => {
+                    const x = e.nativeEvent.layout.x;
+                    if (chipX[filter.value] === undefined) {
+                        setChipX(prev => ({ ...prev, [filter.value]: x }));
+                    }
+                }}
             >
                 <Typography
                     variant="button"
@@ -204,6 +255,7 @@ const AllServices = () => {
                         display: showFilter ? "flex" : "none",
                     },
                 ]}
+                ref={filtersScrollRef}
                 contentContainerStyle={styles.filtersContent}
             >
                 {filterCategories?.map(renderFilterButton)}

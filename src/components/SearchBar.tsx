@@ -5,10 +5,13 @@ import {
     StyleSheet,
     ViewStyle,
     TextStyle,
+    TouchableOpacity,
 } from "react-native";
 import { COLORS } from "../constants/ui";
 import { CustomIcon } from "./CustomIcon";
-import { Typography } from "./Typography";
+import { ServiceCategory } from "../types/home-data";
+import { useNavigation } from "@react-navigation/native";
+import { Body, BodySmall, Caption } from "./Typography";
 
 interface SearchBarProps {
     value: string;
@@ -25,8 +28,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     containerStyle,
     inputStyle,
 }) => {
+    const navigation = useNavigation<any>();
     return (
-        <View style={[styles.container, containerStyle]}>
+        <TouchableOpacity
+            onPress={() => navigation.navigate("SearchScreen")}
+            style={[styles.container, containerStyle]}
+        >
             <View style={styles.iconWrap}>
                 <CustomIcon
                     provider="Ionicons"
@@ -35,15 +42,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
                     color={COLORS.GREY[400]}
                 />
             </View>
-            <TextInput
+            <TouchableOpacity
+                onPress={() => navigation.navigate("SearchScreen")}
                 style={[styles.input, inputStyle]}
-                placeholder={placeholder}
-                placeholderTextColor={COLORS.GREY[400]}
-                value={value}
-                onChangeText={onChangeText}
-                returnKeyType="search"
-            />
-        </View>
+            >
+                <BodySmall color={COLORS.GREY[400]}>{placeholder}</BodySmall>
+            </TouchableOpacity>
+        </TouchableOpacity>
     );
 };
 
@@ -51,7 +56,6 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: "row",
         alignItems: "center",
-        backgroundColor: COLORS.WHITE,
         borderRadius: 16,
         height: 48,
         paddingHorizontal: 12,

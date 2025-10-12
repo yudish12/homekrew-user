@@ -21,9 +21,6 @@ export interface ServiceCardProps {
     style?: ViewStyle;
 }
 
-// Use a better visual placeholder from assets
-const placeholderImage = require("../../../../assets/splash-icon.png");
-
 const ServiceCard: React.FC<ServiceCardProps> = ({
     image,
     title,
@@ -41,7 +38,13 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         >
             <View style={styles.imageWrap}>
                 <Image
-                    source={image || placeholderImage}
+                    source={
+                        typeof image === "string"
+                            ? { uri: image }
+                            : image || {
+                                  uri: "https://e7.pngegg.com/pngimages/348/633/png-clipart-computer-icons-service-icon-design-others-miscellaneous-text.png",
+                              }
+                    }
                     style={styles.image}
                     resizeMode="cover"
                 />

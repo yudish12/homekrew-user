@@ -20,7 +20,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({
     style,
 }) => {
     const getAddressTypeIcon = (type: string) => {
-        switch (type.toLowerCase()) {
+        switch (type?.toLowerCase()) {
             case "home":
                 return "home";
             case "work":
@@ -33,7 +33,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({
     };
 
     const getAddressTypeColor = (type: string) => {
-        switch (type.toLowerCase()) {
+        switch (type?.toLowerCase()) {
             case "home":
                 return COLORS.GREEN[700];
             case "work":
@@ -81,14 +81,9 @@ export const AddressCard: React.FC<AddressCardProps> = ({
                         color={getAddressTypeColor(address.addressType)}
                         style={styles.typeText}
                     >
-                        {address.addressType}
+                        {address.city}, {address.state}
                     </Typography>
                 </View>
-                <RadioButton
-                    selected={isSelected}
-                    onPress={onSelect}
-                    size={18}
-                />
             </View>
 
             <Typography
@@ -97,7 +92,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({
                 style={styles.addressText}
                 numberOfLines={3}
             >
-                {formatAddress()}
+                {address.completeAddress}
             </Typography>
 
             {address.landmark && (

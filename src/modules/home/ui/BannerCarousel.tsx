@@ -18,7 +18,7 @@ const { width } = Dimensions.get("window");
 
 export interface BannerItem {
     id: string;
-    image?: ImageSourcePropType;
+    imageUrl?: ImageSourcePropType;
     title?: string;
     subtitle?: string;
     ctaText?: string;
@@ -30,8 +30,6 @@ interface BannerCarouselProps {
     style?: ViewStyle;
     autoplayIntervalMs?: number;
 }
-
-const placeholderImage = require("../../../../assets/icon.png");
 
 const ITEM_SPACING = 14;
 const SIDE_PADDING = 16;
@@ -148,7 +146,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
             ]}
         >
             <Image
-                source={item.imageUrl || placeholderImage}
+                source={{ uri: item.imageUrl }}
                 style={styles.bannerImage}
                 resizeMode="cover"
             />
@@ -273,7 +271,7 @@ const styles = StyleSheet.create({
     bannerImage: {
         width: "100%",
         height: "100%",
-        objectFit: "contain",
+        objectFit: "cover",
     },
     bannerContent: {
         position: "absolute",

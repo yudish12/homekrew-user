@@ -82,11 +82,10 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
     },
     itemContainer: {
-        backgroundColor: COLORS.WHITE,
+        backgroundColor: "transparent",
         borderRadius: 12,
-        borderWidth: 1,
-        borderColor: COLORS.border.light,
-        padding: 16,
+        borderWidth: 0,
+        padding: 0,
         marginBottom: 16,
     },
     block: {
