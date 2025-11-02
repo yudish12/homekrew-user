@@ -445,9 +445,7 @@ const PostBooking: React.FC = () => {
             const response = await OrdersServices.getBookingStatus(
                 params?.bookingId ?? "",
             );
-            console.log(response);
             if (response.success && response.data) {
-                console.log(response.data);
                 setBookingData(response.data);
             }
         } catch (error) {
@@ -483,29 +481,41 @@ const PostBooking: React.FC = () => {
 
     const handlePayNow = async () => {
         setPaymentLoading(true);
-        const resp = await OrdersServices.bookingPayNow(
-            params?.bookingId ?? "",
-        );
-        if (resp.success) {
-            const options = {
-                key: "rzp_test_M1Ad7casmGNZTV",
-                amount: (resp.data?.razorpayOrder?.amount ?? 0) / 100,
-                currency: "INR",
-                theme: {
-                    color: COLORS.primary,
-                    type: "light",
+        try {
+            const resp = await OrdersServices.bookingPayNow(
+                params?.bookingId ?? "",
+            );
+            console.log(resp, "payment");
+            if (resp.success) {
+                const options = {
+                    key: "rzp_test_M1Ad7casmGNZTV",
+                    amount:
+                        (resp.data?.booking?.razorpayOrder?.amount ?? 0) / 100,
+                    currency: "INR",
+                    theme: {
+                        color: COLORS.primary,
+                        type: "light",
+                    },
+                    order_id: resp.data?.booking?.razorpayOrder.id ?? "",
+                    name: "Buy Products",
+                    description:
+                        "Payment to buy products delivered right at your registered address ",
+                };
+                const data = await RazorpayCheckout.open(options);
+                setShowSuccessModal(true);
+            } else {
+                setShowErrorModal(true);
+            }
+        } catch (error) {
+            console.log(error, "error");
+            showErrorToast("Error", "Something went wrong. Please try again.", {
+                onDismiss: () => {
+                    console.log("Error toast dismissed");
                 },
-                order_id: resp.data?.razorpayOrder.id ?? "",
-                name: "Buy Products",
-                description:
-                    "Payment to buy products delivered right at your registered address ",
-            };
-            const data = await RazorpayCheckout.open(options);
-            setShowSuccessModal(true);
-        } else {
-            setShowErrorModal(true);
+            });
+        } finally {
+            setPaymentLoading(false);
         }
-        setPaymentLoading(false);
     };
 
     const handleSuccessClose = () => {
