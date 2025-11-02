@@ -325,7 +325,7 @@ const BookingDetailsCard: React.FC<{ booking: BookingStatusResponse }> = ({
             <View style={[styles.detailRow, { alignItems: "center" }]}>
                 <Caption color={COLORS.GREY[500]}>OTP</Caption>
                 <StatusPill
-                    color={COLORS.primaryLight}
+                    color={COLORS.GREY[900]}
                     icon={"key"}
                     text={booking?.otpDeatils?.otp ?? ""}
                 />
