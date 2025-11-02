@@ -23,6 +23,7 @@ export interface User {
     phoneNumber: string;
     role: string;
     isVerified: boolean;
+    email: string;
     isEmailVerified: boolean;
     profileCompleted?: boolean;
     isMobileVerified: boolean;

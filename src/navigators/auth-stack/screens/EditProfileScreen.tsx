@@ -24,7 +24,7 @@ import {
     OutlineButton,
     Button,
 } from "../../../components/Button";
-import { Input } from "../../../components/Input";
+import { EmailInput, Input } from "../../../components/Input";
 import { DatePicker } from "../../../components/DatePicker";
 import Modal from "../../../components/Modal"; // Import your Modal component
 import { COLORS, WEIGHTS } from "../../../constants/ui";
@@ -41,6 +41,7 @@ interface ProfileFormData {
     middleName: string;
     userName?: string;
     phoneNumber: string;
+    email: string;
     dob: string;
     avatar: string;
 }
@@ -65,6 +66,7 @@ const EditProfileScreen = () => {
         middleName: user?.middleName ?? "",
         userName: "",
         phoneNumber: user?.phoneNumber ?? "",
+        email: user?.email ?? "",
         dob: user?.dob ?? "",
         avatar: user?.avatar ?? "",
     });
@@ -230,12 +232,29 @@ const EditProfileScreen = () => {
 
             if (!result.canceled && result.assets && result.assets.length > 0) {
                 const pickedImage = result.assets[0];
+
+                // Determine file extension and MIME type
+                const uriParts = pickedImage.uri.split(".");
+                const fileExtension =
+                    uriParts[uriParts.length - 1].toLowerCase();
+
+                let mimeType = "image/jpeg";
+                if (fileExtension === "png") mimeType = "image/png";
+                else if (fileExtension === "jpg" || fileExtension === "jpeg")
+                    mimeType = "image/jpeg";
+                else if (fileExtension === "gif") mimeType = "image/gif";
+                else if (fileExtension === "webp") mimeType = "image/webp";
+
+                const fileName =
+                    pickedImage.fileName ||
+                    `profile_${
+                        user?.firstName || "user"
+                    }_${Date.now()}.${fileExtension}`;
+
                 setSelectedImage({
-                    name:
-                        pickedImage.fileName ??
-                        `${user?.firstName}-${new Date().getTime()}`,
+                    name: fileName,
                     uri: pickedImage.uri,
-                    type: pickedImage.type ?? "image/jpeg",
+                    type: mimeType,
                 });
                 setShowImageModal(true);
 
@@ -269,6 +288,8 @@ const EditProfileScreen = () => {
                 selectedImage,
             );
 
+            console.log(response);
+
             if (!response.success) {
                 Alert.alert(
                     "Error",
@@ -276,11 +297,18 @@ const EditProfileScreen = () => {
                 );
                 return;
             }
+            setFormData(prev => ({
+                ...prev,
+                avatar: response.data?.avatar ?? "",
+            }));
             dispatch(
-                setUser({ ...user, avatar: response.data?.avatar } as User),
+                setUser({
+                    ...user,
+                    avatar: response.data?.avatar ?? "",
+                } as User),
             );
             // For now, just update the local state
-            handleInputChange("avatar", selectedImage.uri);
+            handleInputChange("avatar", response.data?.avatar ?? "");
             setShowImageModal(false);
             setSelectedImage(undefined);
 
@@ -317,6 +345,7 @@ const EditProfileScreen = () => {
                 delete formData.userName;
             }
             const response = await AuthServices.editUserProfile(formData);
+            console.log(response);
             if (response.success && response.data && user) {
                 dispatch(
                     setUser({
@@ -327,6 +356,9 @@ const EditProfileScreen = () => {
                         phoneNumber: response.data.user.phoneNumber,
                         dob: response.data.user.dob,
                         avatar: response.data.user.avatar,
+                        profileCompleted:
+                            response.data.user.profileCompleted ??
+                            user.profileCompleted,
                     }),
                 );
                 Alert.alert("Success", "Profile updated successfully.", [
@@ -550,6 +582,20 @@ const EditProfileScreen = () => {
                         required
                         keyboardType="phone-pad"
                         autoComplete="tel"
+                        containerStyle={styles.inputContainer}
+                    />
+
+                    <EmailInput
+                        label="Email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChangeText={value =>
+                            handleInputChange("email", value)
+                        }
+                        error={formErrors.email}
+                        required
+                        autoCapitalize="none"
+                        autoCorrect={false}
                         containerStyle={styles.inputContainer}
                     />
 

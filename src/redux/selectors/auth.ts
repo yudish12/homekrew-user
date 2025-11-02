@@ -5,8 +5,8 @@ export const isAuthenticated = (state: RootState) => {
 };
 
 export const isProfileCompleted = (state: RootState) => {
-    // return state?.auth?.user?.profileCompleted;
-    return true;
+    return state?.auth?.user?.profileCompleted;
+    // return true;
 };
 
 export const getUser = (state: RootState) => {

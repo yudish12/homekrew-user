@@ -322,6 +322,14 @@ const BookingDetailsCard: React.FC<{ booking: BookingStatusResponse }> = ({
                     text={booking.paymentStatus === "paid" ? "Paid" : "Pending"}
                 />
             </View>
+            <View style={[styles.detailRow, { alignItems: "center" }]}>
+                <Caption color={COLORS.GREY[500]}>OTP</Caption>
+                <StatusPill
+                    color={COLORS.primaryLight}
+                    icon={"key"}
+                    text={booking?.otpDeatils?.otp ?? ""}
+                />
+            </View>
         </View>
     );
 };
@@ -439,6 +447,7 @@ const PostBooking: React.FC = () => {
             );
             console.log(response);
             if (response.success && response.data) {
+                console.log(response.data);
                 setBookingData(response.data);
             }
         } catch (error) {

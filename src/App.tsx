@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { AppNavigator } from "./navigators";
-import { Provider } from "react-redux";
+import { Provider, useDispatch } from "react-redux";
 import configureStore from "./redux/store";
 import { AuthInitialState } from "./redux/reducers/auth";
 import { GestureHandlerRootView } from "react-native-gesture-handler";

@@ -1,7 +1,8 @@
+import { Platform } from "react-native";
 import { api } from "../../lib";
 import { ApiResponse, UserUpdateBody } from "../../types";
 import { User } from "../../types/user";
-import { setAuthToken } from "../../lib/storage/auth-storage"; // Add this import
+import { setAuthToken } from "../../lib/storage/auth-storage";
 
 export class AuthServices {
     private static readonly BASE_URL = "https://ao1.onrender.com/api/v1/user";
@@ -129,11 +130,17 @@ export class AuthServices {
     }): Promise<ApiResponse<User>> {
         // Create FormData for file upload
         const formData = new FormData();
-        formData.append("image", {
-            uri,
-            name,
-            type,
-        } as any);
+
+        // Android needs the file object in a specific format
+        const fileToUpload = {
+            uri: Platform.OS === "android" ? uri : uri.replace("file://", ""),
+            name: name || "profile-image.jpg",
+            type: type || "image/jpeg",
+        };
+
+        formData.append("image", fileToUpload as any);
+
+        console.log("Uploading image with data:", fileToUpload);
 
         const response = await api.put<any>(
             `${this.BASE_URL}/profile`,
@@ -144,6 +151,8 @@ export class AuthServices {
                 },
             },
         );
+
+        console.log("Upload response:", response);
 
         if (!response.success) {
             return {
@@ -158,7 +167,7 @@ export class AuthServices {
 
         return {
             success: true,
-            data: response.data,
+            data: response.data.user,
             status: response.status,
             message: response.message || "Profile picture update successful",
         };

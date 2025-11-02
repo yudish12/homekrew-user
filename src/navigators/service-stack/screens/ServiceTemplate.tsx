@@ -8,6 +8,7 @@ import {
     Dimensions,
     ActivityIndicator,
 } from "react-native";
+import ImageView from "react-native-image-viewing";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
@@ -20,26 +21,6 @@ import { BackButton } from "../../../components/BackButton";
 
 const { width } = Dimensions.get("window");
 
-// Service data based on the Car Repairing image
-const serviceData = {
-    id: "1",
-    title: "Car Repairing",
-    provider: "Wade Warren",
-    price: "৳182",
-    description:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    headerImage:
-        "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=300&fit=crop",
-    galleryImages: [
-        "https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=200&h=300&fit=crop", // Large image (spans 2 rows)
-        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=150&fit=crop", // Top right
-        "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&h=150&fit=crop", // Middle right
-        "https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=200&h=150&fit=crop", // Middle left
-        "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&h=150&fit=crop", // Bottom left
-        "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=200&h=150&fit=crop", // Bottom right
-    ],
-};
-
 const ServiceTemplate = () => {
     const navigation = useNavigation<any>();
     const route = useRoute<any>();
@@ -48,26 +29,25 @@ const ServiceTemplate = () => {
     const [serviceTemplate, setServiceTemplate] =
         useState<ServiceTemplateType | null>();
     const [loading, setLoading] = useState(true);
+    const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const handleBookNow = () => {
         // Handle booking logic
         navigation.navigate("ServiceBooking", { serviceId, serviceTemplateId });
     };
 
-    const renderGalleryImage = (
-        imageUri: string,
-        index: number,
-        isLarge: boolean = false,
-    ) => (
+    const handleImagePress = (index: number) => {
+        setCurrentImageIndex(index);
+        setIsImageViewVisible(true);
+    };
+
+    const renderGalleryImage = (imageUri: string, index: number) => (
         <TouchableOpacity
             key={index}
-            style={[
-                styles.galleryImageContainer,
-                isLarge
-                    ? styles.largeImageContainer
-                    : styles.smallImageContainer,
-            ]}
+            style={[styles.galleryImageContainer]}
             activeOpacity={0.8}
+            onPress={() => handleImagePress(index)}
         >
             <Image
                 source={{ uri: imageUri }}
@@ -78,12 +58,9 @@ const ServiceTemplate = () => {
     );
 
     const renderGalleryGrid = (images: string[]) => {
-        console.log(images);
         return (
             <View style={styles.galleryGrid}>
-                {images.map((image, ind) =>
-                    renderGalleryImage(image, ind, true),
-                )}
+                {images.map((image, ind) => renderGalleryImage(image, ind))}
             </View>
         );
     };
@@ -96,6 +73,10 @@ const ServiceTemplate = () => {
         setServiceTemplate(response?.data ?? null);
         setLoading(false);
     }, [serviceTemplateId]);
+
+    const imageViewerImages = useMemo(() => {
+        return (serviceTemplate?.images ?? []).map(uri => ({ uri }));
+    }, [serviceTemplate?.images]);
 
     useEffect(() => {
         fetchServiceTemplateDetails();
@@ -214,15 +195,6 @@ const ServiceTemplate = () => {
                         >
                             Photo & Videos
                         </Typography>
-                        <TouchableOpacity activeOpacity={0.7}>
-                            <Typography
-                                variant="body"
-                                color={COLORS.primary}
-                                style={styles.seeAllLink}
-                            >
-                                See All
-                            </Typography>
-                        </TouchableOpacity>
                     </View>
 
                     {renderGalleryGrid(serviceTemplate?.images ?? [])}
@@ -243,6 +215,15 @@ const ServiceTemplate = () => {
                     style={styles.bookNowButton}
                 />
             </View>
+
+            {/* Full Screen Image Viewer */}
+            <ImageView
+                images={imageViewerImages}
+                imageIndex={currentImageIndex}
+                backgroundColor={"#000000"}
+                visible={isImageViewVisible}
+                onRequestClose={() => setIsImageViewVisible(false)}
+            />
         </SafeAreaView>
     );
 };
@@ -336,8 +317,11 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
     galleryGrid: {
+        width: "100%",
         flexDirection: "row",
+        flexWrap: "wrap", // Add this
         justifyContent: "space-between",
+        gap: 12,
     },
     leftColumn: {
         width: (width - 48) / 2, // Half width minus padding
@@ -348,6 +332,7 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
     },
     galleryImageContainer: {
+        width: "48%", // Add this to make 2 items per row
         borderRadius: 12,
         overflow: "hidden",
         marginBottom: 12,
@@ -360,7 +345,7 @@ const styles = StyleSheet.create({
     },
     galleryImage: {
         width: "100%",
-        height: "100%",
+        height: 300,
     },
     bottomSpacing: {
         height: 100, // Space for sticky button

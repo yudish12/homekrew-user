@@ -128,7 +128,6 @@ export const ServiceBooking: React.FC = () => {
             address: selectedAddress._id,
             specialRequirements: specialRequirements,
         };
-        console.log(bookingData);
         const response = await OrdersServices.bookService(bookingData);
         if (response.success) {
             navigation.navigate("PostBooking", {

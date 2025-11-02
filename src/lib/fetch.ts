@@ -107,15 +107,34 @@ class FetchUtility {
             const { ...axiosConfig } = config;
             const authToken = await getAuthToken();
             console.log("Auth token:", authToken);
+
+            // Check if data is FormData
+            const isFormData = axiosConfig.data instanceof FormData;
+
             // Remove the duplicate Authorization header logic from here
             // Let the interceptor handle it
-            const response: AxiosResponse<T> = await this.instance.request({
+            const requestConfig = {
                 ...axiosConfig,
                 headers: {
                     ...axiosConfig.headers,
                     Authorization: `Bearer ${authToken}`,
                 },
+                // For FormData, let axios handle the content type and transformation
+                ...(isFormData && {
+                    transformRequest: (data: any) => data,
+                }),
+            };
+
+            console.log("Request config:", {
+                url: requestConfig.url,
+                method: requestConfig.method,
+                isFormData,
+                headers: requestConfig.headers,
             });
+
+            const response: AxiosResponse<T> = await this.instance.request(
+                requestConfig,
+            );
 
             // Return success response with proper typing
             // Handle nested data structure from API
@@ -130,10 +149,12 @@ class FetchUtility {
                 success: true,
             } as ApiResponse<T>;
         } catch (error) {
+            console.log("Error:", error);
             const apiError = this.createApiError(error as AxiosError);
 
             // Log error for debugging
             console.error(`API Error:${config.url}`, apiError);
+            console.error("Full error:", error);
 
             // Return error response instead of throwing
             return {
