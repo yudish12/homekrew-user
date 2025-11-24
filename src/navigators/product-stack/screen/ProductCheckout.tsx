@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     View,
     StyleSheet,
@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     Image,
     Alert,
+    ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, WEIGHTS } from "../../../constants";
@@ -15,6 +16,7 @@ import {
     H4,
     Body,
     BodySmall,
+    Caption,
 } from "../../../components/Typography";
 import { PrimaryButton } from "../../../components/Button";
 import {
@@ -23,21 +25,60 @@ import {
     CartState,
     RootState,
     UserAddress,
+    Coupon,
 } from "../../../types";
 import { useDispatch, useSelector } from "react-redux";
-import { removeFromCart, updateQuantity } from "../../../redux/actions";
+import {
+    applyCoupon,
+    removeFromCart,
+    updateQuantity,
+} from "../../../redux/actions";
 import { StackActions, useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { BackButton } from "../../../components/BackButton";
+import { OrdersServices } from "../../../services/orders";
+import { showErrorToast } from "../../../components/Toast";
+import { CouponBottomSheet } from "../../../modules/cart/CouponBottomSheet";
 
 const CartCheckout: React.FC = () => {
     const navigation = useNavigation<any>();
     const cartState = useSelector((state: RootState) => state.cart);
+
     const { selectedAddress } = useSelector(
         (state: RootState) => state.address,
     );
 
     const dispatch = useDispatch<AppDispatch>();
+
+    // Coupon state
+    const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
+    const [coupons, setCoupons] = useState<Coupon[]>([]);
+    const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+    const [isCouponBottomSheetVisible, setIsCouponBottomSheetVisible] =
+        useState(false);
+
+    // Calculate discount based on selected coupon
+    const calculateDiscount = () => {
+        if (!selectedCoupon) return 0;
+
+        const subtotal = cartState.totalPrice;
+
+        if (selectedCoupon.discountType === "fixed") {
+            return selectedCoupon.discountValue;
+        } else if (selectedCoupon.discountType === "percentage") {
+            const percentageDiscount =
+                (subtotal * selectedCoupon.discountValue) / 100;
+            // Apply max discount limit if exists
+            if (selectedCoupon.maxDiscount) {
+                return Math.min(percentageDiscount, selectedCoupon.maxDiscount);
+            }
+            return percentageDiscount;
+        }
+        return 0;
+    };
+
+    const discount = calculateDiscount();
+    const totalPrice = cartState.totalPrice - discount;
 
     const removeItem = (itemId: string) => {
         Alert.alert(
@@ -69,9 +110,10 @@ const CartCheckout: React.FC = () => {
 
         const checkoutData = {
             items: cartState.items,
-            totalPrice: cartState.totalPrice,
+            totalPrice: totalPrice,
             deliveryAddress: selectedAddress,
             timestamp: new Date().toISOString(),
+            appliedCoupon: selectedCoupon?.code ?? undefined,
         };
 
         navigation.navigate("PaymentMethod", { checkoutData });
@@ -85,6 +127,64 @@ const CartCheckout: React.FC = () => {
         return `${address.line1}, ${address.line2 ? address.line2 + ", " : ""}${
             address.street
         }, ${address.city}, ${address.state} ${address.postalCode}`;
+    };
+
+    // Fetch coupons for products in cart
+    const fetchCoupons = async () => {
+        if (cartState.items.length === 0) return;
+
+        setIsFetchingCoupons(true);
+        try {
+            // Fetch coupons for the first product in cart
+            // In a real scenario, you might want to fetch for all products and combine
+            const firstProductId = cartState.items[0].id;
+            console.log("Fetching coupons for product id: ", firstProductId);
+            const response = await OrdersServices.getCoupons(
+                "product",
+                firstProductId,
+            );
+            if (response.success && response.data) {
+                setCoupons(response.data?.coupons || []);
+            } else {
+                showErrorToast(
+                    "Error",
+                    "Something went wrong. Please try again.",
+                    {
+                        onDismiss: () => {
+                            console.log("Error toast dismissed");
+                        },
+                    },
+                );
+            }
+        } catch (error) {
+            console.error("Error fetching coupons:", error);
+            showErrorToast(
+                "Error",
+                "Failed to fetch coupons. Please try again.",
+            );
+        } finally {
+            setIsFetchingCoupons(false);
+        }
+    };
+
+    useEffect(() => {
+        if (cartState.items.length > 0) {
+            fetchCoupons();
+        }
+    }, [cartState.items]);
+
+    const handleApplyCoupon = (coupon: Coupon) => {
+        setSelectedCoupon(coupon);
+        setIsCouponBottomSheetVisible(false);
+        dispatch(applyCoupon(coupon));
+    };
+
+    const handleRemoveCoupon = () => {
+        setSelectedCoupon(null);
+    };
+
+    const formatCurrency = (amount: number) => {
+        return `₹${amount.toFixed(2)}`;
     };
 
     const renderCartItem = (item: CartItem) => {
@@ -105,7 +205,7 @@ const CartCheckout: React.FC = () => {
                         <View style={styles.itemInfo}>
                             <H4 style={styles.itemName}>{item.name}</H4>
                             <Body style={styles.itemPrice}>
-                                ${item.singleItemPrice}
+                                ₹{item.singleItemPrice}
                             </Body>
                         </View>
                         <TouchableOpacity
@@ -156,7 +256,7 @@ const CartCheckout: React.FC = () => {
                         </View>
 
                         <View style={styles.priceContainer}>
-                            <H4 style={styles.itemTotal}>${itemTotal}</H4>
+                            <H4 style={styles.itemTotal}>₹{itemTotal}</H4>
                         </View>
                     </View>
                 </View>
@@ -167,6 +267,10 @@ const CartCheckout: React.FC = () => {
     if (cartState.items.length === 0) {
         return (
             <SafeAreaView>
+                <BackButton
+                    backButtonStyle={{ position: "static", marginBottom: 0 }}
+                    onPress={() => navigation.goBack()}
+                />
                 <View style={styles.emptyCartContainer}>
                     <Ionicons
                         name="cart-outline"
@@ -263,6 +367,83 @@ const CartCheckout: React.FC = () => {
                     </TouchableOpacity>
                 </View>
 
+                {/* Apply Coupon Section */}
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Ionicons
+                            name="pricetag-outline"
+                            size={20}
+                            color={COLORS.primary}
+                        />
+                        <H4 style={styles.sectionTitle}>Apply Coupon</H4>
+                    </View>
+
+                    {selectedCoupon ? (
+                        <View style={styles.appliedCouponCard}>
+                            <View style={styles.appliedCouponLeft}>
+                                <View style={styles.appliedCouponBadge}>
+                                    <Ionicons
+                                        name="checkmark-circle"
+                                        size={18}
+                                        color={COLORS.GREEN[700]}
+                                    />
+                                    <Body style={styles.appliedCouponCode}>
+                                        {selectedCoupon.code}
+                                    </Body>
+                                </View>
+                                <BodySmall style={styles.appliedCouponDiscount}>
+                                    You saved {formatCurrency(discount)}!
+                                </BodySmall>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.removeCouponButton}
+                                onPress={handleRemoveCoupon}
+                            >
+                                <Ionicons
+                                    name="close-circle"
+                                    size={24}
+                                    color={COLORS.RED[500]}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.applyCouponButton}
+                            onPress={() => setIsCouponBottomSheetVisible(true)}
+                            disabled={isFetchingCoupons}
+                        >
+                            {isFetchingCoupons ? (
+                                <ActivityIndicator
+                                    size="small"
+                                    color={COLORS.primary}
+                                />
+                            ) : (
+                                <Ionicons
+                                    name="pricetag"
+                                    size={24}
+                                    color={COLORS.primary}
+                                />
+                            )}
+                            <Body style={styles.applyCouponText}>
+                                {isFetchingCoupons
+                                    ? "Loading coupons..."
+                                    : coupons.length > 0
+                                    ? `View ${coupons.length} available ${
+                                          coupons.length === 1
+                                              ? "coupon"
+                                              : "coupons"
+                                      }`
+                                    : "No coupons available"}
+                            </Body>
+                            <Ionicons
+                                name="chevron-forward"
+                                size={20}
+                                color={COLORS.GREY[400]}
+                            />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
                 {/* Order Summary */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -278,17 +459,44 @@ const CartCheckout: React.FC = () => {
                             <Body>
                                 Subtotal ({cartState.totalQuantity} items)
                             </Body>
-                            <Body>${cartState.totalPrice}</Body>
+                            <Body>₹{cartState.totalPrice.toFixed(2)}</Body>
                         </View>
                         <View style={styles.summaryRow}>
                             <Body>Delivery Fee</Body>
                             <Body style={styles.freeDelivery}>Free</Body>
                         </View>
+                        {discount > 0 && (
+                            <>
+                                <View style={styles.summaryDivider} />
+                                <View style={styles.summaryRow}>
+                                    <View style={styles.discountLabelContainer}>
+                                        <Body style={styles.summaryLabel}>
+                                            Discount
+                                        </Body>
+                                        {selectedCoupon && (
+                                            <Caption
+                                                style={styles.couponCodeText}
+                                            >
+                                                ({selectedCoupon.code})
+                                            </Caption>
+                                        )}
+                                    </View>
+                                    <Body
+                                        style={[
+                                            styles.summaryValue,
+                                            styles.discountText,
+                                        ]}
+                                    >
+                                        - {formatCurrency(discount)}
+                                    </Body>
+                                </View>
+                            </>
+                        )}
                         <View style={styles.summaryDivider} />
                         <View style={styles.summaryRow}>
                             <H4>Total Amount</H4>
                             <H4 style={styles.totalAmount}>
-                                ${cartState.totalPrice}
+                                {formatCurrency(totalPrice)}
                             </H4>
                         </View>
                     </View>
@@ -298,8 +506,9 @@ const CartCheckout: React.FC = () => {
             {/* Checkout Button */}
             <View style={styles.checkoutButtonContainer}>
                 <PrimaryButton
-                    title={`Place Order • $${cartState.totalPrice}`}
+                    title={`Place Order • ${formatCurrency(totalPrice)}`}
                     onPress={handleCheckout}
+                    disabled={cartState.isLoading || !selectedAddress}
                     fullWidth
                     loading={cartState.isLoading}
                     icon={
@@ -308,6 +517,16 @@ const CartCheckout: React.FC = () => {
                     iconPosition="left"
                 />
             </View>
+
+            {/* Coupon Bottom Sheet */}
+            <CouponBottomSheet
+                visible={isCouponBottomSheetVisible}
+                onClose={() => setIsCouponBottomSheetVisible(false)}
+                coupons={coupons}
+                appliedCoupon={selectedCoupon}
+                onApply={handleApplyCoupon}
+                onRemove={handleRemoveCoupon}
+            />
         </SafeAreaView>
     );
 };
@@ -503,6 +722,76 @@ const styles = StyleSheet.create({
         color: COLORS.primary,
         fontWeight: WEIGHTS.BOLD,
     },
+    summaryLabel: {
+        color: COLORS.TEXT.DARK,
+    },
+    summaryValue: {
+        color: COLORS.TEXT.DARK,
+    },
+    discountLabelContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    discountText: {
+        color: COLORS.GREEN[700],
+        fontWeight: WEIGHTS.SEMI_BOLD,
+    },
+    couponCodeText: {
+        color: COLORS.GREEN[700],
+        fontWeight: WEIGHTS.MEDIUM,
+        textTransform: "uppercase",
+    },
+
+    // Coupon Styles
+    applyCouponButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: COLORS.primaryLight,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        borderRadius: 12,
+        padding: 15,
+        borderStyle: "dashed",
+    },
+    applyCouponText: {
+        flex: 1,
+        marginLeft: 10,
+        color: COLORS.primary,
+        fontWeight: WEIGHTS.MEDIUM,
+    },
+    appliedCouponCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#E8F5E9",
+        borderWidth: 1,
+        borderColor: COLORS.GREEN[700],
+        borderRadius: 12,
+        padding: 15,
+    },
+    appliedCouponLeft: {
+        flex: 1,
+        gap: 6,
+    },
+    appliedCouponBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    appliedCouponCode: {
+        color: COLORS.GREEN[700],
+        fontWeight: WEIGHTS.BOLD,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+    },
+    appliedCouponDiscount: {
+        color: COLORS.GREEN[700],
+        fontWeight: WEIGHTS.MEDIUM,
+    },
+    removeCouponButton: {
+        padding: 4,
+    },
 
     // Empty Cart Styles
     emptyCartContainer: {
@@ -529,7 +818,7 @@ const styles = StyleSheet.create({
     // Checkout Button Styles
     checkoutButtonContainer: {
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingVertical: 20,
         backgroundColor: COLORS.WHITE,
         borderTopWidth: 1,
         borderTopColor: COLORS.GREY[100],

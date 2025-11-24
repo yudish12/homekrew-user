@@ -30,6 +30,7 @@ import { Product, ProductCategory } from "../../../types/home-data";
 import { useToast } from "../../../hooks/useToast";
 import SkeletonLoader from "../../../components/SkeletonLoader";
 import FloatingCartButton from "../../../modules/cart/FloatingButton";
+import { ProductsComingSoon } from "../../../modules/products/ProductsComingSoon";
 
 const ProductCard = ({
     item,
@@ -97,14 +98,14 @@ const ProductCard = ({
                         color="#FF6B35"
                         style={styles.currentPrice}
                     >
-                        {item.price}
+                        {`₹${item.discountPrice}`}
                     </Typography>
                     <Typography
                         variant="bodySmall"
                         color={COLORS.GREY[400]}
                         style={styles.originalPrice}
                     >
-                        {item.price}
+                        {`₹${item.price}`}
                     </Typography>
                 </View>
 
@@ -390,9 +391,10 @@ const AllProducts = () => {
             addToCart(
                 product._id,
                 1, // quantity
-                product.price, // singleItemPrice
+                product.discountPrice, // singleItemPrice
                 product?.productImages?.[0],
                 product.name,
+                product?.pricing?.platformFee ?? 0,
             ),
         );
     };
@@ -405,8 +407,30 @@ const AllProducts = () => {
     };
 
     const handleCartPress = () => {
-        navigation.navigate("ProductCheckout");
+        navigation.navigate("ProductStack", {
+            screen: "ProductCheckout",
+        });
     };
+
+    const navigateToExplore = useCallback(() => {
+        const state = navigation.getState?.();
+        if (state?.routeNames?.includes?.("Explore")) {
+            navigation.navigate("Explore");
+            return;
+        }
+
+        const parent = navigation.getParent?.();
+        const parentState = parent?.getState?.();
+
+        if (parentState?.routeNames?.includes?.("Explore")) {
+            parent?.navigate("Explore");
+            return;
+        }
+
+        navigation.navigate("BottomTabs", {
+            screen: "Explore",
+        });
+    }, [navigation]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -535,45 +559,6 @@ const AllProducts = () => {
                 </>
             ) : (
                 <>
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        style={[
-                            styles.filtersContainer,
-                            {
-                                display: showFilter ? "flex" : "none",
-                            },
-                        ]}
-                        contentContainerStyle={styles.filtersContent}
-                    >
-                        {/* Add "All" filter option */}
-                        <TouchableOpacity
-                            style={[
-                                styles.filterButton,
-                                !selectedFilter && styles.filterButtonSelected,
-                            ]}
-                            onPress={() => handleFilterChange(undefined)}
-                            activeOpacity={0.8}
-                        >
-                            <Typography
-                                variant="button"
-                                color={
-                                    !selectedFilter
-                                        ? COLORS.WHITE
-                                        : COLORS.GREY[500]
-                                }
-                                style={[
-                                    styles.filterButtonText,
-                                    !selectedFilter &&
-                                        styles.filterButtonTextSelected,
-                                ]}
-                            >
-                                All
-                            </Typography>
-                        </TouchableOpacity>
-                        {productCategories?.map(renderFilterButton)}
-                    </ScrollView>
-
                     {/* Products Grid */}
                     <FlatList
                         data={products}
@@ -599,41 +584,57 @@ const AllProducts = () => {
                         showsVerticalScrollIndicator={false}
                         onEndReached={handleEndReached}
                         onEndReachedThreshold={0.1}
+                        ListHeaderComponent={
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                style={[
+                                    styles.filtersContainer,
+                                    {
+                                        display: showFilter ? "flex" : "none",
+                                    },
+                                ]}
+                                contentContainerStyle={styles.filtersContent}
+                            >
+                                {/* Add "All" filter option */}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.filterButton,
+                                        !selectedFilter &&
+                                            styles.filterButtonSelected,
+                                    ]}
+                                    onPress={() =>
+                                        handleFilterChange(undefined)
+                                    }
+                                    activeOpacity={0.8}
+                                >
+                                    <Typography
+                                        variant="button"
+                                        color={
+                                            !selectedFilter
+                                                ? COLORS.WHITE
+                                                : COLORS.GREY[500]
+                                        }
+                                        style={[
+                                            styles.filterButtonText,
+                                            !selectedFilter &&
+                                                styles.filterButtonTextSelected,
+                                        ]}
+                                    >
+                                        All
+                                    </Typography>
+                                </TouchableOpacity>
+                                {productCategories?.map(renderFilterButton)}
+                            </ScrollView>
+                        }
                         ListFooterComponent={renderFooter}
                         ListEmptyComponent={
-                            <View style={styles.emptyContainer}>
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="search-outline"
-                                    size={48}
-                                    color={COLORS.GREY[400]}
-                                />
-                                <Typography
-                                    variant="h5"
-                                    color={COLORS.GREY[500]}
-                                    style={styles.emptyText}
-                                >
-                                    No products found
-                                </Typography>
-                                <Typography
-                                    variant="bodySmall"
-                                    color={COLORS.GREY[400]}
-                                    style={styles.emptySubtext}
-                                >
-                                    Try adjusting your search terms
-                                </Typography>
-                                <Button
-                                    title="Reset Filters"
-                                    variant="primary"
-                                    size="small"
-                                    fullWidth={false}
-                                    onPress={() => {
-                                        setSearchQuery("");
-                                        handleFilterChange(undefined);
-                                    }}
-                                    style={{ marginTop: 16 }}
-                                />
-                            </View>
+                            <ProductsComingSoon
+                                title="Fresh products are coming soon"
+                                description="We are stocking up exciting products. In the meantime, continue discovering services and inspirations in Explore."
+                                buttonLabel="Go to Explore"
+                                onButtonPress={navigateToExplore}
+                            />
                         }
                     />
                 </>
@@ -654,6 +655,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 6,
         minHeight: 40,
+        maxHeight: 40,
         marginBottom: 30,
         borderRadius: 8,
         backgroundColor: COLORS.GREY[100],
@@ -700,10 +702,9 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     filtersContainer: {
-        marginBottom: 20,
+        marginBottom: 0,
     },
     filtersContent: {
-        paddingHorizontal: 16,
         gap: 12,
     },
     headerTitle: {
@@ -832,19 +833,6 @@ const styles = StyleSheet.create({
     },
     cartCounter: {
         alignSelf: "center",
-    },
-    emptyContainer: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 60,
-    },
-    emptyText: {
-        marginTop: 16,
-        fontWeight: "600",
-    },
-    emptySubtext: {
-        marginTop: 4,
     },
     // New pagination-related styles
     loadingFooter: {

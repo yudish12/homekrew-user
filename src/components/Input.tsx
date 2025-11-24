@@ -34,7 +34,8 @@ interface InputProps extends Omit<TextInputProps, "secureTextEntry"> {
     error?: string;
     regex?: RegExp;
     required?: boolean;
-    containerStyle?: ViewStyle;
+    containerStyle?: ViewStyle | ViewStyle[];
+    inputContainerStyle?: ViewStyle | ViewStyle[];
     inputStyle?: TextStyle;
     labelStyle?: TextStyle;
     errorStyle?: TextStyle;
@@ -53,6 +54,7 @@ export const Input: React.FC<InputProps> = ({
     regex,
     required = false,
     containerStyle,
+    inputContainerStyle,
     inputStyle,
     labelStyle,
     disabled,
@@ -182,6 +184,7 @@ export const Input: React.FC<InputProps> = ({
                     styles.inputContainer,
                     isFocused && styles.inputContainerFocused,
                     hasError && styles.inputContainerError,
+                    inputContainerStyle,
                 ]}
             >
                 {icon && iconPosition === "left" && (

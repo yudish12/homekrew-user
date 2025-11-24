@@ -344,8 +344,9 @@ const EditProfileScreen = () => {
             if (!params.isUserNameEditable) {
                 delete formData.userName;
             }
+
             const response = await AuthServices.editUserProfile(formData);
-            console.log(response);
+
             if (response.success && response.data && user) {
                 dispatch(
                     setUser({
@@ -574,15 +575,17 @@ const EditProfileScreen = () => {
                         label="Phone Number"
                         placeholder="Enter your phone number"
                         value={formData.phoneNumber}
-                        onChangeText={value =>
-                            handleInputChange("phoneNumber", value)
-                        }
+                        disabled={true}
                         maxLength={10}
                         error={formErrors.phoneNumber}
                         required
                         keyboardType="phone-pad"
                         autoComplete="tel"
-                        containerStyle={styles.inputContainer}
+                        inputContainerStyle={{
+                            backgroundColor: COLORS.GREY[100],
+                            opacity: 0.5,
+                        }}
+                        containerStyle={[styles.inputContainer]}
                     />
 
                     <EmailInput

@@ -18,6 +18,7 @@ import Header from "../../../components/header";
 import { ServiceTemplate as ServiceTemplateType } from "../../../types/home-data";
 import { ServiceCategoryUtil } from "../../../services";
 import { BackButton } from "../../../components/BackButton";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
 
@@ -31,10 +32,22 @@ const ServiceTemplate = () => {
     const [loading, setLoading] = useState(true);
     const [isImageViewVisible, setIsImageViewVisible] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+    console.log(serviceTemplate);
     const handleBookNow = () => {
         // Handle booking logic
-        navigation.navigate("ServiceBooking", { serviceId, serviceTemplateId });
+        navigation.navigate("ServiceBooking", {
+            serviceId,
+            serviceTemplateId,
+            pricingData: {
+                maxPrice: serviceTemplate?.pricingGuidelines.maxPrice || 0,
+                basePrice: serviceTemplate?.pricing?.basePrice || 0,
+                currency: "INR",
+                platformFee: serviceTemplate?.pricing?.platformFee ?? 0,
+                taxAmount: serviceTemplate?.pricing?.taxAmount ?? 0,
+                membershipDiscount:
+                    serviceTemplate?.pricing?.membershipDiscount || 0,
+            },
+        });
     };
 
     const handleImagePress = (index: number) => {
@@ -82,6 +95,68 @@ const ServiceTemplate = () => {
         fetchServiceTemplateDetails();
     }, [fetchServiceTemplateDetails]);
 
+    const formatPrice = (price: number, currency: string) => {
+        const currencySymbol = currency === "INR" ? "₹" : currency;
+        return `${currencySymbol}${price}`;
+    };
+
+    const renderPriceRange = () => {
+        const pricing = serviceTemplate?.pricing;
+        const mx = serviceTemplate?.pricingGuidelines.maxPrice || 0;
+        if (!pricing) return null;
+
+        const minPrice = formatPrice(pricing.basePrice, "INR");
+        const maxPrice = formatPrice(mx, "INR");
+
+        return (
+            <View style={styles.priceRangeContainer}>
+                <Typography
+                    variant="caption"
+                    color={COLORS.TEXT.LIGHT}
+                    style={styles.priceLabel}
+                >
+                    Price
+                </Typography>
+                <Typography
+                    variant="h3"
+                    color={COLORS.primary}
+                    style={styles.priceRange}
+                >
+                    {minPrice}
+                </Typography>
+            </View>
+        );
+    };
+
+    const renderRatings = () => {
+        const rating = serviceTemplate?.averageRating || 0;
+        const totalRatings = serviceTemplate?.totalRatings || 0;
+
+        if (!rating && !totalRatings) return null;
+
+        return (
+            <View style={styles.ratingsContainer}>
+                <View style={styles.ratingBadge}>
+                    <Ionicons name="star" size={16} color={COLORS.WHITE} />
+                    <Typography
+                        variant="body"
+                        color={COLORS.WHITE}
+                        style={styles.ratingText}
+                    >
+                        {rating.toFixed(1)}
+                    </Typography>
+                </View>
+                <Typography
+                    variant="body"
+                    color={COLORS.TEXT.LIGHT}
+                    style={styles.totalRatingsText}
+                >
+                    ({totalRatings} {totalRatings === 1 ? "rating" : "ratings"})
+                </Typography>
+            </View>
+        );
+    };
+
     if (loading)
         return (
             <View
@@ -99,28 +174,20 @@ const ServiceTemplate = () => {
         <SafeAreaView style={styles.container}>
             <View
                 style={{
-                    justifyContent: "center",
-                    paddingHorizontal: 10,
+                    display: "flex",
+                    flexDirection: "row",
                     alignItems: "center",
-
-                    backgroundColor: "transparent",
+                    gap: 10,
+                    paddingTop: 8,
                 }}
             >
-                <Header
-                    title={serviceTemplate?.title ?? ""}
-                    backButton={false}
-                    style={{
-                        shadowOpacity: 0,
-                        shadowOffset: { width: 0, height: 0 },
-                        shadowRadius: 0,
-                        shadowColor: "transparent",
-                    }}
-                    titleStyle={{ width: "80%" }}
-                    backHandler={() => navigation.goBack()}
-                    showLogo={false}
-                    backButtonStyle={{ top: 5 }}
+                <BackButton
+                    backButtonStyle={{ position: "static" }}
+                    onPress={() => navigation.goBack()}
                 />
-                <BackButton onPress={() => navigation.goBack()} />
+                <Typography variant="h5" color={COLORS.TEXT.DARK}>
+                    {serviceTemplate?.title}
+                </Typography>
             </View>
             <ScrollView
                 style={styles.scrollView}
@@ -139,6 +206,11 @@ const ServiceTemplate = () => {
 
                 {/* Service Details Section */}
                 <View style={styles.serviceDetailsSection}>
+                    <View style={styles.priceAndRatingRow}>
+                        {renderPriceRange()}
+                        {renderRatings()}
+                    </View>
+
                     <View style={styles.serviceInfo}>
                         <Typography
                             variant="h4"
@@ -155,34 +227,6 @@ const ServiceTemplate = () => {
                             {serviceTemplate?.description}
                         </Typography>
                     </View>
-
-                    <View style={styles.priceAndButton}>
-                        <Typography
-                            variant="h3"
-                            color={COLORS.primary}
-                            style={styles.price}
-                        >
-                            {serviceTemplate?.formattedPrice}
-                        </Typography>
-                    </View>
-                </View>
-
-                {/* About Me Section */}
-                <View style={styles.aboutSection}>
-                    <Typography
-                        variant="h4"
-                        color={COLORS.TEXT.DARK}
-                        style={styles.sectionTitle}
-                    >
-                        About me
-                    </Typography>
-                    <Typography
-                        variant="body"
-                        color={COLORS.TEXT.DARK}
-                        style={styles.description}
-                    >
-                        {serviceTemplate?.description}
-                    </Typography>
                 </View>
 
                 {/* Photo & Videos Section */}
@@ -247,16 +291,18 @@ const styles = StyleSheet.create({
         height: "100%",
     },
     serviceDetailsSection: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
+        flexDirection: "column",
         paddingHorizontal: 16,
         paddingVertical: 20,
         backgroundColor: COLORS.WHITE,
     },
+    priceAndRatingRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+    },
     serviceInfo: {
-        flex: 1,
-        marginRight: 16,
+        marginTop: 16,
     },
     serviceTitle: {
         fontWeight: "700",
@@ -265,12 +311,51 @@ const styles = StyleSheet.create({
     providerName: {
         fontWeight: "400",
     },
+    ratingsContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
+    ratingBadge: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 20,
+        gap: 4,
+    },
+    ratingText: {
+        fontWeight: "700",
+        fontSize: 14,
+    },
+    totalRatingsText: {
+        fontSize: 13,
+        fontWeight: "500",
+    },
     priceAndButton: {
         alignItems: "flex-end",
     },
     price: {
         fontWeight: "700",
         marginBottom: 12,
+    },
+    priceRangeContainer: {
+        alignItems: "flex-start",
+    },
+    priceLabel: {
+        fontSize: 12,
+        marginBottom: 6,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+    },
+    priceRange: {
+        fontWeight: "700",
+        marginBottom: 6,
+    },
+    priceType: {
+        fontSize: 11,
+        fontStyle: "italic",
     },
     addButton: {
         backgroundColor: COLORS.primary,

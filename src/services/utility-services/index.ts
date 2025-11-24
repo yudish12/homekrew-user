@@ -101,4 +101,95 @@ export class UtilityServices {
             status: 200,
         };
     }
+
+    static async rateVendor(
+        bookingId: string,
+        rating: number,
+        review: string,
+    ): Promise<ApiResponse<any>> {
+        const response = await api.post(`${this.BASE_URL}/rating`, {
+            itemId: bookingId,
+            itemType: "Vendor",
+            rating,
+            comment: review,
+            sourceId: bookingId,
+            sourceType: "Booking",
+        });
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Vendor rated successfully",
+            status: 200,
+        };
+    }
+
+    static async rateServiceTemplate(
+        bookingId: string,
+        rating: number,
+        review: string,
+    ): Promise<ApiResponse<any>> {
+        const response = await api.post(`${this.BASE_URL}/rating`, {
+            itemId: bookingId,
+            itemType: "Booking",
+            rating,
+            comment: review,
+            sourceId: bookingId,
+            sourceType: "Booking",
+        });
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Service template rated successfully",
+            status: 200,
+        };
+    }
+
+    static async rateProduct(
+        productId: string,
+        orderId: string,
+        rating: number,
+        review: string,
+    ): Promise<ApiResponse<any>> {
+        const response = await api.post(`${this.BASE_URL}/rating`, {
+            itemId: productId,
+            itemType: "Product",
+            rating,
+            comment: review,
+            sourceId: orderId,
+            sourceType: "Order",
+        });
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Product rated successfully",
+            status: 200,
+        };
+    }
 }

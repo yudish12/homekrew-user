@@ -128,7 +128,7 @@ const OrderHistoryComponent: React.FC = () => {
                     Qty: {item.quantity}
                 </BodySmall>
             </View>
-            <BodySmall style={styles.itemPrice}>${item.price}</BodySmall>
+            <BodySmall style={styles.itemPrice}>₹{item.price}</BodySmall>
         </View>
     );
 
@@ -215,7 +215,7 @@ const OrderHistoryComponent: React.FC = () => {
                     <BodySmall style={styles.totalLabel}>
                         Total Amount
                     </BodySmall>
-                    <H4 style={styles.totalAmount}>${order.totalAmount}</H4>
+                    <H4 style={styles.totalAmount}>₹{order.totalAmount}</H4>
                 </View>
                 <TouchableOpacity style={styles.actionButton}>
                     <BodySmall style={styles.actionButtonText}>

@@ -140,14 +140,34 @@ const AllServices = () => {
         setFilteredChildCategories(temp);
     }, [selectedFilter, allChildCategories, searchQuery]);
 
-    const handleServicePress = (serviceId: string, serviceName: string) => {
+    const handleServicePress = (
+        serviceId: string,
+        serviceName: string,
+        image: string,
+        description: string,
+    ) => {
         // Navigate to service details
-        navigation.navigate("ServiceDetails", { serviceId, serviceName });
+        navigation.navigate("ServiceDetails", {
+            serviceId,
+            serviceName,
+            image,
+            description,
+        });
     };
 
-    const handleAddPress = (serviceId: string, serviceName: string) => {
+    const handleAddPress = (
+        serviceId: string,
+        serviceName: string,
+        image: string,
+        description: string,
+    ) => {
         // Add to cart logic
-        navigation.navigate("ServiceDetails", { serviceId, serviceName });
+        navigation.navigate("ServiceDetails", {
+            serviceId,
+            serviceName,
+            image,
+            description,
+        });
     };
 
     const renderServiceCard = ({
@@ -159,8 +179,22 @@ const AllServices = () => {
             title={item.name}
             provider={item.description}
             image={item.image}
-            onPress={() => handleServicePress(item.parentId, item.name)}
-            onAddPress={() => handleAddPress(item.parentId, item.name)}
+            onPress={() =>
+                handleServicePress(
+                    item.parentId,
+                    item.name,
+                    item.image,
+                    item.description,
+                )
+            }
+            onAddPress={() =>
+                handleAddPress(
+                    item.parentId,
+                    item.name,
+                    item.image,
+                    item.description,
+                )
+            }
         />
     );
 
@@ -303,7 +337,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: COLORS.WHITE,
-        borderWidth: 2,
     },
     header: {
         flexDirection: "row",

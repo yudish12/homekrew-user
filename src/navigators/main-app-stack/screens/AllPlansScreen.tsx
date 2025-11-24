@@ -13,12 +13,15 @@ import { Typography } from "../../../components/Typography";
 import { CustomIcon } from "../../../components/CustomIcon";
 import { SkeletonLoader } from "../../../components/SkeletonLoader";
 import { COLORS, WEIGHTS } from "../../../constants/ui";
-import { MembershipPlan } from "../../../types";
-import { MembershipPlansServices } from "../../../services";
+import { AppDispatch, MembershipPlan } from "../../../types";
+import { AuthServices, MembershipPlansServices } from "../../../services";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { fontFamily } from "../../../lib";
 import RazorpayCheckout from "react-native-razorpay";
 import { showErrorToast, showSuccessToast } from "../../../components/Toast";
+import { setUser } from "../../../redux/actions/auth";
+import { User } from "../../../types/user";
+import { useDispatch } from "react-redux";
 
 // Enhanced Membership Card Component for List View
 const MembershipPlanCard: React.FC<{
@@ -243,6 +246,8 @@ const MembershipDetailView: React.FC<{
         }
     };
 
+    const dispatch = useDispatch<AppDispatch>();
+
     const formatPrice = (price: number): string => {
         return `₹${price.toLocaleString("en-IN")}`;
     };
@@ -258,7 +263,7 @@ const MembershipDetailView: React.FC<{
             plan?._id ?? "",
         );
         if (response.success) {
-            RazorpayCheckout.open({
+            await RazorpayCheckout.open({
                 key: "rzp_test_M1Ad7casmGNZTV",
                 amount: (response.data?.amount ?? 0) / 100,
                 currency: "INR",
@@ -270,6 +275,18 @@ const MembershipDetailView: React.FC<{
                 description:
                     "Payment to buy products delivered right at your registered address ",
             });
+
+            const authResp = await AuthServices.selfVerification();
+            if (authResp.success) {
+                dispatch(setUser(authResp.data as User));
+                navigation.reset({
+                    index: 0,
+                    routes: [
+                        { name: "BottomTabs", params: { screen: "Home" } },
+                    ],
+                });
+            }
+
             setBuyLoading(false);
             showSuccessToast("Plan purchased successfully");
             setTimeout(() => {

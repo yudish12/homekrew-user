@@ -1,4 +1,5 @@
 import { CART_ACTIONS } from "../../constants";
+import { Coupon } from "../../types";
 
 export const addToCart = (
     id: string,
@@ -6,6 +7,7 @@ export const addToCart = (
     singleItemPrice: number,
     image: string,
     name: string,
+    platformFee: number,
 ) => {
     return {
         type: CART_ACTIONS.ADD_TO_CART,
@@ -15,6 +17,7 @@ export const addToCart = (
             singleItemPrice,
             image,
             name,
+            platformFee,
         },
     };
 };
@@ -23,6 +26,19 @@ export const removeFromCart = (id: string) => {
     return {
         type: CART_ACTIONS.REMOVE_FROM_CART,
         payload: id,
+    };
+};
+
+export const applyCoupon = (couponCode: Coupon) => {
+    return {
+        type: CART_ACTIONS.APPLY_COUPON,
+        payload: couponCode,
+    };
+};
+
+export const removeCoupon = () => {
+    return {
+        type: CART_ACTIONS.REMOVE_COUPON,
     };
 };
 

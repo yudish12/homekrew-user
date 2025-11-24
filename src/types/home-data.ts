@@ -25,8 +25,14 @@ export interface Product {
     name: string;
     price: number;
     category: ProductCategory;
+    discountPrice: number;
     stock: number;
     sku: string;
+    pricing: {
+        basePrice: number;
+        platformFee: number;
+        price: number;
+    };
     isDeleted: boolean;
     isActive: boolean;
     status: string;
@@ -72,12 +78,22 @@ export interface ServiceTemplate {
     images: string[];
     subCategory: ServiceChildCategory;
     pricingGuidelines: {
-        basePrice: number;
-        currency: string;
-        priceType: string;
+        maxPrice: number;
     };
+    pricing: {
+        basePrice: number;
+        couponDiscount: number;
+        discountAmount: number;
+        finalPrice: number;
+        membershipDiscount: number;
+        platformFee: number;
+        taxAmount: number;
+        totalAmount: number;
+    };
+    commissionRate?: number;
     estimatedDuration: {
         unit: string;
+        value: number;
     };
     tags: [];
     seo: {
@@ -96,6 +112,8 @@ export interface ServiceTemplate {
         isBookable: boolean;
         status: string;
     };
+    averageRating?: number;
+    totalRatings?: number;
 }
 
 export interface ProductCategory {

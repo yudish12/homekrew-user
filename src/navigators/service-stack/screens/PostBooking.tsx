@@ -8,7 +8,13 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
-import { H3, Body, Caption, H4 } from "../../../components/Typography";
+import {
+    H3,
+    Body,
+    Caption,
+    H4,
+    BodySmall,
+} from "../../../components/Typography";
 import { COLORS } from "../../../constants/ui";
 import { Button, OutlineButton } from "../../../components/Button";
 import { CustomIcon } from "../../../components/CustomIcon";
@@ -18,13 +24,19 @@ import uiUtils from "../../../utils/ui";
 import Header from "../../../components/header";
 import { OrdersServices } from "../../../services/orders";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { showErrorToast } from "../../../components/Toast";
+import { showErrorToast, showToast } from "../../../components/Toast";
 import { BookingHistory } from "../../../types/services/orders";
 import { ErrorModal, SuccessModal } from "../../../components/Modal";
+import { RatingUI } from "../../../modules/booking/rating-ui";
+import { RatingModal } from "../../../modules/booking/rating-modal";
+import { fontFamily } from "../../../lib";
+import { UtilityServices } from "../../../services/utility-services";
 
 // Type for the booking status response
 interface BookingStatusResponse {
     _id: string;
+    isVendorRated: boolean;
+    isServiceTemplateRated: boolean;
     status: string;
     paymentStatus: string;
     date: string;
@@ -59,6 +71,7 @@ interface BookingStatusResponse {
         name: string;
         category: string;
         subCategory: string;
+        image: string | null;
     };
     assignedVendor?: {
         _id: string;
@@ -207,8 +220,25 @@ const PricingBreakdown: React.FC<{
     </View>
 );
 
-const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
+const VendorCard: React.FC<{
+    vendor: any;
+    booking: BookingStatusResponse;
+    setBookingData: React.Dispatch<
+        React.SetStateAction<BookingStatusResponse | null>
+    >;
+}> = ({ vendor, booking, setBookingData }) => {
     if (!vendor) return null;
+
+    const [rating, setRating] = useState<number>(0);
+    const [review, setReview] = useState<string>("");
+
+    const handleRatingSubmit = () => {
+        UtilityServices.rateVendor(booking._id, rating, review);
+        setBookingData({
+            ...booking,
+            isVendorRated: true,
+        });
+    };
 
     const makeCall = (phoneNumber: string) => {
         console.log(phoneNumber);
@@ -260,28 +290,71 @@ const VendorCard: React.FC<{ vendor: any }> = ({ vendor }) => {
                             style={{ marginLeft: 4 }}
                             color={COLORS.GREY[500]}
                         >
-                            {vendor.phoneNumber}
+                            {booking.paymentStatus !== "paid"
+                                ? vendor.phoneNumber
+                                : `*** **** ${vendor.phoneNumber.slice(
+                                      7,
+                                      10,
+                                  )} `}
                         </Caption>
                     </View>
                 </View>
             </View>
 
-            <View style={{ flexDirection: "row", marginTop: 12 }}>
-                <Button
-                    onPress={() => makeCall(vendor.phoneNumber)}
-                    title="Call"
-                    style={{ flex: 1 }}
-                    icon={
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="call"
-                            size={18}
-                            color={COLORS.WHITE}
+            {booking.status === "completed" &&
+            booking.paymentStatus === "paid" ? (
+                <>
+                    {booking.isVendorRated ? (
+                        <View
+                            style={{
+                                backgroundColor: uiUtils.color.addAlpha(
+                                    COLORS.GREEN[700],
+                                    0.1,
+                                ),
+                                padding: 12,
+                                borderRadius: 8,
+                            }}
+                        >
+                            <Caption
+                                style={{
+                                    textAlign: "center",
+                                    fontFamily: fontFamily.medium,
+                                    fontSize: 13,
+                                }}
+                                color={COLORS.GREEN[700]}
+                            >
+                                We have captured the feedback for {vendor.name}{" "}
+                                and will share it with him/her soon.
+                            </Caption>
+                        </View>
+                    ) : (
+                        <RatingUI
+                            rating={rating}
+                            review={review}
+                            setRating={setRating}
+                            setReview={setReview}
+                            onSubmit={handleRatingSubmit}
                         />
-                    }
-                />
-                <View style={{ width: 12 }} />
-            </View>
+                    )}
+                </>
+            ) : (
+                <View style={{ flexDirection: "row", marginTop: 12 }}>
+                    <Button
+                        onPress={() => makeCall(vendor.phoneNumber)}
+                        title="Call"
+                        style={{ flex: 1 }}
+                        icon={
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="call"
+                                size={18}
+                                color={COLORS.WHITE}
+                            />
+                        }
+                    />
+                    <View style={{ width: 12 }} />
+                </View>
+            )}
         </View>
     );
 };
@@ -434,11 +507,13 @@ const PostBooking: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [paymentLoading, setPaymentLoading] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-
+    const [showRatingModal, setShowRatingModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
 
     const params = useRoute()?.params as { bookingId?: string } | undefined;
+
+    console.log(bookingData);
 
     const fetchBookingStatus = async () => {
         try {
@@ -470,6 +545,12 @@ const PostBooking: React.FC = () => {
     }, [params?.bookingId]);
 
     useEffect(() => {
+        if (
+            bookingData?.status === "completed" &&
+            !bookingData.isServiceTemplateRated
+        ) {
+            setShowRatingModal(true);
+        }
         if (
             bookingData?.status === "completed" &&
             bookingData.paymentStatus === "paid" &&
@@ -515,6 +596,14 @@ const PostBooking: React.FC = () => {
         } finally {
             setPaymentLoading(false);
         }
+    };
+
+    const handleRatingSubmit = async (rating: number, review: string) => {
+        UtilityServices.rateServiceTemplate(
+            bookingData?._id ?? "",
+            rating,
+            review,
+        );
     };
 
     const handleSuccessClose = () => {
@@ -564,7 +653,11 @@ const PostBooking: React.FC = () => {
                 <HeaderStatus booking={bookingData} />
 
                 {bookingData.assignedVendor && (
-                    <VendorCard vendor={bookingData.assignedVendor} />
+                    <VendorCard
+                        vendor={bookingData.assignedVendor}
+                        booking={bookingData}
+                        setBookingData={setBookingData}
+                    />
                 )}
                 {/* Booking ID Card */}
                 <View style={styles.bookingIdCard}>
@@ -622,6 +715,25 @@ const PostBooking: React.FC = () => {
                 message={
                     "We couldn't process your payment. Please check your payment details and try again."
                 }
+            />
+            <RatingModal
+                visible={showRatingModal}
+                onClose={() => setShowRatingModal(false)}
+                onSubmit={(rating, review) => {
+                    handleRatingSubmit(rating, review);
+                    setShowRatingModal(false);
+                    showToast({
+                        type: "success",
+                        title: "Rating submitted successfully",
+                        message: "Thank you for your feedback!",
+                    });
+                    setBookingData({
+                        ...bookingData,
+                        isServiceTemplateRated: true,
+                    });
+                }}
+                templateImage={bookingData.service?.image ?? ""}
+                templateName={bookingData.service?.name ?? ""}
             />
         </SafeAreaView>
     );

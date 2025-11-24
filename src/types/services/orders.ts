@@ -15,6 +15,7 @@ export interface BookingData {
     timeSlot: string;
     address: string;
     specialRequirements: string;
+    appliedCoupon?: string;
 }
 
 export interface BookingResponse {

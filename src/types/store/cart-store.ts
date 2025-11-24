@@ -1,3 +1,5 @@
+import { Coupon } from "../cart";
+
 export interface CartItem {
     id: string;
     quantity: number;
@@ -9,6 +11,8 @@ export interface CartItem {
 export interface CartState {
     items: CartItem[];
     totalPrice: number;
+    platformFee: number;
     isLoading: boolean;
     totalQuantity: number;
+    coupon: Coupon | undefined;
 }

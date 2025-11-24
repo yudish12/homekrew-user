@@ -78,9 +78,10 @@ const ProductDetail = () => {
             addToCart(
                 productData._id,
                 1,
-                productData.price || 0,
+                productData.discountPrice || 0,
                 productData?.productImages?.[0],
                 productData.name,
+                productData.pricing.platformFee,
             ),
         );
     };
@@ -179,14 +180,13 @@ const ProductDetail = () => {
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => {
-                        const route =
-                            navigation.getState().routes[
-                                navigation.getState().index - 1
-                            ];
-                        navigation.reset({
-                            index: 0,
-                            routes: [{ name: route.name }],
-                        });
+                        if (navigation.canGoBack()) {
+                            navigation.goBack();
+                        } else {
+                            navigation.navigate("ProductStack", {
+                                screen: "ProductsLanding",
+                            });
+                        }
                     }}
                     activeOpacity={0.7}
                 >
@@ -333,13 +333,28 @@ const ProductDetail = () => {
                         </Typography>
 
                         <View style={styles.priceSection}>
-                            <Typography
-                                variant="h2"
-                                color={COLORS.primary}
-                                style={styles.price}
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                    gap: 8,
+                                }}
                             >
-                                ${productData.price?.toFixed(2) || "0.00"}
-                            </Typography>
+                                <Typography variant="h3" color={COLORS.primary}>
+                                    ₹
+                                    {productData.discountPrice?.toFixed(2) ||
+                                        "0.00"}
+                                </Typography>
+                                <Typography
+                                    variant="h6"
+                                    style={{
+                                        textDecorationLine: "line-through",
+                                    }}
+                                    color={COLORS.GREY[500]}
+                                >
+                                    ₹{productData.price?.toFixed(2) || "0.00"}
+                                </Typography>
+                            </View>
 
                             {/* Stock status */}
                             <View
@@ -705,6 +720,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
+        paddingTop: 12,
     },
     price: {
         fontWeight: "800",

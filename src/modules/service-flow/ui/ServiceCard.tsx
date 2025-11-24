@@ -5,20 +5,23 @@ import {
     Image,
     TouchableOpacity,
     ViewStyle,
-    ImageSourcePropType,
+    Text,
 } from "react-native";
 import { COLORS, WEIGHTS } from "../../../constants/ui";
 import { Typography } from "../../../components/Typography";
 import { CustomIcon } from "../../../components/CustomIcon";
+import { fontFamily } from "../../../lib";
 
 export interface ServiceCardProps {
     image?: string;
     title: string;
     provider: string;
     originalPrice?: string;
+    maxPrice?: string;
     discountedPrice?: string;
     rating?: number;
     buttonText?: string;
+    showPrice?: boolean;
     buttonIconName?: string;
     onPress?: () => void;
     onAddPress?: () => void;
@@ -33,7 +36,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
     title,
     provider,
     originalPrice,
+    maxPrice,
     discountedPrice,
+    showPrice = false,
     rating = 0,
     onPress,
     onAddPress,
@@ -75,22 +80,14 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
                         {provider}
                     </Typography>
 
-                    {originalPrice && discountedPrice && (
+                    {showPrice && (
                         <View style={styles.pricingRow}>
-                            <Typography
-                                variant="caption"
-                                color={COLORS.GREY[400]}
-                                style={styles.originalPrice}
-                            >
+                            {maxPrice && (
+                                <Text style={styles.maxPrice}>{maxPrice}</Text>
+                            )}
+                            <Text style={styles.basePrice}>
                                 {originalPrice}
-                            </Typography>
-                            <Typography
-                                variant="body"
-                                color="#FF6B35"
-                                style={styles.discountedPrice}
-                            >
-                                {discountedPrice}
-                            </Typography>
+                            </Text>
                         </View>
                     )}
                 </View>
@@ -168,13 +165,28 @@ const styles = StyleSheet.create({
     },
     pricingRow: {
         flexDirection: "row",
-        alignItems: "baseline",
-        gap: 6,
-        marginTop: 4,
+        alignItems: "center",
+        gap: 8,
+        marginTop: 6,
+    },
+    maxPrice: {
+        fontSize: 12,
+        color: COLORS.GREY[400],
+        textDecorationLine: "line-through",
+        textDecorationStyle: "solid",
+        fontFamily: fontFamily.medium,
+    },
+    basePrice: {
+        fontSize: 14,
+        fontFamily: fontFamily.semiBold,
+        color: COLORS.GREY[500],
     },
     originalPrice: {
-        textDecorationLine: "line-through",
         fontSize: 11,
+    },
+    priceText: {
+        fontFamily: fontFamily.semiBold,
+        fontSize: 12,
     },
     discountedPrice: {
         fontWeight: WEIGHTS.BOLD,

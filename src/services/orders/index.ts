@@ -1,5 +1,5 @@
 import { api } from "../../lib";
-import { ApiResponse } from "../../types";
+import { ApiResponse, Coupon, CouponResponse } from "../../types";
 import {
     BookingData,
     BookingHistory,
@@ -143,6 +143,30 @@ export class OrdersServices {
             success: true,
             data: response.data,
             message: "Booking status fetched successfully",
+            status: 200,
+        };
+    }
+
+    static async getCoupons(
+        type: "service" | "product",
+        id: string,
+    ): Promise<ApiResponse<CouponResponse>> {
+        const response = await api.get(
+            `${this.BASE_URL}/coupons/${type}/${id}`,
+        );
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Coupons fetched successfully",
             status: 200,
         };
     }

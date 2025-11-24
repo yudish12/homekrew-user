@@ -39,6 +39,7 @@ import { MembershipStatusBadge } from "../../../modules/home/ui/MembershipBadge"
 import FeaturedServiceTemplate from "../../../modules/home/ui/FeaturedServiceTemplate";
 import { ProductsServices } from "../../../services/products";
 import FeaturedProducts from "../../../modules/home/ui/FeaturedProducts";
+import { ProductsComingSoon } from "../../../modules/products/ProductsComingSoon";
 
 // Define the ActiveBooking interface
 interface ActiveBooking {
@@ -492,7 +493,15 @@ const Home = () => {
                             })
                         }
                     />
-                ) : null}
+                ) : (
+                    <ProductsComingSoon
+                        title="Products launching soon"
+                        description="We are adding a curated collection of products very soon. Until then, explore services tailor-made for you."
+                        buttonLabel="Explore more"
+                        onButtonPress={() => navigation.navigate("Explore")}
+                        style={{ marginTop: 16 }}
+                    />
+                )}
 
                 {/* Active Bookings Nudge with Loading State */}
                 {activeBookingsLoading ? (

@@ -6,6 +6,8 @@ export const CartInitialState: CartState = {
     totalPrice: 0,
     isLoading: false,
     totalQuantity: 0,
+    platformFee: 0,
+    coupon: undefined,
 };
 
 export const cartReducer = (state = CartInitialState, action: any) => {
@@ -19,6 +21,7 @@ export const cartReducer = (state = CartInitialState, action: any) => {
                 items: [...state.items, action.payload],
                 totalPrice: newPrice,
                 totalQuantity: state.totalQuantity + action.payload.quantity,
+                platformFee: action.payload.platformFee,
             };
         case CART_ACTIONS.REMOVE_FROM_CART:
             const item = state.items.find(item => item.id === action.payload);
@@ -52,6 +55,10 @@ export const cartReducer = (state = CartInitialState, action: any) => {
             };
         case CART_ACTIONS.CLEAR_CART:
             return { ...state, items: [], totalPrice: 0, totalQuantity: 0 };
+        case CART_ACTIONS.APPLY_COUPON:
+            return { ...state, coupon: action.payload };
+        case CART_ACTIONS.REMOVE_COUPON:
+            return { ...state, coupon: undefined };
         default:
             return state;
     }

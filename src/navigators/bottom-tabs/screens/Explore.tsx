@@ -24,6 +24,7 @@ import { ProductsServices } from "../../../services/products";
 import { CustomIcon } from "../../../components/CustomIcon";
 import ServiceCard from "../../../modules/home/ui/ServiceCard";
 import SearchBar from "../../../components/SearchBar";
+import { ProductsComingSoon } from "../../../modules/products/ProductsComingSoon";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2; // 2 columns with padding
@@ -188,21 +189,13 @@ const Explore = () => {
 
         if (products.length === 0) {
             return (
-                <View style={styles.emptyContainer}>
-                    <CustomIcon
-                        provider="Ionicons"
-                        name="cube-outline"
-                        size={48}
-                        color={COLORS.GREY[400]}
-                    />
-                    <Typography
-                        variant="bodySmall"
-                        color={COLORS.GREY[500]}
-                        style={styles.emptyText}
-                    >
-                        No products available
-                    </Typography>
-                </View>
+                <ProductsComingSoon
+                    title="Products are on their way"
+                    description="We are polishing the product catalog. For now, continue booking services you love."
+                    buttonLabel="Browse services"
+                    onButtonPress={handleSeeAllServices}
+                    style={{ marginTop: 12 }}
+                />
             );
         }
 

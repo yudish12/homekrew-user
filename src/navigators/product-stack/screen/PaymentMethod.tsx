@@ -19,6 +19,7 @@ import { getOrderSummary } from "../../../redux/selectors";
 import { BookOrderRequest } from "../../../types/services/orders";
 import { RootState } from "../../../types";
 import { useNavigation } from "@react-navigation/native";
+import { BackButton } from "../../../components/BackButton";
 
 // Types
 interface PaymentMethod {
@@ -101,7 +102,7 @@ const PaymentMethod: React.FC = () => {
                     price: item.singleItemPrice,
                     quantity: item.quantity,
                 })),
-                couponCode: undefined,
+                couponCode: orderSummary.coupon?.code,
                 address: selectedAddress?._id ?? "",
                 paymentMethod: selectedMethod,
                 customer: {
@@ -212,12 +213,18 @@ const PaymentMethod: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <BackButton
+                backButtonStyle={{ position: "static", marginBottom: 0 }}
+                onPress={() => navigation.goBack()}
+            />
             {/* Header */}
             <View style={styles.header}>
-                <H3>Payment Method</H3>
-                <BodySmall style={styles.subtitle}>
-                    Choose your preferred payment option
-                </BodySmall>
+                <View>
+                    <H3>Payment Method</H3>
+                    <BodySmall style={styles.subtitle}>
+                        Choose your preferred payment option
+                    </BodySmall>
+                </View>
             </View>
 
             <ScrollView
@@ -254,8 +261,16 @@ const PaymentMethod: React.FC = () => {
                     <View style={styles.summaryContainer}>
                         <View style={styles.summaryRow}>
                             <Body>Subtotal</Body>
-                            <Body>${orderSummary.subtotal}</Body>
+                            <Body>₹{orderSummary.subtotal}</Body>
                         </View>
+                        {orderSummary.coupon ? (
+                            <View style={styles.summaryRow}>
+                                <Body>Discount</Body>
+                                <Body color={COLORS.GREEN[700]}>
+                                    - ₹{orderSummary.discount}
+                                </Body>
+                            </View>
+                        ) : null}
                         <View style={styles.summaryRow}>
                             <Body>Delivery Fee</Body>
                             <Body style={styles.freeDelivery}>Free</Body>
@@ -264,7 +279,7 @@ const PaymentMethod: React.FC = () => {
                         <View style={styles.summaryRow}>
                             <H4>Total Amount</H4>
                             <H4 style={styles.totalAmount}>
-                                ${orderSummary.total}
+                                ₹{orderSummary.total}
                             </H4>
                         </View>
                     </View>
@@ -312,7 +327,7 @@ const PaymentMethod: React.FC = () => {
                         selectedMethodData?.type === "razorpay"
                             ? "Pay Now"
                             : "Place Order"
-                    } • $${orderSummary.total}`}
+                    } • ₹${orderSummary.total}`}
                     onPress={handlePayment}
                     fullWidth
                     disabled={isProcessing || !selectedAddress}
@@ -385,6 +400,7 @@ const styles = StyleSheet.create({
     scrollContainer: {
         flex: 1,
         paddingHorizontal: 20,
+        marginTop: 20,
     },
     header: {
         paddingHorizontal: 20,
@@ -563,8 +579,7 @@ const styles = StyleSheet.create({
         color: COLORS.TEXT.LIGHT,
     },
     paymentButtonContainer: {
-        marginTop: 20,
+        paddingVertical: 20,
         paddingHorizontal: 20,
-        marginBottom: 60,
     },
 });
