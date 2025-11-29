@@ -6,14 +6,18 @@ export interface AddressResponse {
 }
 
 export interface LocationDetailsResponse {
-    line1: string;
-    line2: string;
-    street: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-    landmark: string;
+    coordinates: {
+        latitude: number;
+        longitude: number;
+    };
+    location: {
+        city: string;
+        country: string;
+        formatted_address: string;
+        place_id: string;
+        postal_code: string;
+        state: string;
+    };
 }
 
 export interface SearchLocationResponse {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     StyleSheet,
     View,
@@ -8,9 +8,13 @@ import {
     Alert,
     Platform,
     KeyboardAvoidingView,
+    Modal as RNModal,
+    Dimensions,
+    Pressable,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library";
+import { Video, ResizeMode, AVPlaybackStatus } from "expo-av";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import {
     NavigationProp,
@@ -34,6 +38,11 @@ import { AppDispatch, RootState } from "../../../types";
 import { setUser } from "../../../redux/actions";
 import { uiUtils } from "../../../utils";
 import { User } from "../../../types/user";
+import {
+    getProfileVideoViewed,
+    setProfileVideoViewed,
+} from "../../../lib/storage/auth-storage";
+import { CustomIcon } from "../../../components/CustomIcon";
 
 interface ProfileFormData {
     firstName: string;
@@ -91,6 +100,10 @@ const EditProfileScreen = () => {
         type: string;
     }>();
     const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+    // Video modal states
+    const [showVideoModal, setShowVideoModal] = useState(false);
+    const videoRef = useRef<Video>(null);
 
     // Validation functions
     const validateForm = (): boolean => {
@@ -288,12 +301,11 @@ const EditProfileScreen = () => {
                 selectedImage,
             );
 
-            console.log(response);
-
             if (!response.success) {
                 Alert.alert(
                     "Error",
-                    "Failed to update profile picture. Please try again.",
+                    response.message ||
+                        "Failed to update profile picture. Please try again.",
                 );
                 return;
             }
@@ -410,8 +422,16 @@ const EditProfileScreen = () => {
             const cameraStatus =
                 await ImagePicker.requestCameraPermissionsAsync();
             setHasCameraPermission(cameraStatus.status === "granted");
+
+            // Check if video should be shown (only when backEnabled is false)
+            if (params.backEnabled === false) {
+                const videoViewed = await getProfileVideoViewed();
+                if (!videoViewed) {
+                    setShowVideoModal(true);
+                }
+            }
         })();
-    }, []);
+    }, [params.backEnabled]);
 
     const renderAvatar = () => {
         return (
@@ -441,6 +461,61 @@ const EditProfileScreen = () => {
                 </TouchableOpacity>
                 <Body style={styles.avatarHint}>Tap to change photo</Body>
             </View>
+        );
+    };
+
+    const handleCloseVideo = async () => {
+        // Pause video before closing
+        if (videoRef.current) {
+            await videoRef.current.pauseAsync();
+        }
+        setShowVideoModal(false);
+        await setProfileVideoViewed(true);
+    };
+
+    const renderVideoModal = () => {
+        return (
+            <RNModal
+                visible={showVideoModal}
+                animationType="fade"
+                presentationStyle="fullScreen"
+                onRequestClose={handleCloseVideo}
+            >
+                <View style={styles.videoContainer}>
+                    <Video
+                        ref={videoRef}
+                        source={{
+                            uri: "https://homekrew-storage.s3.ap-south-1.amazonaws.com/WhatsApp+Video+2025-11-29+at+16.51.00.mp4",
+                        }}
+                        style={styles.video}
+                        useNativeControls
+                        resizeMode={ResizeMode.CONTAIN}
+                        shouldPlay
+                        onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
+                            if (
+                                status.isLoaded &&
+                                status.didJustFinish &&
+                                !status.isLooping
+                            ) {
+                                handleCloseVideo();
+                            }
+                        }}
+                    />
+                    <Pressable
+                        style={styles.closeButton}
+                        onPress={handleCloseVideo}
+                    >
+                        <View style={styles.closeButtonInner}>
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="close"
+                                size={24}
+                                color={COLORS.WHITE}
+                            />
+                        </View>
+                    </Pressable>
+                </View>
+            </RNModal>
         );
     };
 
@@ -596,7 +671,6 @@ const EditProfileScreen = () => {
                             handleInputChange("email", value)
                         }
                         error={formErrors.email}
-                        required
                         autoCapitalize="none"
                         autoCorrect={false}
                         containerStyle={styles.inputContainer}
@@ -631,6 +705,9 @@ const EditProfileScreen = () => {
                     />
                 </View>
             </KeyboardAvoidingView>
+
+            {/* Video Modal */}
+            {renderVideoModal()}
 
             {/* Image Preview Modal */}
             {renderImagePreviewModal()}
@@ -766,6 +843,33 @@ const styles = StyleSheet.create({
     },
     secondaryButton: {
         flex: 1,
+    },
+    // Video modal styles
+    videoContainer: {
+        flex: 1,
+        backgroundColor: "#000000",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    video: {
+        width: Dimensions.get("window").width,
+        height: Dimensions.get("window").height,
+    },
+    closeButton: {
+        position: "absolute",
+        top: Platform.OS === "ios" ? 50 : 20,
+        right: 20,
+        zIndex: 1000,
+    },
+    closeButtonInner: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+        borderWidth: 1,
+        borderColor: COLORS.WHITE,
     },
 });
 

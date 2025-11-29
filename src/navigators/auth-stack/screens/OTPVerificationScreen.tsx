@@ -20,7 +20,8 @@ import { AppDispatch } from "../../../types";
 import { setUser } from "../../../redux/actions";
 import { AuthServices } from "../../../services/auth-services";
 import { showErrorToast } from "../../../components/Toast";
-import { setAuthToken } from "../../../lib";
+import { NotificationService, setAuthToken } from "../../../lib";
+import DeviceInfo from "react-native-device-info";
 
 interface OTPVerificationScreenProps {
     navigation: any;
@@ -72,6 +73,13 @@ const OTPVerificationScreen: React.FC<OTPVerificationScreenProps> = ({
             return;
         }
         await setAuthToken(response.data.accessToken ?? "");
+        const result = await NotificationService.requestPermission();
+        if (result) {
+            AuthServices.registerFcmToken(
+                DeviceInfo.getDeviceId(),
+                Platform.OS,
+            );
+        }
         setIsLoading(false);
         setShowSuccessModal(true);
         dispatch(setUser(response.data));

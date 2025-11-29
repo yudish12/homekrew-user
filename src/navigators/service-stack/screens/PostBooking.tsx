@@ -4,6 +4,7 @@ import {
     Linking,
     Platform,
     ScrollView,
+    StatusBar,
     StyleSheet,
     View,
 } from "react-native";
@@ -35,11 +36,16 @@ import { UtilityServices } from "../../../services/utility-services";
 // Type for the booking status response
 interface BookingStatusResponse {
     _id: string;
+    bookingId: string;
     isVendorRated: boolean;
     isServiceTemplateRated: boolean;
     status: string;
     paymentStatus: string;
     date: string;
+    otpDeatils: {
+        otp: string;
+        isVerified: boolean;
+    };
     timeSlot: string;
     progress: {
         step: number;
@@ -181,11 +187,11 @@ const PricingBreakdown: React.FC<{
                 ₹{pricing.basePrice}
             </Body>
         </View>
-        {pricing.discountAmount > 0 && (
+        {pricing.membershipDiscount > 0 && (
             <View style={styles.pricingRow}>
-                <Body color={COLORS.GREEN[700]}>Discount</Body>
+                <Body color={COLORS.GREEN[700]}>Membership Discount</Body>
                 <Body style={{ color: COLORS.GREEN[700] }}>
-                    -₹{pricing.discountAmount}
+                    -₹{pricing.membershipDiscount}
                 </Body>
             </View>
         )}
@@ -197,18 +203,18 @@ const PricingBreakdown: React.FC<{
                 </Body>
             </View>
         )}
-        {pricing.taxAmount > 0 && (
+        {pricing.addOnsTotal > 0 && (
             <View style={styles.pricingRow}>
-                <Body color={COLORS.GREY[500]}>Tax</Body>
-                <Body style={{ color: COLORS.TEXT.DARK }}>
-                    ₹{pricing.taxAmount.toFixed(2)}
+                <Body color={COLORS.RED[500]}>Add-ons Total</Body>
+                <Body style={{ color: COLORS.RED[500] }}>
+                    +₹{pricing.addOnsTotal}
                 </Body>
             </View>
         )}
         <View style={styles.pricingRow}>
-            <Body color={COLORS.GREY[500]}>Platform Fee</Body>
+            <Body color={COLORS.GREY[500]}>Platform Fees and taxes</Body>
             <Body style={{ color: COLORS.TEXT.DARK }}>
-                ₹{pricing.platformFee}
+                ₹{pricing.platformFee + pricing.taxAmount}
             </Body>
         </View>
         <View style={[styles.pricingRow, styles.totalRow]}>
@@ -379,30 +385,38 @@ const BookingDetailsCard: React.FC<{ booking: BookingStatusResponse }> = ({
                 <Caption color={COLORS.GREY[500]}>Time</Caption>
                 <Body style={styles.detailValue}>{booking.timeSlot}</Body>
             </View>
-            <View style={[styles.detailRow, { alignItems: "center" }]}>
-                <Caption color={COLORS.GREY[500]}>Payment</Caption>
-                <StatusPill
-                    color={
-                        booking.paymentStatus === "paid"
-                            ? COLORS.GREEN[700]
-                            : COLORS.primary
-                    }
-                    icon={
-                        booking.paymentStatus === "paid"
-                            ? "checkmark-circle"
-                            : "card"
-                    }
-                    text={booking.paymentStatus === "paid" ? "Paid" : "Pending"}
-                />
-            </View>
-            <View style={[styles.detailRow, { alignItems: "center" }]}>
-                <Caption color={COLORS.GREY[500]}>OTP</Caption>
-                <StatusPill
-                    color={COLORS.GREY[900]}
-                    icon={"key"}
-                    text={booking?.otpDeatils?.otp ?? ""}
-                />
-            </View>
+            {booking.status !== "expired" && (
+                <>
+                    <View style={[styles.detailRow, { alignItems: "center" }]}>
+                        <Caption color={COLORS.GREY[500]}>Payment</Caption>
+                        <StatusPill
+                            color={
+                                booking.paymentStatus === "paid"
+                                    ? COLORS.GREEN[700]
+                                    : COLORS.primary
+                            }
+                            icon={
+                                booking.paymentStatus === "paid"
+                                    ? "checkmark-circle"
+                                    : "card"
+                            }
+                            text={
+                                booking.paymentStatus === "paid"
+                                    ? "Paid"
+                                    : "Pending"
+                            }
+                        />
+                    </View>
+                    <View style={[styles.detailRow, { alignItems: "center" }]}>
+                        <Caption color={COLORS.GREY[500]}>OTP</Caption>
+                        <StatusPill
+                            color={COLORS.GREY[900]}
+                            icon={"key"}
+                            text={booking?.otpDeatils?.otp ?? ""}
+                        />
+                    </View>
+                </>
+            )}
         </View>
     );
 };
@@ -438,6 +452,7 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
     booking,
 }) => {
     const getStatusTitle = (status: string, hasVendor: boolean) => {
+        if (status === "expired") return "Booking expired";
         if (status === "completed") return "Booking completed";
         if (status === "arrived") return "Vendor arrived";
         if (hasVendor) return "Vendor assigned";
@@ -449,6 +464,9 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
         if (booking.assignedVendor) {
             return "You're all set! A professional has been assigned to your booking.";
         }
+        if (booking.status === "expired") {
+            return "No vendors found for your booking.";
+        }
         return booking.progress?.nextAction ?? "This won't take long.";
     };
 
@@ -457,7 +475,17 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
 
     return (
         <View style={styles.headerCard}>
-            <View style={styles.headerIconWrap}>
+            <View
+                style={[
+                    styles.headerIconWrap,
+                    booking.status === "expired" && {
+                        backgroundColor: uiUtils.color.addAlpha(
+                            COLORS.RED[500],
+                            0.12,
+                        ),
+                    },
+                ]}
+            >
                 {booking.assignedVendor ? (
                     <CustomIcon
                         provider="Ionicons"
@@ -466,7 +494,18 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
                         color={COLORS.GREEN[700]}
                     />
                 ) : (
-                    <SearchingAnimation />
+                    <>
+                        {booking.status === "expired" ? (
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="alert-circle"
+                                size={26}
+                                color={COLORS.RED[500]}
+                            />
+                        ) : (
+                            <SearchingAnimation />
+                        )}
+                    </>
                 )}
             </View>
             <H3 style={{ color: COLORS.TEXT.DARK, textAlign: "center" }}>
@@ -481,18 +520,36 @@ const HeaderStatus: React.FC<{ booking: BookingStatusResponse }> = ({
             >
                 {subtitle}
             </Body>
-            <View style={{ marginTop: 12, width: "100%" }}>
-                <ProgressBar percentage={booking.progress?.percentage ?? 10} />
-            </View>
+            {booking.status !== "expired" && (
+                <View style={{ marginTop: 12, width: "100%" }}>
+                    <ProgressBar
+                        percentage={booking.progress?.percentage ?? 10}
+                    />
+                </View>
+            )}
             <View style={{ marginTop: 10 }}>
                 <StatusPill
                     color={
                         booking.assignedVendor
                             ? COLORS.GREEN[700]
+                            : booking.status === "expired"
+                            ? COLORS.RED[500]
                             : COLORS.primary
                     }
-                    icon={booking.assignedVendor ? "shield-checkmark" : "time"}
-                    text={booking.timing?.timeUntilBooking ?? "Soon"}
+                    icon={
+                        booking.assignedVendor
+                            ? "shield-checkmark"
+                            : booking.status === "expired"
+                            ? "time-outline"
+                            : "time"
+                    }
+                    text={
+                        booking.status === "expired"
+                            ? "Please try a different date or time."
+                            : booking.assignedVendor
+                            ? "Vendor assigned, below are the details"
+                            : "Searching for a trusted vendor"
+                    }
                 />
             </View>
         </View>
@@ -513,8 +570,6 @@ const PostBooking: React.FC = () => {
 
     const params = useRoute()?.params as { bookingId?: string } | undefined;
 
-    console.log(bookingData);
-
     const fetchBookingStatus = async () => {
         try {
             const response = await OrdersServices.getBookingStatus(
@@ -522,6 +577,12 @@ const PostBooking: React.FC = () => {
             );
             if (response.success && response.data) {
                 setBookingData(response.data);
+                if (
+                    response.data.paymentStatus === "paid" &&
+                    timerRef.current
+                ) {
+                    clearInterval(timerRef.current);
+                }
             }
         } catch (error) {
             console.error("Error fetching booking status:", error);
@@ -637,6 +698,10 @@ const PostBooking: React.FC = () => {
 
     return (
         <SafeAreaView>
+            <StatusBar
+                backgroundColor={COLORS.WHITE}
+                barStyle={"dark-content"}
+            />
             <Header
                 backHandler={() => navigation.goBack()}
                 backButton={true}
@@ -660,14 +725,27 @@ const PostBooking: React.FC = () => {
                     />
                 )}
                 {/* Booking ID Card */}
-                <View style={styles.bookingIdCard}>
+                <View
+                    style={[
+                        styles.bookingIdCard,
+                        bookingData.status === "expired" && {
+                            backgroundColor: uiUtils.color.addAlpha(
+                                COLORS.RED[500],
+                                0.12,
+                            ),
+                            borderLeftColor: COLORS.RED[500],
+                        },
+                    ]}
+                >
                     <Caption style={styles.bookingIdLabel}>Booking ID</Caption>
                     <Body style={styles.bookingIdValue}>
-                        #{bookingData._id}
+                        #{bookingData.bookingId}
                     </Body>
                 </View>
                 <BookingDetailsCard booking={bookingData} />
-                <PricingBreakdown pricing={bookingData.pricing} />
+                {bookingData.status !== "expired" && (
+                    <PricingBreakdown pricing={bookingData.pricing} />
+                )}
                 <AddressSection address={bookingData.address} />
 
                 <View style={{ flexDirection: "row" }}>

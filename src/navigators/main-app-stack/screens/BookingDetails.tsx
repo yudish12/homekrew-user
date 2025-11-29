@@ -189,11 +189,11 @@ const PricingBreakdown: React.FC<{
                 ₹{pricing.basePrice}
             </Body>
         </View>
-        {pricing.discountAmount > 0 && (
+        {pricing.membershipDiscount > 0 && (
             <View style={styles.pricingRow}>
-                <Body color={COLORS.GREEN[700]}>Discount</Body>
+                <Body color={COLORS.GREEN[700]}>Membership Discount</Body>
                 <Body style={{ color: COLORS.GREEN[700] }}>
-                    -₹{pricing.discountAmount}
+                    -₹{pricing.membershipDiscount}
                 </Body>
             </View>
         )}
@@ -205,16 +205,18 @@ const PricingBreakdown: React.FC<{
                 </Body>
             </View>
         )}
+        {pricing.addOnsTotal > 0 && (
+            <View style={styles.pricingRow}>
+                <Body color={COLORS.RED[500]}>Add-ons Total</Body>
+                <Body style={{ color: COLORS.RED[500] }}>
+                    +₹{pricing.addOnsTotal}
+                </Body>
+            </View>
+        )}
         <View style={styles.pricingRow}>
-            <Body color={COLORS.GREY[500]}>Tax</Body>
+            <Body color={COLORS.GREY[500]}>Platform Fees and taxes</Body>
             <Body style={{ color: COLORS.TEXT.DARK }}>
-                ₹{pricing.taxAmount.toFixed(2)}
-            </Body>
-        </View>
-        <View style={styles.pricingRow}>
-            <Body color={COLORS.GREY[500]}>Platform Fee</Body>
-            <Body style={{ color: COLORS.TEXT.DARK }}>
-                ₹{pricing.platformFee.toFixed(2)}
+                ₹{(pricing.platformFee + pricing.taxAmount).toFixed(2)}
             </Body>
         </View>
         <View style={[styles.pricingRow, styles.totalRow]}>

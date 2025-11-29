@@ -11,3 +11,12 @@ export const getAuthToken = async () => {
 export const removeAuthToken = async () => {
     await AsyncStorage.removeItem("authToken");
 };
+
+export const setProfileVideoViewed = async (viewed: boolean) => {
+    await AsyncStorage.setItem("profileVideoViewed", JSON.stringify(viewed));
+};
+
+export const getProfileVideoViewed = async (): Promise<boolean> => {
+    const viewed = await AsyncStorage.getItem("profileVideoViewed");
+    return viewed === "true";
+};

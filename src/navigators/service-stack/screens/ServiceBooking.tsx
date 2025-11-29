@@ -4,15 +4,13 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    FlatList,
     Alert,
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { COLORS, WEIGHTS } from "../../../constants";
 import {
     Typography,
@@ -22,16 +20,14 @@ import {
     BodySmall,
     Caption,
 } from "../../../components/Typography";
-import { Button, PrimaryButton } from "../../../components/Button";
-import { Input } from "../../../components/Input";
+import { PrimaryButton } from "../../../components/Button";
 import { BackButton } from "../../../components/BackButton";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, Coupon, RootState } from "../../../types";
-import { setSelectedAddress } from "../../../redux/actions";
+import { useSelector } from "react-redux";
+import { Coupon, RootState } from "../../../types";
 import CustomIcon from "../../../components/CustomIcon";
-import { BookingData, TimeSlot } from "../../../types/services/orders";
+import { BookingData } from "../../../types/services/orders";
 import { OrdersServices } from "../../../services/orders";
 import { showErrorToast } from "../../../components/Toast";
 import { CouponBottomSheet } from "../../../modules/cart/CouponBottomSheet";
@@ -56,47 +52,7 @@ export interface UserAddress {
     landmark: string;
 }
 
-const timeSlots: TimeSlot[] = [
-    { id: "1", time: "08:00 AM - 10:00 AM", available: true },
-    { id: "2", time: "10:00 AM - 12:00 PM", available: true },
-    { id: "3", time: "12:00 PM - 02:00 PM", available: true },
-    { id: "4", time: "02:00 PM - 04:00 PM", available: true },
-    { id: "5", time: "04:00 PM - 06:00 PM", available: true },
-    { id: "6", time: "06:00 PM - 08:00 PM", available: true },
-    { id: "7", time: "08:00 PM - 10:00 PM", available: true },
-];
-
-// Helper function to generate next 7 days
-const getNext7Days = () => {
-    const dates = [];
-    const today = new Date();
-
-    for (let i = 1; i < 8; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-
-        const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
-        const dayNumber = date.getDate();
-        const month = date.toLocaleDateString("en-US", { month: "short" });
-        const fullDate = date.toISOString().split("T")[0]; // YYYY-MM-DD format
-
-        dates.push({
-            id: i.toString(),
-            dayName,
-            dayNumber,
-            month,
-            fullDate,
-            isToday: i === 0,
-        });
-    }
-    return dates;
-};
-
 export const ServiceBooking: React.FC = () => {
-    const [dates] = useState(getNext7Days());
-    const [selectedDate, setSelectedDate] = useState<string>(dates[0].fullDate);
-    const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
-    const [specialRequirements, setSpecialRequirements] = useState<string>("");
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingCoupons, setIsFetchingCoupons] = useState(false);
     const [coupons, setCoupons] = useState<Coupon[]>([]);
@@ -115,6 +71,10 @@ export const ServiceBooking: React.FC = () => {
     const params = useRoute().params as {
         serviceId: string;
         serviceTemplateId: string;
+        selectedDate: string;
+        selectedTimeSlot: string;
+        selectedAddress: UserAddress;
+        specialRequirements: string;
         pricingData?: {
             maxPrice: number;
             basePrice: number;
@@ -126,11 +86,11 @@ export const ServiceBooking: React.FC = () => {
     };
     console.log(params.pricingData);
 
-    //redux hooks
-    const { selectedAddress } = useSelector(
-        (state: RootState) => state.address,
-    );
-    const dispatch = useDispatch<AppDispatch>();
+    // Get selected values from route params
+    const selectedDate = params.selectedDate;
+    const selectedTimeSlot = params.selectedTimeSlot;
+    const selectedAddress = params.selectedAddress;
+    const specialRequirements = params.specialRequirements || "";
 
     const formatAddress = (address: UserAddress): string => {
         return `${address.line1}, ${address.line2 ? address.line2 + ", " : ""}${
@@ -203,7 +163,7 @@ export const ServiceBooking: React.FC = () => {
         setSelectedCoupon(null);
     };
 
-    const formatCurrency = (amount: number) => {
+    const formatCurrency = (amount: number | string) => {
         const currencySymbol = currency === "INR" ? "₹" : currency;
         return `${currencySymbol}${amount}`;
     };
@@ -299,7 +259,7 @@ export const ServiceBooking: React.FC = () => {
                     <View style={styles.totalPricingRow}>
                         <H4 style={styles.totalLabel}>Total Amount</H4>
                         <H3 style={styles.totalValue}>
-                            {formatCurrency(totalPrice)}
+                            {formatCurrency(totalPrice.toFixed(2))}
                         </H3>
                     </View>
                 </View>
@@ -310,7 +270,8 @@ export const ServiceBooking: React.FC = () => {
     const handleBookService = async () => {
         setIsLoading(true);
         if (!selectedDate || !selectedTimeSlot || !selectedAddress) {
-            Alert.alert("Error", "Please select date, time slot, and address");
+            Alert.alert("Error", "Missing required information");
+            setIsLoading(false);
             return;
         }
         const bookingData: BookingData = {
@@ -318,7 +279,7 @@ export const ServiceBooking: React.FC = () => {
             serviceTemplate: params.serviceTemplateId,
             date: selectedDate,
             timeSlot: selectedTimeSlot,
-            address: selectedAddress._id,
+            address: selectedAddress._id || "",
             specialRequirements: specialRequirements,
             appliedCoupon: selectedCoupon?.code ?? undefined,
         };
@@ -337,88 +298,6 @@ export const ServiceBooking: React.FC = () => {
         }
 
         setIsLoading(false);
-    };
-
-    const handleAddNewAddress = () => {
-        navigation.navigate("AllAddress");
-    };
-
-    const renderDateItem = ({ item }: { item: any }) => {
-        const isSelected = selectedDate === item.fullDate;
-
-        return (
-            <TouchableOpacity
-                style={[
-                    styles.dateItem,
-                    isSelected && styles.selectedDateItem,
-                    item.isToday && styles.todayDateItem,
-                ]}
-                onPress={() => setSelectedDate(item.fullDate)}
-            >
-                <BodySmall
-                    style={[
-                        styles.dayName,
-                        isSelected && styles.selectedText,
-                        item.isToday && !isSelected && styles.todayText,
-                    ]}
-                >
-                    {item.dayName}
-                </BodySmall>
-                <H4
-                    style={[
-                        styles.dayNumber,
-                        isSelected && styles.selectedText,
-                        item.isToday && !isSelected && styles.todayText,
-                    ]}
-                >
-                    {item.dayNumber}
-                </H4>
-                <BodySmall
-                    style={[
-                        styles.monthText,
-                        isSelected && styles.selectedText,
-                        item.isToday && !isSelected && styles.todayText,
-                    ]}
-                >
-                    {item.month}
-                </BodySmall>
-            </TouchableOpacity>
-        );
-    };
-
-    const renderTimeSlot = ({ item }: { item: TimeSlot }) => {
-        const isSelected = selectedTimeSlot === item.time;
-        const isAvailable = item.available;
-
-        return (
-            <TouchableOpacity
-                style={[
-                    styles.timeSlotItem,
-                    isSelected && styles.selectedTimeSlot,
-                    !isAvailable && styles.unavailableTimeSlot,
-                ]}
-                onPress={() => isAvailable && setSelectedTimeSlot(item.time)}
-                disabled={!isAvailable}
-            >
-                <Typography
-                    style={[
-                        styles.timeSlotText,
-                        isSelected && styles.selectedText,
-                        !isAvailable && styles.unavailableText,
-                    ]}
-                >
-                    {item.time}
-                </Typography>
-                {!isAvailable && (
-                    <MaterialIcons
-                        name="block"
-                        size={16}
-                        color={COLORS.RED[500]}
-                        style={styles.unavailableIcon}
-                    />
-                )}
-            </TouchableOpacity>
-        );
     };
 
     if (isFetchingCoupons) {
@@ -456,120 +335,14 @@ export const ServiceBooking: React.FC = () => {
                 >
                     {/* Header */}
                     <View style={styles.header}>
-                        <H3>Book Your Service</H3>
+                        <H3 style={{ marginLeft: -6 }}>
+                            {" "}
+                            Please confirm details{" "}
+                        </H3>
                         <BodySmall style={styles.subtitle}>
-                            Select your preferred date, time, and service
-                            location
+                            Go through your booking details and confirm your
+                            booking.
                         </BodySmall>
-                    </View>
-
-                    {/* Date Selection */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons
-                                name="calendar-outline"
-                                size={20}
-                                color={COLORS.primary}
-                            />
-                            <H4 style={styles.sectionTitle}>Select Date</H4>
-                        </View>
-                        <FlatList
-                            data={dates}
-                            renderItem={renderDateItem}
-                            keyExtractor={item => item.id}
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.datesList}
-                        />
-                    </View>
-
-                    {/* Time Slot Selection */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons
-                                name="time-outline"
-                                size={20}
-                                color={COLORS.primary}
-                            />
-                            <H4 style={styles.sectionTitle}>
-                                Select Time Slot
-                            </H4>
-                        </View>
-                        <FlatList
-                            data={timeSlots}
-                            renderItem={renderTimeSlot}
-                            keyExtractor={item => item.id}
-                            numColumns={2}
-                            columnWrapperStyle={styles.timeSlotsRow}
-                            contentContainerStyle={styles.timeSlotsList}
-                        />
-                    </View>
-
-                    {/* Address Selection */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons
-                                name="location-outline"
-                                size={20}
-                                color={COLORS.primary}
-                            />
-                            <H4 style={styles.sectionTitle}>Service Address</H4>
-                        </View>
-
-                        {/* Add New Address Button */}
-                        <TouchableOpacity
-                            style={styles.addAddressButton}
-                            onPress={handleAddNewAddress}
-                        >
-                            <Ionicons
-                                name="add-circle-outline"
-                                size={24}
-                                color={COLORS.primary}
-                            />
-                            {!selectedAddress ? (
-                                <Body style={styles.addAddressText}>
-                                    Choose an address
-                                </Body>
-                            ) : (
-                                <View style={styles.addAddressText}>
-                                    <Typography
-                                        variant="body"
-                                        numberOfLines={2}
-                                        color={COLORS.TEXT.DARK}
-                                        style={styles.addAddressText}
-                                    >
-                                        {formatAddress(selectedAddress)}
-                                    </Typography>
-                                </View>
-                            )}
-                            <Ionicons
-                                name="chevron-forward"
-                                size={20}
-                                color={COLORS.GREY[400]}
-                            />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Special Requirements */}
-                    <View style={styles.section}>
-                        <View style={styles.sectionHeader}>
-                            <Ionicons
-                                name="document-text-outline"
-                                size={20}
-                                color={COLORS.primary}
-                            />
-                            <H4 style={styles.sectionTitle}>
-                                Special Requirements
-                            </H4>
-                        </View>
-                        <Input
-                            placeholder="Any special instructions or requirements..."
-                            value={specialRequirements}
-                            onChangeText={setSpecialRequirements}
-                            multiline={true}
-                            numberOfLines={4}
-                            inputStyle={styles.requirementsInput}
-                        />
                     </View>
 
                     {!isUserMemberShipActive && (
@@ -703,6 +476,8 @@ export const ServiceBooking: React.FC = () => {
                         </View>
                     )}
 
+                    {/* Pricing Breakdown */}
+                    {renderPricingBreakdown()}
                     {/* Apply Coupon Section */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
@@ -773,9 +548,111 @@ export const ServiceBooking: React.FC = () => {
                             </TouchableOpacity>
                         )}
                     </View>
+                    {/* Selected Details Display */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <Ionicons
+                                name="information-circle-outline"
+                                size={20}
+                                color={COLORS.primary}
+                            />
+                            <H4 style={styles.sectionTitle}>Booking Details</H4>
+                        </View>
+                        <View style={styles.selectedDetailsCard}>
+                            {/* Address */}
+                            <View style={styles.selectedDetailRow}>
+                                <Ionicons
+                                    name="location"
+                                    size={18}
+                                    style={{ marginTop: 2 }}
+                                    color={COLORS.primary}
+                                />
+                                <View style={styles.selectedDetailContent}>
+                                    <BodySmall
+                                        style={styles.selectedDetailLabel}
+                                    >
+                                        Service Address
+                                    </BodySmall>
+                                    <Body style={styles.selectedDetailText}>
+                                        {selectedAddress
+                                            ? formatAddress(selectedAddress)
+                                            : "Not selected"}
+                                    </Body>
+                                </View>
+                            </View>
 
-                    {/* Pricing Breakdown */}
-                    {renderPricingBreakdown()}
+                            {/* Date */}
+                            <View style={styles.selectedDetailRow}>
+                                <Ionicons
+                                    name="calendar"
+                                    size={18}
+                                    style={{ marginTop: 2 }}
+                                    color={COLORS.primary}
+                                />
+                                <View style={styles.selectedDetailContent}>
+                                    <BodySmall
+                                        style={styles.selectedDetailLabel}
+                                    >
+                                        Date
+                                    </BodySmall>
+                                    <Body style={styles.selectedDetailText}>
+                                        {selectedDate
+                                            ? new Date(
+                                                  selectedDate,
+                                              ).toLocaleDateString("en-US", {
+                                                  weekday: "long",
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                              })
+                                            : "Not selected"}
+                                    </Body>
+                                </View>
+                            </View>
+
+                            {/* Time */}
+                            <View style={styles.selectedDetailRow}>
+                                <Ionicons
+                                    name="time"
+                                    size={18}
+                                    style={{ marginTop: 2 }}
+                                    color={COLORS.primary}
+                                />
+                                <View style={styles.selectedDetailContent}>
+                                    <BodySmall
+                                        style={styles.selectedDetailLabel}
+                                    >
+                                        Time Slot
+                                    </BodySmall>
+                                    <Body style={styles.selectedDetailText}>
+                                        {selectedTimeSlot || "Not selected"}
+                                    </Body>
+                                </View>
+                            </View>
+
+                            {/* Special Requirements */}
+                            {specialRequirements && (
+                                <View style={styles.selectedDetailRow}>
+                                    <Ionicons
+                                        name="document-text"
+                                        size={18}
+                                        style={{ marginTop: 2 }}
+                                        color={COLORS.primary}
+                                    />
+                                    <View style={styles.selectedDetailContent}>
+                                        <BodySmall
+                                            style={styles.selectedDetailLabel}
+                                        >
+                                            Special Requirements
+                                        </BodySmall>
+                                        <Body style={styles.selectedDetailText}>
+                                            {specialRequirements}
+                                        </Body>
+                                    </View>
+                                </View>
+                            )}
+                        </View>
+                    </View>
                 </ScrollView>
                 {/* Book Service Button with Total */}
                 <View style={styles.bookingButtonContainer}>
@@ -790,17 +667,12 @@ export const ServiceBooking: React.FC = () => {
                             variant="h3"
                             style={styles.totalPriceAmount}
                         >
-                            {formatCurrency(totalPrice)}
+                            {formatCurrency(totalPrice.toFixed(2))}
                         </Typography>
                     </View>
                     <PrimaryButton
                         title="Book Service"
-                        disabled={
-                            !selectedDate ||
-                            !selectedTimeSlot ||
-                            !selectedAddress ||
-                            isLoading
-                        }
+                        disabled={isLoading}
                         textStyle={{ marginLeft: 12 }}
                         onPress={handleBookService}
                         loading={isLoading}
@@ -857,113 +729,33 @@ const styles = StyleSheet.create({
         color: COLORS.TEXT.DARK,
     },
 
-    // Date Selection Styles
-    datesList: {
-        paddingHorizontal: 5,
-    },
-    dateItem: {
-        backgroundColor: COLORS.WHITE,
+    // Selected Details Display Styles
+    selectedDetailsCard: {
+        backgroundColor: COLORS.primaryLight,
         borderWidth: 1,
-        borderColor: COLORS.GREY[100],
-        borderRadius: 12,
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        alignItems: "center",
-        marginHorizontal: 5,
-        minWidth: 80,
-    },
-    selectedDateItem: {
-        backgroundColor: COLORS.primary,
         borderColor: COLORS.primary,
-    },
-    todayDateItem: {
-        borderColor: COLORS.primary,
-        borderWidth: 2,
-    },
-    dayName: {
-        color: COLORS.TEXT.LIGHT,
-        marginBottom: 5,
-    },
-    dayNumber: {
-        color: COLORS.TEXT.DARK,
-        marginBottom: 2,
-    },
-    monthText: {
-        color: COLORS.TEXT.LIGHT,
-        fontSize: 10,
-    },
-    selectedText: {
-        color: COLORS.WHITE,
-    },
-    todayText: {
-        color: COLORS.primary,
-    },
-
-    // Time Slot Styles
-    timeSlotsList: {
-        paddingHorizontal: 5,
-    },
-    timeSlotsRow: {
-        justifyContent: "space-between",
-    },
-    timeSlotItem: {
-        width: Dimensions.get("window").width / 2 - 30,
-        backgroundColor: COLORS.WHITE,
-        borderWidth: 1,
-        borderColor: COLORS.GREY[100],
-        borderRadius: 10,
-        paddingVertical: 15,
-        paddingHorizontal: 10,
-        alignItems: "center",
-        marginBottom: 10,
-        flexDirection: "row",
-        justifyContent: "center",
-    },
-    selectedTimeSlot: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    unavailableTimeSlot: {
-        backgroundColor: COLORS.GREY[100],
-        borderColor: COLORS.GREY[200],
-    },
-    timeSlotText: {
-        textAlign: "center",
-        fontSize: 12,
-    },
-    unavailableText: {
-        color: COLORS.GREY[400],
-    },
-    unavailableIcon: {
-        marginLeft: 5,
-    },
-
-    // Address Styles
-    addressesList: {
-        marginBottom: 15,
-    },
-    addressItem: {
-        backgroundColor: COLORS.WHITE,
-        borderWidth: 1,
-        borderColor: COLORS.GREY[100],
         borderRadius: 12,
         padding: 15,
-        marginBottom: 10,
+        gap: 16,
     },
-    selectedAddressItem: {
-        backgroundColor: COLORS.primary,
-        borderColor: COLORS.primary,
-    },
-    addressHeader: {
+    selectedDetailRow: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8,
+        alignItems: "flex-start",
+        gap: 12,
     },
-    addressTypeContainer: {
-        flexDirection: "row",
-        alignItems: "center",
+    selectedDetailContent: {
+        flex: 1,
     },
+    selectedDetailLabel: {
+        color: COLORS.primary,
+        marginBottom: 4,
+        fontSize: 12,
+    },
+    selectedDetailText: {
+        color: COLORS.TEXT.DARK,
+        fontWeight: WEIGHTS.MEDIUM,
+    },
+
     // Premium Membership Styles
     membershipContainer: {
         borderRadius: 20,
@@ -1076,41 +868,6 @@ const styles = StyleSheet.create({
         fontWeight: WEIGHTS.BOLD,
         fontSize: 15,
     },
-    addressType: {
-        marginLeft: 5,
-        fontWeight: WEIGHTS.MEDIUM,
-    },
-    addressText: {
-        color: COLORS.TEXT.DARK,
-        marginBottom: 5,
-        lineHeight: 18,
-    },
-    landmarkText: {
-        color: COLORS.TEXT.LIGHT,
-        fontSize: 12,
-    },
-    addAddressButton: {
-        flexDirection: "row",
-        alignItems: "center",
-        backgroundColor: COLORS.primaryLight,
-        borderWidth: 1,
-        borderColor: COLORS.primary,
-        borderRadius: 12,
-        padding: 15,
-        borderStyle: "dashed",
-    },
-    addAddressText: {
-        flex: 1,
-        marginLeft: 10,
-        color: COLORS.primary,
-        fontWeight: WEIGHTS.MEDIUM,
-    },
-
-    // Special Requirements Styles
-    requirementsInput: {
-        textAlignVertical: "top",
-        minHeight: 100,
-    },
 
     // Booking Button Styles
     bookingButtonContainer: {
@@ -1122,11 +879,6 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         borderTopWidth: 1,
         borderTopColor: COLORS.GREY[100],
-        shadowColor: COLORS.TEXT.DARK,
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
-        elevation: 8,
     },
     totalPriceContainer: {
         flex: 1,

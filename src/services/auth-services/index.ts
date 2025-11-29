@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { api } from "../../lib";
+import { api, NotificationService } from "../../lib";
 import { ApiResponse, UserUpdateBody } from "../../types";
 import { User } from "../../types/user";
 import { setAuthToken } from "../../lib/storage/auth-storage";
@@ -174,14 +174,16 @@ export class AuthServices {
     }
 
     static async registerFcmToken(
-        token: string,
         deviceId: string,
         platform: string,
     ): Promise<ApiResponse<any>> {
-        const response = await api.post<any>(
-            `${this.BASE_URL}/user/fcm-register`,
-            { fcmToken: token, deviceId, platform },
-        );
+        const token = await NotificationService.getToken();
+        const response = await api.post<any>(`${this.BASE_URL}/fcm-register`, {
+            fcmToken: token,
+            deviceId,
+            platform,
+        });
+        console.log(response);
         if (!response.success) {
             return {
                 success: false,

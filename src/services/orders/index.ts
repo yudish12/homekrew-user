@@ -84,7 +84,7 @@ export class OrdersServices {
         bookingId: string,
     ): Promise<ApiResponse<any>> {
         const response = await api.get(
-            `https://ao1.onrender.com/api/v1/bookings/status/${bookingId}`,
+            `${this.BASE_URL}/bookings/status/${bookingId}`,
         );
         if (!response.success) {
             return {

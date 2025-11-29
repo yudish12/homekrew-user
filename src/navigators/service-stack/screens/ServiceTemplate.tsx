@@ -35,7 +35,7 @@ const ServiceTemplate = () => {
     console.log(serviceTemplate);
     const handleBookNow = () => {
         // Handle booking logic
-        navigation.navigate("ServiceBooking", {
+        navigation.navigate("SlotSelection", {
             serviceId,
             serviceTemplateId,
             pricingData: {

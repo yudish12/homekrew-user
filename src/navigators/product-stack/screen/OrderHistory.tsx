@@ -108,6 +108,7 @@ const OrderHistoryComponent: React.FC = () => {
     };
 
     const filteredOrders = useMemo(() => {
+        console.log(orderHistory);
         return orderHistory.filter(order => order.orderStatus === currentTab);
     }, [orderHistory, currentTab]);
 
@@ -137,7 +138,7 @@ const OrderHistoryComponent: React.FC = () => {
             {/* Order Header */}
             <View style={styles.orderHeader}>
                 <View style={styles.orderInfo}>
-                    <H4 style={styles.orderNumber}>#{order.orderId}</H4>
+                    <H4 style={styles.orderNumber}>#{order.orderSeq}</H4>
                     <BodySmall style={styles.orderDate}>
                         {order.formattedDate}
                     </BodySmall>

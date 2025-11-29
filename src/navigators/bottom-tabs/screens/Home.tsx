@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     RefreshControl,
     Image,
+    StatusBar,
 } from "react-native";
 import { COLORS } from "../../../constants/ui";
 import { LinearGradient } from "expo-linear-gradient";
@@ -606,10 +607,10 @@ const styles = StyleSheet.create({
         width: "100%",
     },
     headerWrap: {
-        paddingTop: 8,
-        paddingHorizontal: 16,
+        paddingRight: 16,
+        paddingLeft: 6,
         gap: 12,
-        paddingBottom: 8,
+        paddingVertical: 16,
         backgroundColor: "transparent",
     },
     headerRow: {

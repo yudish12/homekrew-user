@@ -157,8 +157,10 @@ export interface BookingHistory {
     pricing: {
         basePrice: number;
         discountAmount: number;
+        addOnsTotal: number;
         couponDiscount: number;
         taxAmount: number;
+        membershipDiscount: number;
         platformFee: number;
         totalAmount: number;
     };
@@ -243,8 +245,9 @@ export interface BookingHistoryItem {
     price: number;
     pricing: {
         basePrice: number;
-        discountAmount: number;
         couponDiscount: number;
+        addOnsTotal: number;
+        membershipDiscount: number;
         taxAmount: number;
         platformFee: number;
         totalAmount: number;

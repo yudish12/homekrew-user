@@ -23,7 +23,7 @@ import AddressForm from "../../../modules/address/AddressForm";
 import { useDispatch, useSelector } from "react-redux";
 import { addAddress } from "../../../redux/actions";
 
-// Local Region type (expo-maps does not export Region)
+// Local Region type for map region configuration
 export type Region = {
     latitude: number;
     longitude: number;
@@ -170,9 +170,18 @@ const Address = () => {
                 setFormData(prev => ({
                     ...prev,
                     ...locationData,
+                    line1: locationData.location.formatted_address || "",
+                    city: locationData.location.city || "",
+                    state: locationData.location.state || "",
+                    country: locationData.location.country || "",
+                    postalCode: locationData.location.postal_code || "",
+                    landmark: locationData.location.formatted_address || "",
                     location: {
                         type: "Point",
-                        coordinates: [region.longitude, region.latitude],
+                        coordinates: [
+                            locationData.coordinates.longitude,
+                            locationData.coordinates.latitude,
+                        ],
                     },
                 }));
             }
@@ -186,8 +195,7 @@ const Address = () => {
     };
 
     const handleFormSubmit = async () => {
-        await dispatch(addAddress(formData));
-        console.log("Address added successfully!");
+        dispatch(addAddress(formData));
         navigation.goBack();
     };
 
@@ -411,7 +419,6 @@ const styles = StyleSheet.create({
     buttonContainer: {
         flexDirection: "row",
         paddingVertical: 20,
-        paddingBottom: 60,
         paddingHorizontal: 16,
         backgroundColor: COLORS.WHITE,
         borderTopWidth: 1,

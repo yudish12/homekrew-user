@@ -6,15 +6,21 @@ import {
     TouchableOpacity,
     Platform,
     StyleSheet,
+    TextInput,
 } from "react-native";
-import React from "react";
+import React, { useRef, useEffect, useMemo } from "react";
+import MapView, {
+    Marker,
+    PROVIDER_GOOGLE,
+    Region as MapRegion,
+    PROVIDER_DEFAULT,
+} from "react-native-maps";
 import SearchBar from "../../components/SearchBar";
 import { Button } from "../../components/Button";
 import { COLORS, WEIGHTS } from "../../constants";
 import CustomIcon from "../../components/CustomIcon";
 import { Typography } from "../../components/Typography";
 import { Region } from "../../navigators/main-app-stack/screens/Address";
-import { AppleMaps, GoogleMaps } from "expo-maps";
 
 interface MapViewProps {
     query: string;
@@ -33,7 +39,7 @@ interface MapViewProps {
     markerCoord: any;
 }
 
-const MapView = (props: MapViewProps) => {
+const MapViewComponent = (props: MapViewProps) => {
     const {
         query,
         setQuery,
@@ -50,16 +56,77 @@ const MapView = (props: MapViewProps) => {
         markerCoord,
         region,
     } = props;
+
+    console.log("query", query);
+
+    const mapRef = useRef<MapView>(null);
+    const lastExternalRegion = useRef<{ lat: number; lng: number } | null>(
+        null,
+    );
+
+    // Convert Region to MapRegion format
+    const mapRegion: MapRegion = useMemo(
+        () => ({
+            latitude: region.latitude,
+            longitude: region.longitude,
+            latitudeDelta: region.latitudeDelta,
+            longitudeDelta: region.longitudeDelta,
+        }),
+        [
+            region.latitude,
+            region.longitude,
+            region.latitudeDelta,
+            region.longitudeDelta,
+        ],
+    );
+
+    const handleRegionChangeComplete = (newRegion: MapRegion) => {
+        // Only update if this is a significant change (user dragged or external update)
+        const hasChanged =
+            Math.abs(newRegion.latitude - region.latitude) > 0.0001 ||
+            Math.abs(newRegion.longitude - region.longitude) > 0.0001;
+
+        if (hasChanged) {
+            setRegion({
+                latitude: newRegion.latitude,
+                longitude: newRegion.longitude,
+                latitudeDelta: newRegion.latitudeDelta,
+                longitudeDelta: newRegion.longitudeDelta,
+            });
+        }
+    };
+
+    // Animate map when region changes externally (e.g., from current location or search)
+    useEffect(() => {
+        const currentKey = `${region.latitude.toFixed(
+            6,
+        )}_${region.longitude.toFixed(6)}`;
+        const lastKey = lastExternalRegion.current
+            ? `${lastExternalRegion.current.lat.toFixed(
+                  6,
+              )}_${lastExternalRegion.current.lng.toFixed(6)}`
+            : null;
+
+        // Only animate if this is an external change (not from map interaction)
+        if (mapRef.current && currentKey !== lastKey) {
+            lastExternalRegion.current = {
+                lat: region.latitude,
+                lng: region.longitude,
+            };
+            mapRef.current.animateToRegion(mapRegion, 500);
+        }
+    }, [mapRegion]);
+
     return (
         <>
-            <SearchBar
+            <TextInput
+                placeholder="Search for a location"
                 value={query}
                 onChangeText={setQuery}
-                placeholder="Search for a location"
-                containerStyle={styles.search}
-                inputStyle={{ fontSize: 15 }}
+                style={styles.search}
+                returnKeyType="search"
+                autoFocus
             />
-
             {isSearching ? (
                 <>
                     <ActivityIndicator size="large" color={COLORS.primary} />
@@ -74,14 +141,22 @@ const MapView = (props: MapViewProps) => {
                                 onPress={() => {
                                     const lat = result.coordinates.lat;
                                     const lng = result.coordinates.lng;
-                                    setRegion({
+                                    const newRegion = {
                                         latitude: lat,
                                         longitude: lng,
                                         latitudeDelta: 0.02,
                                         longitudeDelta: 0.02,
-                                    });
+                                    };
+                                    setRegion(newRegion);
                                     setAddressLine(result.formattedAddress);
                                     setSearchResults([]);
+                                    // Animate map to selected location
+                                    if (mapRef.current) {
+                                        mapRef.current.animateToRegion(
+                                            newRegion,
+                                            500,
+                                        );
+                                    }
                                 }}
                             >
                                 <View style={styles.resultIconContainer}>
@@ -145,55 +220,35 @@ const MapView = (props: MapViewProps) => {
             />
 
             <View style={styles.card}>
-                {Platform.OS === "ios" ? (
-                    <AppleMaps.View
-                        style={styles.map}
-                        markers={[
-                            {
-                                coordinates: markerCoord,
-                                title: "Selected location",
-                            },
-                        ]}
-                        onCameraMove={e => {
-                            const { coordinates } = e;
-                            if (
-                                coordinates &&
-                                typeof coordinates.latitude === "number" &&
-                                typeof coordinates.longitude === "number"
-                            ) {
-                                setRegion(prev => ({
-                                    ...prev,
-                                    latitude: coordinates.latitude as number,
-                                    longitude: coordinates.longitude as number,
-                                }));
-                            }
+                <MapView
+                    ref={mapRef}
+                    provider={
+                        Platform.OS === "ios"
+                            ? PROVIDER_DEFAULT
+                            : PROVIDER_GOOGLE
+                    }
+                    style={styles.map}
+                    region={mapRegion}
+                    onRegionChangeComplete={handleRegionChangeComplete}
+                    showsUserLocation={false}
+                    showsMyLocationButton={false}
+                    mapType="standard"
+                    loadingEnabled={true}
+                >
+                    <Marker
+                        coordinate={markerCoord}
+                        title="Selected location"
+                        draggable
+                        onDragEnd={e => {
+                            const newCoord = e.nativeEvent.coordinate;
+                            setRegion(prev => ({
+                                ...prev,
+                                latitude: newCoord.latitude,
+                                longitude: newCoord.longitude,
+                            }));
                         }}
                     />
-                ) : (
-                    <GoogleMaps.View
-                        style={styles.map}
-                        markers={[
-                            {
-                                coordinates: markerCoord,
-                                title: "Selected location",
-                            },
-                        ]}
-                        onCameraMove={e => {
-                            const { coordinates } = e;
-                            if (
-                                coordinates &&
-                                typeof coordinates.latitude === "number" &&
-                                typeof coordinates.longitude === "number"
-                            ) {
-                                setRegion(prev => ({
-                                    ...prev,
-                                    latitude: coordinates.latitude as number,
-                                    longitude: coordinates.longitude as number,
-                                }));
-                            }
-                        }}
-                    />
-                )}
+                </MapView>
 
                 <View style={styles.cardFooter}>
                     <CustomIcon
@@ -228,7 +283,7 @@ const MapView = (props: MapViewProps) => {
     );
 };
 
-export default MapView;
+export default MapViewComponent;
 
 const styles = StyleSheet.create({
     searchResults: {
@@ -277,8 +332,15 @@ const styles = StyleSheet.create({
         height: 56,
         shadowOpacity: 0.06,
         shadowRadius: 8,
+        backgroundColor: COLORS.WHITE,
+        borderWidth: 1,
+        borderColor: COLORS.GREY[100],
         shadowOffset: { width: 0, height: 4 },
         marginBottom: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        fontSize: 15,
+        color: COLORS.TEXT.DARK,
     },
     useLocation: {
         alignSelf: "flex-start",
