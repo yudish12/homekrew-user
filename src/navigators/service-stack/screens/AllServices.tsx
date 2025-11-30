@@ -385,7 +385,6 @@ const styles = StyleSheet.create({
         padding: 4,
     },
     filtersContainer: {
-        marginBottom: 20,
         maxHeight: 80,
     },
     filtersContent: {

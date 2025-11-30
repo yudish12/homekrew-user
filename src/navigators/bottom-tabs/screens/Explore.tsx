@@ -163,7 +163,7 @@ const Explore = () => {
         <ServiceCard
             title={item.name}
             provider={item.category?.name || "Product"}
-            price={`₹${item.price}`}
+            price={`₹${item.discountPrice}`}
             rating={item.averageRating || 0}
             image={item.productImages?.[0] || item.images?.[0]}
             onPress={() => handleProductPress(item._id)}
@@ -172,7 +172,7 @@ const Explore = () => {
     );
 
     const renderFeaturedProducts = () => {
-        if (featuredProductsLoading) {
+        if (featuredProductsLoading || productsLoading || servicesLoading) {
             return (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color={COLORS.primary} />
@@ -212,7 +212,7 @@ const Explore = () => {
     };
 
     const renderServiceCategories = () => {
-        if (productsLoading) {
+        if (featuredProductsLoading || productsLoading || servicesLoading) {
             return (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="small" color={COLORS.primary} />
@@ -249,7 +249,35 @@ const Explore = () => {
 
         return (
             <View style={styles.productCategoriesGrid}>
-                {productCategories.slice(0, 6).map(renderProductCategoryCard)}
+                {serviceCategories.slice(0, 6).map(e => {
+                    return (
+                        <TouchableOpacity
+                            key={e._id}
+                            style={styles.productCategoryCard}
+                            activeOpacity={0.8}
+                            onPress={() => handleServicePress(e._id, e.name)}
+                        >
+                            <View style={styles.productCategoryContent}>
+                                <View style={styles.productCategoryIcon}>
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name="cube-outline"
+                                        size={24}
+                                        color={COLORS.primary}
+                                    />
+                                </View>
+                                <Typography
+                                    variant="bodySmall"
+                                    color={COLORS.TEXT.DARK}
+                                    style={styles.productCategoryName}
+                                    numberOfLines={2}
+                                >
+                                    {e.name}
+                                </Typography>
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
         );
     };

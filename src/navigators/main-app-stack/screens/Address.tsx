@@ -5,6 +5,8 @@ import {
     View,
     ScrollView,
     KeyboardAvoidingView,
+    Alert,
+    Linking,
 } from "react-native";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { Button } from "../../../components/Button";
@@ -22,6 +24,7 @@ import MapView from "../../../modules/address/MapView";
 import AddressForm from "../../../modules/address/AddressForm";
 import { useDispatch, useSelector } from "react-redux";
 import { addAddress } from "../../../redux/actions";
+import DeviceInfo from "react-native-device-info";
 
 // Local Region type for map region configuration
 export type Region = {
@@ -83,6 +86,28 @@ const Address = () => {
         try {
             const { status } =
                 await Location.requestForegroundPermissionsAsync();
+            const isLocationEnabled = await DeviceInfo.isLocationEnabled();
+
+            if (!isLocationEnabled) {
+                Alert.alert(
+                    "Location is not enabled",
+                    "Please enable location in your device settings",
+                    [
+                        {
+                            text: "Cancel",
+                            style: "cancel",
+                        },
+                        {
+                            text: "Open Settings",
+                            style: "default",
+                            onPress: () => {
+                                Linking.openSettings();
+                            },
+                        },
+                    ],
+                );
+                return;
+            }
             const granted = status === "granted";
             setHasPermission(granted);
             if (!granted) return;
@@ -118,6 +143,7 @@ const Address = () => {
                 setAddressLine(line);
             }
         } catch (e) {
+            console.log(e, "error");
             // silent fail; keep defaults
         }
     }, []);
@@ -175,7 +201,6 @@ const Address = () => {
                     state: locationData.location.state || "",
                     country: locationData.location.country || "",
                     postalCode: locationData.location.postal_code || "",
-                    landmark: locationData.location.formatted_address || "",
                     location: {
                         type: "Point",
                         coordinates: [

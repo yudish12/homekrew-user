@@ -1,6 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { View, StyleSheet } from "react-native";
+import {
+    View,
+    StyleSheet,
+    TouchableOpacityProps,
+    TouchableOpacity,
+} from "react-native";
 import Home from "./screens/Home";
 import Explore from "./screens/Explore";
 import { COLORS } from "../../constants/ui";
@@ -54,6 +59,12 @@ const BottomTabs = () => {
                     shadowRadius: 16,
                     elevation: 6,
                 },
+                tabBarButton: props => (
+                    <TouchableOpacity
+                        {...(props as TouchableOpacityProps)}
+                        activeOpacity={0.7}
+                    />
+                ),
             }}
         >
             <Tab.Screen

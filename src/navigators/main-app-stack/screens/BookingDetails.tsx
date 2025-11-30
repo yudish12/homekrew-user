@@ -269,7 +269,7 @@ const BookingDetails: React.FC = () => {
     };
 
     return (
-        <SafeAreaView>
+        <SafeAreaView style={{ flex: 1, justifyContent: "space-between" }}>
             <Header
                 backHandler={() => navigation.goBack()}
                 backButton={true}
@@ -364,15 +364,17 @@ const BookingDetails: React.FC = () => {
                 )}
 
                 {/* Pricing Information */}
-                <InfoCard title="Pricing Details">
-                    <PricingBreakdown pricing={booking.pricing} />
-                </InfoCard>
+                {booking.status !== "expired" ? (
+                    <InfoCard title="Pricing Details">
+                        <PricingBreakdown pricing={booking.pricing} />
+                    </InfoCard>
+                ) : null}
 
                 {/* Booking Information */}
                 <InfoCard title="Booking Information">
                     <InfoRow
                         label="Booking ID"
-                        value={booking._id}
+                        value={booking.bookingId}
                         icon="receipt"
                     />
                     <InfoRow
@@ -381,56 +383,31 @@ const BookingDetails: React.FC = () => {
                         icon="card"
                     />
                 </InfoCard>
-
-                {/* Action Buttons */}
-                <View style={styles.actionButtons}>
-                    {booking.canCancel && (
-                        <OutlineButton
-                            title="Cancel Booking"
-                            style={{ flex: 1, marginRight: 8 }}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="close"
-                                    size={16}
-                                    color={COLORS.RED[500]}
-                                />
-                            }
-                        />
-                    )}
-                    {booking.canRate && (
-                        <OutlineButton
-                            title="Rate Service"
-                            style={{ flex: 1, marginLeft: 8 }}
-                            onPress={handleRateService}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="star"
-                                    size={16}
-                                    color={COLORS.primary}
-                                />
-                            }
-                        />
-                    )}
-                </View>
-
-                {booking.paymentStatus === "pending" && (
-                    <Button
-                        title="Pay Now"
-                        style={{ marginTop: 12 }}
-                        onPress={handlePayNow}
-                        icon={
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="card"
-                                size={16}
-                                color={COLORS.WHITE}
-                            />
-                        }
-                    />
-                )}
             </ScrollView>
+            {/* Action Buttons */}
+            {booking.status === "arrived" ||
+            booking.status === "vendor_assigned" ||
+            booking.status === "in_progress" ? (
+                <View style={styles.actionButtons}>
+                    <Button
+                        title="Manage Booking"
+                        style={{
+                            flex: 1,
+                            backgroundColor: COLORS.primaryLight,
+                            borderColor: COLORS.primary,
+                            borderWidth: 1,
+                        }}
+                        textStyle={{
+                            color: COLORS.primary,
+                        }}
+                        onPress={() => {
+                            navigation.navigate("PostBooking", {
+                                bookingId: booking._id,
+                            });
+                        }}
+                    />
+                </View>
+            ) : null}
         </SafeAreaView>
     );
 };
@@ -559,7 +536,10 @@ const styles = StyleSheet.create({
     },
     actionButtons: {
         flexDirection: "row",
-        marginTop: 8,
+        borderTopColor: COLORS.border.light,
+        borderTopWidth: 1,
+        paddingHorizontal: 20,
+        paddingTop: 16,
     },
     errorContainer: {
         flex: 1,

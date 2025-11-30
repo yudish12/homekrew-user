@@ -144,6 +144,7 @@ export interface OrderHistory {
 
 export interface BookingHistory {
     _id: string;
+    bookingId: string;
     user: User;
     serviceTemplate: ServiceTemplate;
     category: ServiceCategory;

@@ -356,6 +356,15 @@ const ServiceBookingHistory: React.FC = () => {
         console.log(bookingsData);
         if (filter === "all") {
             setFilteredBookings(bookingsData);
+        } else if (filter === "pending") {
+            setFilteredBookings(
+                bookingsData.filter(
+                    booking =>
+                        booking.status === "arrived" ||
+                        booking.status === "vendor_assigned" ||
+                        booking.status === "in_progress",
+                ),
+            );
         } else {
             setFilteredBookings(
                 bookingsData.filter(booking => booking.status === filter),
