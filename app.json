@@ -23,7 +23,7 @@
         "NSPhotoLibraryUsageDescription": "This app requires access to your photo library so you can select a profile photo from your gallery.",
         "NSPhotoLibraryAddUsageDescription": "This app needs access to save the photo you take to your library."
       },
-      "bundleIdentifier": "com.anmolratnpandey.homekrewuser"
+      "bundleIdentifier": "com.homekrew.customers"
     },
     "android": {
       "googleServicesFile": "./google-services.json",
@@ -48,7 +48,7 @@
           "apiKey": "AIzaSyCJfWS4uoY3OPycHGr43KcmMvNiwtVJX1g"
         }
       },
-      "package": "com.anmolratnpandey.homekrewuser"
+      "package": "com.homekrew.customers"
     },
     "web": {
       "favicon": "./assets/favicon.png"

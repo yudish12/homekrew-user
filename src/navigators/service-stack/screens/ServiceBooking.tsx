@@ -110,12 +110,12 @@ export const ServiceBooking: React.FC = () => {
     // Calculate discount based on selected coupon
     const calculateDiscount = () => {
         if (!selectedCoupon) return 0;
-
+        console.log("selectedCoupon", selectedCoupon, basePrice);
         if (selectedCoupon.discountType === "fixed") {
             return selectedCoupon.discountValue;
         } else if (selectedCoupon.discountType === "percentage") {
             const percentageDiscount =
-                (subtotal * selectedCoupon.discountValue) / 100;
+                (basePrice * selectedCoupon.discountValue) / 100;
             // Apply max discount limit if exists
             if (selectedCoupon.maxDiscount) {
                 return Math.min(percentageDiscount, selectedCoupon.maxDiscount);

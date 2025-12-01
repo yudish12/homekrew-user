@@ -675,6 +675,8 @@ const PostBooking: React.FC = () => {
         setShowErrorModal(false);
     };
 
+    console.log("bookingData", bookingData);
+
     if (loading || !bookingData) {
         return (
             <SafeAreaView>

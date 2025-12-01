@@ -1,4 +1,4 @@
-package com.anmolratnpandey.homekrewuser
+package com.homekrew.customers
 
 import android.app.Application
 import android.content.res.Configuration

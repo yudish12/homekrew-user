@@ -394,7 +394,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
-				PRODUCT_BUNDLE_IDENTIFIER = com.anmolratnpandey.homekrewuser;
+				PRODUCT_BUNDLE_IDENTIFIER = com.homekrew.customers;
 				PRODUCT_NAME = homekrewuser;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "homekrewuser/homekrewuser-Bridging-Header.h";
@@ -429,7 +429,7 @@
 					"-lc++",
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
-				PRODUCT_BUNDLE_IDENTIFIER = com.anmolratnpandey.homekrewuser;
+				PRODUCT_BUNDLE_IDENTIFIER = com.homekrew.customers;
 				PRODUCT_NAME = homekrewuser;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "homekrewuser/homekrewuser-Bridging-Header.h";

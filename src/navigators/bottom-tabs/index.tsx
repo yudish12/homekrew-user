@@ -6,12 +6,12 @@ import {
     TouchableOpacityProps,
     TouchableOpacity,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Home from "./screens/Home";
 import Explore from "./screens/Explore";
 import { COLORS } from "../../constants/ui";
 import { CustomIcon } from "../../components/CustomIcon";
 import Account from "./screens/Account";
-import ProductStack from "../product-stack";
 import AllProducts from "../product-stack/screen/AllProducts";
 
 const Tab = createBottomTabNavigator();
@@ -32,6 +32,8 @@ const TabIcon = ({ name, focused }: { name: string; focused: boolean }) => {
 };
 
 const BottomTabs = () => {
+    const insets = useSafeAreaInsets();
+
     return (
         <Tab.Navigator
             screenOptions={{
@@ -46,8 +48,8 @@ const BottomTabs = () => {
                     position: "absolute",
                     left: 16,
                     right: 16,
-                    bottom: 0,
-                    height: 72,
+                    bottom: 0, // Lifts the entire bar above navigation
+                    height: 72 + insets.bottom,
                     backgroundColor: COLORS.WHITE,
                     borderTopWidth: 0,
                     paddingTop: 12,

@@ -14,7 +14,6 @@ import { Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
 import { COLORS } from "../../../constants/ui";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import Header from "../../../components/header";
 import { ServiceTemplate as ServiceTemplateType } from "../../../types/home-data";
 import { ServiceCategoryUtil } from "../../../services";
 import { BackButton } from "../../../components/BackButton";
@@ -32,7 +31,7 @@ const ServiceTemplate = () => {
     const [loading, setLoading] = useState(true);
     const [isImageViewVisible, setIsImageViewVisible] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    console.log(serviceTemplate);
+
     const handleBookNow = () => {
         // Handle booking logic
         navigation.navigate("SlotSelection", {

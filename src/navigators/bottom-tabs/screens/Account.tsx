@@ -89,85 +89,84 @@ const Account = () => {
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.WHITE }}>
-            <View>
-                {/* Header */}
-                <View style={styles.header}>
-                    <View style={{ flex: 1 }}>
-                        <Typography
-                            variant="h2"
-                            style={styles.name}
-                            color={COLORS.TEXT.DARK}
-                        >
-                            {displayName}
+            {/* Header */}
+            <View style={styles.header}>
+                <View style={{ flex: 1 }}>
+                    <Typography
+                        variant="h2"
+                        style={styles.name}
+                        color={COLORS.TEXT.DARK}
+                    >
+                        {displayName}
+                    </Typography>
+                    {!!phone && (
+                        <Typography variant="body" color={COLORS.GREY[500]}>
+                            {phone}
                         </Typography>
-                        {!!phone && (
-                            <Typography variant="body" color={COLORS.GREY[500]}>
-                                {phone}
-                            </Typography>
-                        )}
-                    </View>
-                    <View style={styles.rightRow}>
-                        <TouchableOpacity
-                            style={styles.editBtn}
-                            activeOpacity={0.8}
-                            onPress={() =>
-                                navigation.navigate("EditProfile", {
-                                    backEnabled: true,
-                                })
-                            }
-                        >
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="create-outline"
-                                size={18}
-                                color={COLORS.TEXT.DARK}
-                            />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.logoutBtn}
-                            activeOpacity={0.8}
-                            onPress={() => dispatch(logout())}
-                        >
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="log-out-outline"
-                                size={18}
-                                color={COLORS.TEXT.DARK}
-                            />
-                        </TouchableOpacity>
-                    </View>
+                    )}
                 </View>
-
-                {/* Quick actions - removed Native devices */}
-                <View style={styles.quickGrid}>
-                    <QuickAction
-                        label="My bookings"
-                        icon={
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="receipt-outline"
-                                size={22}
-                                color={COLORS.TEXT.DARK}
-                            />
+                <View style={styles.rightRow}>
+                    <TouchableOpacity
+                        style={styles.editBtn}
+                        activeOpacity={0.8}
+                        onPress={() =>
+                            navigation.navigate("EditProfile", {
+                                backEnabled: true,
+                            })
                         }
-                        onPress={() => {}}
-                    />
-                    <QuickAction
-                        label="Help &\nsupport"
-                        icon={
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="headset-outline"
-                                size={22}
-                                color={COLORS.TEXT.DARK}
-                            />
-                        }
-                        onPress={() => {}}
-                    />
+                    >
+                        <CustomIcon
+                            provider="Ionicons"
+                            name="create-outline"
+                            size={18}
+                            color={COLORS.TEXT.DARK}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.logoutBtn}
+                        activeOpacity={0.8}
+                        onPress={() => dispatch(logout())}
+                    >
+                        <CustomIcon
+                            provider="Ionicons"
+                            name="log-out-outline"
+                            size={18}
+                            color={COLORS.TEXT.DARK}
+                        />
+                    </TouchableOpacity>
                 </View>
+            </View>
 
-                <View style={styles.divider} />
+            {/* Quick actions - removed Native devices */}
+            <View style={styles.quickGrid}>
+                <QuickAction
+                    label="My bookings"
+                    icon={
+                        <CustomIcon
+                            provider="Ionicons"
+                            name="receipt-outline"
+                            size={22}
+                            color={COLORS.TEXT.DARK}
+                        />
+                    }
+                    onPress={() => {}}
+                />
+                <QuickAction
+                    label="Help &\nsupport"
+                    icon={
+                        <CustomIcon
+                            provider="Ionicons"
+                            name="headset-outline"
+                            size={22}
+                            color={COLORS.TEXT.DARK}
+                        />
+                    }
+                    onPress={() => {}}
+                />
+            </View>
 
+            <View style={styles.divider} />
+            <ScrollView contentContainerStyle={{ paddingBottom: tabBarheight }}>
                 {/* List menu - removed Wallet and My rating */}
                 <View style={styles.list}>
                     <ListItem
@@ -203,9 +202,10 @@ const Account = () => {
                         onPress={() => {}}
                     />
                 </View>
-            </View>
+
+                <ReferralBanner />
+            </ScrollView>
             {/* Refer card */}
-            <ReferralBanner />
         </SafeAreaView>
     );
 };

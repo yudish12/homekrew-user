@@ -1,7 +1,7 @@
 import React from "react";
-import { ViewStyle } from "react-native";
-import { SafeAreaView as RNSafeAreaView } from "react-native-safe-area-context";
+import { ViewStyle, View } from "react-native";
 import { COLORS } from "../constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface SafeAreaViewProps {
     children: React.ReactNode;
@@ -16,12 +16,22 @@ export const SafeAreaView: React.FC<SafeAreaViewProps> = ({
     edges = ["top", "bottom", "left", "right"],
     backgroundColor = COLORS.WHITE,
 }) => {
+    const insets = useSafeAreaInsets();
     return (
-        <RNSafeAreaView
-            style={[{ flex: 1, backgroundColor }, style]}
-            edges={edges}
+        <View
+            style={[
+                {
+                    flex: 1,
+                    backgroundColor,
+                    paddingTop: insets.top,
+                    paddingBottom: insets.bottom,
+                    paddingLeft: insets.left,
+                    paddingRight: insets.right,
+                },
+                style,
+            ]}
         >
             {children}
-        </RNSafeAreaView>
+        </View>
     );
 };
