@@ -48,7 +48,7 @@ const BottomTabs = () => {
                     position: "absolute",
                     left: 16,
                     right: 16,
-                    bottom: 0, // Lifts the entire bar above navigation
+                    bottom: 0,
                     height: 72 + insets.bottom,
                     backgroundColor: COLORS.WHITE,
                     borderTopWidth: 0,

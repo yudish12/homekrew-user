@@ -489,7 +489,7 @@ const EditProfileScreen = () => {
                         }}
                         style={styles.video}
                         useNativeControls
-                        resizeMode={ResizeMode.CONTAIN}
+                        resizeMode={ResizeMode.COVER}
                         shouldPlay
                         onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
                             if (
@@ -501,19 +501,15 @@ const EditProfileScreen = () => {
                             }
                         }}
                     />
-                    <Pressable
-                        style={styles.closeButton}
-                        onPress={handleCloseVideo}
-                    >
-                        <View style={styles.closeButtonInner}>
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="close"
-                                size={24}
-                                color={COLORS.WHITE}
-                            />
-                        </View>
-                    </Pressable>
+                    <View style={styles.skipButtonContainer}>
+                        <Button
+                            title="Skip"
+                            variant="outline"
+                            onPress={handleCloseVideo}
+                            style={styles.skipButton}
+                            textStyle={styles.skipButtonText}
+                        />
+                    </View>
                 </View>
             </RNModal>
         );
@@ -848,28 +844,29 @@ const styles = StyleSheet.create({
     videoContainer: {
         flex: 1,
         backgroundColor: "#000000",
-        justifyContent: "center",
-        alignItems: "center",
     },
     video: {
         width: Dimensions.get("window").width,
         height: Dimensions.get("window").height,
     },
-    closeButton: {
+    skipButtonContainer: {
         position: "absolute",
-        top: Platform.OS === "ios" ? 50 : 20,
+        top: Platform.OS === "ios" ? 60 : 40,
         right: 20,
         zIndex: 1000,
     },
-    closeButtonInner: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
+    skipButton: {
+        backgroundColor: "rgba(0, 0, 0, 0.6)",
         borderColor: COLORS.WHITE,
+        borderWidth: 1.5,
+        paddingHorizontal: 24,
+        paddingVertical: 8,
+        minHeight: 40,
+    },
+    skipButtonText: {
+        color: COLORS.WHITE,
+        fontSize: 14,
+        fontWeight: WEIGHTS.SEMI_BOLD,
     },
 });
 

@@ -110,7 +110,6 @@ export const ServiceBooking: React.FC = () => {
     // Calculate discount based on selected coupon
     const calculateDiscount = () => {
         if (!selectedCoupon) return 0;
-        console.log("selectedCoupon", selectedCoupon, basePrice);
         if (selectedCoupon.discountType === "fixed") {
             return selectedCoupon.discountValue;
         } else if (selectedCoupon.discountType === "percentage") {
@@ -285,8 +284,14 @@ export const ServiceBooking: React.FC = () => {
         };
         const response = await OrdersServices.bookService(bookingData);
         if (response.success) {
-            navigation.navigate("PostBooking", {
-                bookingId: response.data?.bookingId,
+            navigation.reset({
+                index: 0,
+                routes: [
+                    {
+                        name: "PostBooking",
+                        params: { bookingId: response.data?.bookingId },
+                    },
+                ],
             });
         } else {
             showErrorToast("Error", response.message, {
