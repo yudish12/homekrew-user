@@ -35,6 +35,7 @@ import { UtilityServices } from "../../../services/utility-services";
 
 // Type for the booking status response
 interface BookingStatusResponse {
+    addons: any[];
     _id: string;
     bookingId: string;
     isVendorRated: boolean;
@@ -179,12 +180,17 @@ const SearchingAnimation: React.FC = () => {
 
 const PricingBreakdown: React.FC<{
     pricing: BookingHistory["pricing"];
-}> = ({ pricing }) => (
+    addOns: any[];
+}> = ({ pricing, addOns }) => (
     <View style={styles.pricingCard}>
         <View style={styles.pricingRow}>
-            <Body color={COLORS.GREY[500]}>Base Price</Body>
+            <Body color={COLORS.GREY[500]}>{`${
+                pricing.quantity && pricing.quantity > 1
+                    ? `${pricing.quantity} Items`
+                    : "Item"
+            } Total`}</Body>
             <Body style={{ color: COLORS.TEXT.DARK }}>
-                ₹{pricing.basePrice}
+                ₹{`${pricing.basePrice * (pricing?.quantity ?? 1)}`}
             </Body>
         </View>
         {pricing.membershipDiscount > 0 && (
@@ -203,14 +209,20 @@ const PricingBreakdown: React.FC<{
                 </Body>
             </View>
         )}
-        {pricing.addOnsTotal > 0 && (
-            <View style={styles.pricingRow}>
-                <Body color={COLORS.RED[500]}>Add-ons Total</Body>
-                <Body style={{ color: COLORS.RED[500] }}>
-                    +₹{pricing.addOnsTotal}
-                </Body>
-            </View>
-        )}
+        {pricing.addOnsTotal > 0 ? (
+            <>
+                {addOns?.map(addOn => (
+                    <View style={styles.pricingRow}>
+                        <Body
+                            color={COLORS.RED[500]}
+                        >{`${addOn.name} (${addOn.quantity})`}</Body>
+                        <Body style={{ color: COLORS.RED[500] }}>
+                            +₹{addOn.totalPrice}
+                        </Body>
+                    </View>
+                ))}
+            </>
+        ) : null}
         <View style={styles.pricingRow}>
             <Body color={COLORS.GREY[500]}>Platform Fees and taxes</Body>
             <Body style={{ color: COLORS.TEXT.DARK }}>
@@ -578,7 +590,8 @@ const PostBooking: React.FC = () => {
             if (response.success && response.data) {
                 setBookingData(response.data);
                 if (
-                    response.data.paymentStatus === "paid" &&
+                    (response.data.paymentStatus === "paid" ||
+                        response.data.status === "expired") &&
                     timerRef.current
                 ) {
                     clearInterval(timerRef.current);
@@ -596,7 +609,7 @@ const PostBooking: React.FC = () => {
         fetchBookingStatus();
 
         // Then set up polling
-        timerRef.current = setInterval(fetchBookingStatus, 3000);
+        timerRef.current = setInterval(fetchBookingStatus, 20000);
 
         return () => {
             if (timerRef.current) {
@@ -627,7 +640,6 @@ const PostBooking: React.FC = () => {
             const resp = await OrdersServices.bookingPayNow(
                 params?.bookingId ?? "",
             );
-            console.log(resp, "payment");
             if (resp.success) {
                 const options = {
                     key: "rzp_test_M1Ad7casmGNZTV",
@@ -746,7 +758,10 @@ const PostBooking: React.FC = () => {
                 </View>
                 <BookingDetailsCard booking={bookingData} />
                 {bookingData.status !== "expired" && (
-                    <PricingBreakdown pricing={bookingData.pricing} />
+                    <PricingBreakdown
+                        addOns={bookingData.addons}
+                        pricing={bookingData.pricing}
+                    />
                 )}
                 <AddressSection address={bookingData.address} />
 

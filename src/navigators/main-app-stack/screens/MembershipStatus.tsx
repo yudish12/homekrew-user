@@ -30,7 +30,6 @@ const MembershipStatus = () => {
     const navigation = useNavigation();
     const route = useRoute();
     const { membership } = route.params as RouteParams;
-
     // Calculate membership progress and days
     const getMembershipDetails = useCallback(() => {
         const startDate = new Date(membership.startDate);
@@ -57,7 +56,6 @@ const MembershipStatus = () => {
     }, [membership]);
 
     const membershipDetails = getMembershipDetails();
-
     useEffect(() => {
         // Fade in animation
         Animated.timing(fadeAnim, {
@@ -258,13 +256,13 @@ const MembershipStatus = () => {
                                 color="#FF6B35"
                             />
                             <Typography variant="h4" style={styles.statValue}>
-                                ₹{membership.payment.amountPaid}
+                                ₹{membership.membershipUsage}
                             </Typography>
                             <Typography
                                 variant="caption"
                                 style={styles.statLabel}
                             >
-                                Amount Paid
+                                Total Used
                             </Typography>
                         </View>
                     </View>

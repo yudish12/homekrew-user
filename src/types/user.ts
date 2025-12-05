@@ -1,6 +1,7 @@
 export interface UserMembership {
     membershipId: string;
     status: string;
+    membershipUsage: number;
     startDate: string;
     endDate: string;
     autoRenew: false;

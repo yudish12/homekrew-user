@@ -27,7 +27,7 @@ import { SafeAreaView } from "../../../components/SafeAreaView";
 import { useSelector } from "react-redux";
 import { Coupon, RootState } from "../../../types";
 import CustomIcon from "../../../components/CustomIcon";
-import { BookingData } from "../../../types/services/orders";
+import { BookingData, BookingHistory } from "../../../types/services/orders";
 import { OrdersServices } from "../../../services/orders";
 import { showErrorToast } from "../../../components/Toast";
 import { CouponBottomSheet } from "../../../modules/cart/CouponBottomSheet";
@@ -59,6 +59,10 @@ export const ServiceBooking: React.FC = () => {
     const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
     const [isCouponBottomSheetVisible, setIsCouponBottomSheetVisible] =
         useState(false);
+    const [pricingLoading, setPricingLoading] = useState(false);
+    const [pricingData, setPricingData] = useState<
+        BookingHistory["pricing"] | null
+    >(null);
 
     const userMembership = useSelector(
         (state: RootState) => state.auth.user?.membership,
@@ -71,6 +75,7 @@ export const ServiceBooking: React.FC = () => {
     const params = useRoute().params as {
         serviceId: string;
         serviceTemplateId: string;
+        quantity: number;
         selectedDate: string;
         selectedTimeSlot: string;
         selectedAddress: UserAddress;
@@ -84,7 +89,6 @@ export const ServiceBooking: React.FC = () => {
             membershipDiscount: number;
         };
     };
-    console.log(params.pricingData);
 
     // Get selected values from route params
     const selectedDate = params.selectedDate;
@@ -99,33 +103,8 @@ export const ServiceBooking: React.FC = () => {
     };
 
     // Pricing calculations
-    const maxPrice = params.pricingData?.maxPrice || 0;
-    const basePrice = params.pricingData?.basePrice || 0;
-    const currency = params.pricingData?.currency || "INR";
-    const membershipDiscount = params.pricingData?.membershipDiscount ?? 0;
-    const platformFee = params.pricingData?.platformFee ?? 0;
-    const taxAmount = params.pricingData?.taxAmount ?? 0;
-    const subtotal = basePrice + platformFee + taxAmount;
-
-    // Calculate discount based on selected coupon
-    const calculateDiscount = () => {
-        if (!selectedCoupon) return 0;
-        if (selectedCoupon.discountType === "fixed") {
-            return selectedCoupon.discountValue;
-        } else if (selectedCoupon.discountType === "percentage") {
-            const percentageDiscount =
-                (basePrice * selectedCoupon.discountValue) / 100;
-            // Apply max discount limit if exists
-            if (selectedCoupon.maxDiscount) {
-                return Math.min(percentageDiscount, selectedCoupon.maxDiscount);
-            }
-            return percentageDiscount;
-        }
-        return 0;
-    };
-
-    const discount = calculateDiscount();
-    const totalPrice = subtotal - discount - membershipDiscount;
+    const maxPrice =
+        (params.pricingData?.maxPrice || 0) * (params?.quantity ?? 1);
 
     const fetchCoupons = async () => {
         setIsFetchingCoupons(true);
@@ -149,21 +128,39 @@ export const ServiceBooking: React.FC = () => {
         setIsFetchingCoupons(false);
     };
 
+    const fetchBookingPrice = async (couponCode?: string) => {
+        setPricingLoading(true);
+        const response = await OrdersServices.getBookingPrice(
+            params.serviceTemplateId,
+            params.quantity,
+            couponCode,
+        );
+        if (response.success && response.data) {
+            console.log(response.data.pricing);
+            setPricingData(response.data.pricing);
+        } else {
+        }
+        setPricingLoading(false);
+    };
+
     useEffect(() => {
         fetchCoupons();
+        fetchBookingPrice();
     }, []);
 
     const handleApplyCoupon = (coupon: Coupon) => {
         setSelectedCoupon(coupon);
         setIsCouponBottomSheetVisible(false);
+        fetchBookingPrice(coupon.code);
     };
 
     const handleRemoveCoupon = () => {
         setSelectedCoupon(null);
+        fetchBookingPrice();
     };
 
     const formatCurrency = (amount: number | string) => {
-        const currencySymbol = currency === "INR" ? "₹" : currency;
+        const currencySymbol = "₹";
         return `${currencySymbol}${amount}`;
     };
 
@@ -195,7 +192,7 @@ export const ServiceBooking: React.FC = () => {
                                 {formatCurrency(maxPrice)}
                             </Caption>
                             <Body style={styles.pricingValue}>
-                                {formatCurrency(basePrice)}
+                                {formatCurrency(pricingData?.subtotal || 0)}
                             </Body>
                         </View>
                     </View>
@@ -208,7 +205,7 @@ export const ServiceBooking: React.FC = () => {
                         </Body>
                         <Body style={styles.pricingValue}>
                             {formatCurrency(
-                                params.pricingData?.membershipDiscount || 0,
+                                pricingData?.membershipDiscount || 0,
                             )}
                         </Body>
                     </View>
@@ -220,45 +217,51 @@ export const ServiceBooking: React.FC = () => {
                         </Body>
                         <Body style={styles.pricingValue}>
                             {formatCurrency(
-                                (params.pricingData?.platformFee ?? 0) +
-                                    (params.pricingData?.taxAmount ?? 0),
+                                (pricingData?.platformFee ?? 0) +
+                                    (pricingData?.taxAmount ?? 0),
                             )}
                         </Body>
                     </View>
                     <View style={styles.pricingDivider} />
 
                     {/* Discount */}
-                    {discount > 0 && (
-                        <>
-                            <View style={styles.pricingRow}>
-                                <View style={styles.discountLabelContainer}>
-                                    <Body style={styles.pricingLabel}>
-                                        Discount
+                    {pricingData?.couponDiscount &&
+                        pricingData?.couponDiscount > 0 && (
+                            <>
+                                <View style={styles.pricingRow}>
+                                    <View style={styles.discountLabelContainer}>
+                                        <Body style={styles.pricingLabel}>
+                                            Discount
+                                        </Body>
+                                        {selectedCoupon && (
+                                            <Caption
+                                                style={styles.couponCodeText}
+                                            >
+                                                ({selectedCoupon.code})
+                                            </Caption>
+                                        )}
+                                    </View>
+                                    <Body
+                                        style={[
+                                            styles.pricingValue,
+                                            styles.discountText,
+                                        ]}
+                                    >
+                                        -{" "}
+                                        {formatCurrency(
+                                            pricingData?.couponDiscount || 0,
+                                        )}
                                     </Body>
-                                    {selectedCoupon && (
-                                        <Caption style={styles.couponCodeText}>
-                                            ({selectedCoupon.code})
-                                        </Caption>
-                                    )}
                                 </View>
-                                <Body
-                                    style={[
-                                        styles.pricingValue,
-                                        styles.discountText,
-                                    ]}
-                                >
-                                    - {formatCurrency(discount)}
-                                </Body>
-                            </View>
-                            <View style={styles.pricingDivider} />
-                        </>
-                    )}
+                                <View style={styles.pricingDivider} />
+                            </>
+                        )}
 
                     {/* Total with emphasis */}
                     <View style={styles.totalPricingRow}>
                         <H4 style={styles.totalLabel}>Total Amount</H4>
                         <H3 style={styles.totalValue}>
-                            {formatCurrency(totalPrice.toFixed(2))}
+                            {formatCurrency(pricingData?.totalAmount || 0)}
                         </H3>
                     </View>
                 </View>
@@ -279,6 +282,7 @@ export const ServiceBooking: React.FC = () => {
             date: selectedDate,
             timeSlot: selectedTimeSlot,
             address: selectedAddress._id || "",
+            quantity: params.quantity,
             specialRequirements: specialRequirements,
             appliedCoupon: selectedCoupon?.code ?? undefined,
         };
@@ -482,7 +486,16 @@ export const ServiceBooking: React.FC = () => {
                     )}
 
                     {/* Pricing Breakdown */}
-                    {renderPricingBreakdown()}
+                    {pricingLoading ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator
+                                size="large"
+                                color={COLORS.primary}
+                            />
+                        </View>
+                    ) : (
+                        renderPricingBreakdown()
+                    )}
                     {/* Apply Coupon Section */}
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
@@ -510,7 +523,11 @@ export const ServiceBooking: React.FC = () => {
                                     <BodySmall
                                         style={styles.appliedCouponDiscount}
                                     >
-                                        You saved {formatCurrency(discount)}!
+                                        You saved{" "}
+                                        {formatCurrency(
+                                            pricingData?.couponDiscount || 0,
+                                        )}
+                                        !
                                     </BodySmall>
                                 </View>
                                 <TouchableOpacity
@@ -672,7 +689,7 @@ export const ServiceBooking: React.FC = () => {
                             variant="h3"
                             style={styles.totalPriceAmount}
                         >
-                            {formatCurrency(totalPrice.toFixed(2))}
+                            {formatCurrency(pricingData?.totalAmount || 0)}
                         </Typography>
                     </View>
                     <PrimaryButton
@@ -787,6 +804,11 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         zIndex: 2,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     membershipBadgeGradient: {
         flexDirection: "row",

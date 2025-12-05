@@ -10,7 +10,7 @@ import {
 } from "../../types/services/orders";
 
 export class OrdersServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
+    private static readonly BASE_URL = "http://192.168.0.182:8000/api/v1";
 
     static async bookService(
         bookingData: BookingData,
@@ -167,6 +167,33 @@ export class OrdersServices {
             success: true,
             data: response.data,
             message: "Coupons fetched successfully",
+            status: 200,
+        };
+    }
+
+    static async getBookingPrice(
+        serviceTemplateId: string,
+        quantity: number,
+        couponCode?: string,
+    ) {
+        const response = await api.post(`${this.BASE_URL}/bookings/preview`, {
+            serviceId: serviceTemplateId,
+            quantity,
+            appliedCoupon: couponCode,
+        });
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Booking price fetched successfully",
             status: 200,
         };
     }

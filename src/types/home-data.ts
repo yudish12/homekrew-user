@@ -77,6 +77,7 @@ export interface ServiceTemplate {
     image: string;
     images: string[];
     subCategory: ServiceChildCategory;
+    isMultiOrder: boolean;
     pricingGuidelines: {
         maxPrice: number;
     };

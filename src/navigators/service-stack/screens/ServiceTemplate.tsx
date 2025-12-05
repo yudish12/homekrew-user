@@ -10,14 +10,15 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { SafeAreaView } from "../../../components/SafeAreaView";
-import { Typography } from "../../../components/Typography";
+import { Body, Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
-import { COLORS } from "../../../constants/ui";
+import { COLORS, WEIGHTS } from "../../../constants/ui";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { ServiceTemplate as ServiceTemplateType } from "../../../types/home-data";
 import { ServiceCategoryUtil } from "../../../services";
 import { BackButton } from "../../../components/BackButton";
 import { Ionicons } from "@expo/vector-icons";
+import { showErrorToast } from "../../../components/Toast";
 
 const { width } = Dimensions.get("window");
 
@@ -31,12 +32,14 @@ const ServiceTemplate = () => {
     const [loading, setLoading] = useState(true);
     const [isImageViewVisible, setIsImageViewVisible] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [quantity, setQuantity] = useState(1);
 
     const handleBookNow = () => {
         // Handle booking logic
         navigation.navigate("SlotSelection", {
             serviceId,
             serviceTemplateId,
+            quantity,
             pricingData: {
                 maxPrice: serviceTemplate?.pricingGuidelines.maxPrice || 0,
                 basePrice: serviceTemplate?.pricing?.basePrice || 0,
@@ -211,13 +214,58 @@ const ServiceTemplate = () => {
                     </View>
 
                     <View style={styles.serviceInfo}>
-                        <Typography
-                            variant="h4"
-                            color={COLORS.TEXT.DARK}
-                            style={styles.serviceTitle}
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                            }}
                         >
-                            {serviceTemplate?.title}
-                        </Typography>
+                            <Typography
+                                variant="h4"
+                                color={COLORS.TEXT.DARK}
+                                style={styles.serviceTitle}
+                            >
+                                {serviceTemplate?.title}
+                            </Typography>
+                            {serviceTemplate?.isMultiOrder && (
+                                <View style={styles.quantityContainer}>
+                                    <TouchableOpacity
+                                        style={styles.quantityButton}
+                                        onPress={() => {
+                                            if (quantity > 1) {
+                                                setQuantity(quantity - 1);
+                                            } else {
+                                                showErrorToast(
+                                                    "Error",
+                                                    "Minimum quantity is 1",
+                                                );
+                                            }
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name="remove"
+                                            size={16}
+                                            color={COLORS.primary}
+                                        />
+                                    </TouchableOpacity>
+                                    <Body style={styles.quantityText}>
+                                        {quantity}
+                                    </Body>
+                                    <TouchableOpacity
+                                        style={styles.quantityButton}
+                                        onPress={() => {
+                                            setQuantity(quantity + 1);
+                                        }}
+                                    >
+                                        <Ionicons
+                                            name="add"
+                                            size={16}
+                                            color={COLORS.primary}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
                         <Typography
                             variant="body"
                             color={COLORS.TEXT.DARK}
@@ -299,6 +347,26 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "flex-start",
+    },
+    quantityContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: COLORS.primaryLight,
+        borderRadius: 8,
+        padding: 4,
+    },
+    quantityButton: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        backgroundColor: COLORS.WHITE,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    quantityText: {
+        marginHorizontal: 15,
+        fontWeight: WEIGHTS.MEDIUM,
+        color: COLORS.TEXT.DARK,
     },
     serviceInfo: {
         marginTop: 16,

@@ -12,6 +12,7 @@ import BookingDetails from "./screens/BookingDetails";
 import SearchScreen from "./screens/SearchScreen";
 import MembershipPlansScreen from "./screens/AllPlansScreen";
 import MembershipStatus from "./screens/MembershipStatus";
+import { InteriorCalculatorStack } from "../interior-calculator-stack";
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +55,15 @@ const MainAppStack = () => {
             <Stack.Screen
                 name="MembershipStatus"
                 component={MembershipStatus}
+            />
+            <Stack.Screen
+                name="InteriorCalculator"
+                component={InteriorCalculatorStack}
+                options={{
+                    headerShown: false,
+                    presentation: "modal",
+                    animation: "slide_from_bottom",
+                }}
             />
         </Stack.Navigator>
     );

@@ -11,6 +11,7 @@ import { CartInitialState } from "./redux/reducers/cart";
 import { ToastComponent } from "./components/Toast";
 import { AddressInitialState } from "./redux/reducers";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { NotificationService } from "./lib/notification-service";
 
 // Create the store instance
 const store = configureStore({
@@ -30,6 +31,11 @@ export default function App() {
                 setFontsLoaded(true);
             }
         })();
+    }, []);
+
+    useEffect(() => {
+        // Initialize Firebase Cloud Messaging and Notifee
+        NotificationService.initialize();
     }, []);
 
     if (!fontsLoaded) {

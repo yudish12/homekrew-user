@@ -41,6 +41,7 @@ import FeaturedServiceTemplate from "../../../modules/home/ui/FeaturedServiceTem
 import { ProductsServices } from "../../../services/products";
 import FeaturedProducts from "../../../modules/home/ui/FeaturedProducts";
 import { ProductsComingSoon } from "../../../modules/products/ProductsComingSoon";
+import { InteriorCalculatorBanner } from "../../../components/InteriorCalculatorBanner";
 
 // Define the ActiveBooking interface
 interface ActiveBooking {
@@ -464,6 +465,9 @@ const Home = () => {
                     loading={servicesLoading}
                     categories={serviceCategories}
                 />
+
+                {/* Interior Calculator Banner */}
+                <InteriorCalculatorBanner />
 
                 {/* Featured Products Section */}
                 {productsLoading ? (

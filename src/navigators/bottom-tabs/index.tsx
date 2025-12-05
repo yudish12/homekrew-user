@@ -49,11 +49,11 @@ const BottomTabs = () => {
                     left: 16,
                     right: 16,
                     bottom: 0,
-                    height: 72 + insets.bottom,
+                    height: 60 + insets.bottom,
                     backgroundColor: COLORS.WHITE,
                     borderTopWidth: 0,
                     paddingTop: 12,
-                    paddingBottom: 8,
+                    paddingBottom: 0,
                     // shadow
                     shadowColor: COLORS.TEXT.DARK,
                     shadowOffset: { width: 0, height: 8 },

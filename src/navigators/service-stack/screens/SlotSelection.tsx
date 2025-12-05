@@ -88,6 +88,7 @@ const SlotSelection = () => {
     const route = useRoute();
     const params = route.params as {
         serviceId: string;
+        quantity: number;
         serviceTemplateId: string;
         pricingData?: {
             maxPrice: number;
@@ -127,6 +128,7 @@ const SlotSelection = () => {
         navigation.navigate("ServiceBooking", {
             serviceId: params.serviceId,
             serviceTemplateId: params.serviceTemplateId,
+            quantity: params.quantity,
             pricingData: params.pricingData,
             selectedDate,
             selectedTimeSlot,

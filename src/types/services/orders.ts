@@ -13,6 +13,7 @@ export interface BookingData {
     serviceTemplate: string;
     date: string;
     timeSlot: string;
+    quantity: number;
     address: string;
     specialRequirements: string;
     appliedCoupon?: string;
@@ -156,10 +157,12 @@ export interface BookingHistory {
     paymentStatus: string;
     price: number;
     pricing: {
+        quantity?: number;
         basePrice: number;
         discountAmount: number;
         addOnsTotal: number;
         couponDiscount: number;
+        subtotal: number;
         taxAmount: number;
         membershipDiscount: number;
         platformFee: number;

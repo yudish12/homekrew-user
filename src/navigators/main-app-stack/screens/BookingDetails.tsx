@@ -232,7 +232,6 @@ const BookingDetails: React.FC = () => {
     const navigation = useNavigation<any>();
     const route = useRoute();
     const { booking } = route.params as { booking: BookingHistory };
-
     if (!booking) {
         return (
             <SafeAreaView>
@@ -328,6 +327,16 @@ const BookingDetails: React.FC = () => {
                         value={booking?.service?.description}
                         icon="list"
                     />
+                    {(booking.status === "arrived" ||
+                        booking.status === "vendor_assigned" ||
+                        booking.status === "in_progress") &&
+                        booking?.otpDeatils?.otp && (
+                            <InfoRow
+                                label="OTP"
+                                value={booking?.otpDeatils?.otp ?? ""}
+                                icon="key"
+                            />
+                        )}
                     {booking.specialRequirements && (
                         <InfoRow
                             label="Special Requirements"
@@ -401,8 +410,8 @@ const BookingDetails: React.FC = () => {
                             color: COLORS.primary,
                         }}
                         onPress={() => {
-                            navigation.navigate("PostBooking", {
-                                bookingId: booking._id,
+                            navigation.navigate("Services", {
+                                screen: "PostBooking",
                             });
                         }}
                     />
