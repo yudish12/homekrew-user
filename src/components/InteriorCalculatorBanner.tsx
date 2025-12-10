@@ -73,13 +73,6 @@ export const InteriorCalculatorBanner: React.FC = () => {
                             {previousCalculation ? (
                                 <>
                                     <Typography
-                                        variant="h6"
-                                        color={COLORS.WHITE}
-                                        style={styles.title}
-                                    >
-                                        Your Interior Estimate
-                                    </Typography>
-                                    <Typography
                                         variant="bodySmall"
                                         color={COLORS.WHITE}
                                         style={styles.subtitle}
@@ -100,13 +93,6 @@ export const InteriorCalculatorBanner: React.FC = () => {
                                         style={styles.title}
                                     >
                                         Calculate Interior Cost
-                                    </Typography>
-                                    <Typography
-                                        variant="bodySmall"
-                                        color={COLORS.WHITE}
-                                        style={styles.subtitle}
-                                    >
-                                        Get instant quote for your dream home
                                     </Typography>
                                 </>
                             )}

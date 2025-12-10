@@ -20,6 +20,7 @@ export type ModalType = "success" | "error" | "warning" | "info" | "custom";
 interface ModalProps {
     visible: boolean;
     onClose: () => void;
+    transparent?: boolean;
     title?: string;
     message?: string;
     type?: ModalType;
@@ -53,7 +54,6 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
     const scaleValue = useRef(new Animated.Value(0)).current;
     const opacityValue = useRef(new Animated.Value(0)).current;
-    console.log(primaryButton);
     useEffect(() => {
         if (visible) {
             Animated.parallel([
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
 
 // Convenience components for common modal types
 export const SuccessModal: React.FC<Omit<ModalProps, "type">> = props => (
-    <Modal type="success" {...props} />
+    <Modal type="success" transparent={false} {...props} />
 );
 
 export const ErrorModal: React.FC<Omit<ModalProps, "type">> = props => (

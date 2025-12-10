@@ -10,7 +10,7 @@ import {
 } from "../../types/services/orders";
 
 export class OrdersServices {
-    private static readonly BASE_URL = "http://192.168.0.182:8000/api/v1";
+    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
 
     static async bookService(
         bookingData: BookingData,

@@ -412,6 +412,9 @@ const BookingDetails: React.FC = () => {
                         onPress={() => {
                             navigation.navigate("Services", {
                                 screen: "PostBooking",
+                                params: {
+                                    bookingId: booking._id,
+                                },
                             });
                         }}
                     />

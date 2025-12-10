@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Animated,
     Linking,
@@ -25,7 +25,11 @@ import uiUtils from "../../../utils/ui";
 import Header from "../../../components/header";
 import { OrdersServices } from "../../../services/orders";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { showErrorToast, showToast } from "../../../components/Toast";
+import {
+    showErrorToast,
+    showSuccessToast,
+    showToast,
+} from "../../../components/Toast";
 import { BookingHistory } from "../../../types/services/orders";
 import { ErrorModal, SuccessModal } from "../../../components/Modal";
 import { RatingUI } from "../../../modules/booking/rating-ui";
@@ -609,7 +613,7 @@ const PostBooking: React.FC = () => {
         fetchBookingStatus();
 
         // Then set up polling
-        timerRef.current = setInterval(fetchBookingStatus, 20000);
+        timerRef.current = setInterval(fetchBookingStatus, 5000);
 
         return () => {
             if (timerRef.current) {
@@ -655,7 +659,10 @@ const PostBooking: React.FC = () => {
                         "Payment to buy products delivered right at your registered address ",
                 };
                 const data = await RazorpayCheckout.open(options);
-                setShowSuccessModal(true);
+                showSuccessToast(
+                    "Payment successful",
+                    "Your payment has been processed successfully. Please rate the vendor for your booking.",
+                );
             } else {
                 setShowErrorModal(true);
             }
@@ -686,8 +693,6 @@ const PostBooking: React.FC = () => {
     const handleErrorClose = () => {
         setShowErrorModal(false);
     };
-
-    console.log("bookingData", bookingData);
 
     if (loading || !bookingData) {
         return (
@@ -794,23 +799,7 @@ const PostBooking: React.FC = () => {
                     ) : null}
                 </View>
             </ScrollView>
-            <SuccessModal
-                visible={showSuccessModal}
-                onClose={handleSuccessClose}
-                title="Payment Successful!"
-                message={
-                    "Your payment has been processed successfully. Your order will be prepared and shipped soon."
-                }
-            />
-            {/* Error Modal */}
-            <ErrorModal
-                visible={showErrorModal}
-                onClose={handleErrorClose}
-                title="Payment Failed"
-                message={
-                    "We couldn't process your payment. Please check your payment details and try again."
-                }
-            />
+
             <RatingModal
                 visible={showRatingModal}
                 onClose={() => setShowRatingModal(false)}

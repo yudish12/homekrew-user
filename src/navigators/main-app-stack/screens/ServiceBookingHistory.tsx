@@ -362,7 +362,8 @@ const ServiceBookingHistory: React.FC = () => {
                     booking =>
                         booking.status === "arrived" ||
                         booking.status === "vendor_assigned" ||
-                        booking.status === "in_progress",
+                        booking.status === "in_progress" ||
+                        booking.status === "pending",
                 ),
             );
         } else {

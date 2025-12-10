@@ -6,8 +6,6 @@ import App from "./src/App";
 
 // Background message handler must be set outside of the app lifecycle
 messaging().setBackgroundMessageHandler(async remoteMessage => {
-    console.log("Background notification received:", remoteMessage);
-
     // Create notification channel if needed (Android)
     await notifee.createChannel({
         id: "default",
