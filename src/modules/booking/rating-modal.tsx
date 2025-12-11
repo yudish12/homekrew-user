@@ -48,7 +48,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({
                         style={{ textAlign: "center" }}
                         color={COLORS.TEXT.DARK}
                     >
-                        Rate Your Service
+                        Rate Our Service
                     </H4>
                 </View>
 

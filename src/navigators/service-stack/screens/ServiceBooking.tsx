@@ -205,7 +205,7 @@ export const ServiceBooking: React.FC = () => {
                         </Body>
                         <Body style={styles.pricingValue}>
                             {formatCurrency(
-                                pricingData?.membershipDiscount || 0,
+                                pricingData?.membershipDiscount.toFixed(2) || 0,
                             )}
                         </Body>
                     </View>
