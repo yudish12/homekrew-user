@@ -256,7 +256,10 @@ const MembershipStatus = () => {
                                 color="#FF6B35"
                             />
                             <Typography variant="h4" style={styles.statValue}>
-                                ₹{membership.membershipUsage}
+                                ₹
+                                {parseFloat(
+                                    membership.membershipUsage.toString(),
+                                ).toFixed(2)}
                             </Typography>
                             <Typography
                                 variant="caption"
