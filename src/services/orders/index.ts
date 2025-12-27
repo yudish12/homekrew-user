@@ -1,3 +1,4 @@
+import { API_URL } from "../../constants/axios-config";
 import { api } from "../../lib";
 import { ApiResponse, Coupon, CouponResponse } from "../../types";
 import {
@@ -10,7 +11,7 @@ import {
 } from "../../types/services/orders";
 
 export class OrdersServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
+    private static readonly BASE_URL = `${API_URL}/api/v1`;
 
     static async bookService(
         bookingData: BookingData,

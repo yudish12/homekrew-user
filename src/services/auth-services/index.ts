@@ -3,9 +3,9 @@ import { api, NotificationService } from "../../lib";
 import { ApiResponse, UserUpdateBody } from "../../types";
 import { User } from "../../types/user";
 import { setAuthToken } from "../../lib/storage/auth-storage";
-
+import { API_URL } from "../../constants/axios-config";
 export class AuthServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1/user";
+    private static readonly BASE_URL = `${API_URL}/api/v1/user`;
     private static dispatch: any = null;
 
     // Method to set dispatch function

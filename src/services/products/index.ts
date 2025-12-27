@@ -1,9 +1,10 @@
+import { API_URL } from "../../constants/axios-config";
 import { api } from "../../lib";
 import { ApiResponse } from "../../types";
 import { GetProductsCategoriesResponse, Product } from "../../types/home-data";
 
 export class ProductsServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
+    private static readonly BASE_URL = `${API_URL}/api/v1`;
 
     static async getProductCategories(): Promise<
         ApiResponse<GetProductsCategoriesResponse>

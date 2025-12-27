@@ -1,3 +1,4 @@
+import { API_URL } from "../../constants/axios-config";
 import { api } from "../../lib";
 import { ApiResponse } from "../../types";
 import {
@@ -7,12 +8,11 @@ import {
 } from "../../types/home-data";
 
 export class UtilityServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
+    private static readonly BASE_URL = `${API_URL}/api/v1`;
     private static dispatch: any = null;
 
     static async getBanners(): Promise<ApiResponse<Banner[]>> {
         const response = await api.get(`${this.BASE_URL}/banner`);
-        console.log(response, "banners");
         if (!response.success) {
             return {
                 success: false,

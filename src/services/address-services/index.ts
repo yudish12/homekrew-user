@@ -1,3 +1,4 @@
+import { API_URL } from "../../constants/axios-config";
 import { api } from "../../lib";
 import { ApiResponse } from "../../types";
 import {
@@ -9,9 +10,8 @@ import {
 import { UserAddress } from "../../types/user-address";
 
 export class AddressServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1/user";
-    private static readonly GOOGLE_API_BASE =
-        "https://ao1.onrender.com/api/v1/google";
+    private static readonly BASE_URL = `${API_URL}/api/v1/user`;
+    private static readonly GOOGLE_API_BASE = `${API_URL}/api/v1/google`;
     private static dispatch: any = null;
 
     static async getAllAddresses(): Promise<ApiResponse<AddressResponse>> {
@@ -41,6 +41,7 @@ export class AddressServices {
             `${this.BASE_URL}/addresses`,
             addressData,
         );
+        console.log(response);
         if (!response.success) {
             return {
                 success: false,

@@ -1,9 +1,10 @@
+import { API_URL } from "../../constants/axios-config";
 import { api } from "../../lib";
 import { ApiResponse, MembershipPlan } from "../../types";
 import { RazorPayOrder } from "../../types/services/orders";
 
 export class MembershipPlansServices {
-    private static readonly BASE_URL = "https://ao1.onrender.com/api/v1";
+    private static readonly BASE_URL = `${API_URL}/api/v1`;
 
     static async getMembershipPlans(): Promise<ApiResponse<MembershipPlan[]>> {
         const response = await api.get<MembershipPlan[]>(
