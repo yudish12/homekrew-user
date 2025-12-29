@@ -9,4 +9,5 @@ export const DEFAULT_CONFIG = {
     },
 };
 
-export const API_URL = "http://192.168.0.179:8000";
+// export const API_URL = "http://192.168.0.179:8000";
+export const API_URL = "https://api.homekrew.in";

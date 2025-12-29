@@ -25,7 +25,7 @@ import {
     isItemInCart,
 } from "../../../redux/selectors/cart";
 import { BackButton } from "../../../components/BackButton";
-import { ProductsServices } from "../../../services/products";
+import { ProductsServices } from "../../../services/membership-plans/products";
 import { Product, ProductCategory } from "../../../types/home-data";
 import { useToast } from "../../../hooks/useToast";
 import SkeletonLoader from "../../../components/SkeletonLoader";

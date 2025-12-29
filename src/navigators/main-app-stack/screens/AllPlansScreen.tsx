@@ -47,9 +47,8 @@ const MembershipPlanCard: React.FC<{
     // Determine if premium based on name
     const isPremium =
         plan.name.toLowerCase() === "premium" ||
-        plan.name.toLowerCase() === "gold";
+        plan.name.toLowerCase() === "value plus";
     const isPopular = isPremium; // Premium is popular
-
     // Premium card uses dark blue + gold accents; standard matches home card
     const gradientColors = isPremium
         ? ([COLORS.NAVY[800], COLORS.NAVY[700]] as const)
@@ -254,7 +253,7 @@ const MembershipDetailView: React.FC<{
 
     const isPremium =
         plan.name.toLowerCase() === "premium" ||
-        plan.name.toLowerCase() === "gold";
+        plan.name.toLowerCase() === "value plus";
     const isPopular = isPremium;
 
     const handleBuyNow = async () => {
@@ -399,9 +398,10 @@ const MembershipDetailView: React.FC<{
                         </Typography>
 
                         <Typography
-                            variant="body"
+                            variant="bodySmall"
                             color={isPremium ? COLORS.WHITE : COLORS.TEXT.DARK}
                             style={styles.heroDescription}
+                            numberOfLines={4}
                         >
                             {plan.description}
                         </Typography>
@@ -1018,8 +1018,9 @@ const styles = StyleSheet.create({
     heroDescription: {
         textAlign: "center",
         marginBottom: 20,
-        paddingHorizontal: 16,
-        lineHeight: 22,
+        paddingHorizontal: 20,
+        lineHeight: 20,
+        opacity: 0.9,
     },
     heroPricing: {
         alignItems: "center",

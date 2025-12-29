@@ -43,9 +43,10 @@ export class ServiceCategoryUtil {
 
     static async getServiceTemplates(
         id: string,
+        subCategoryId: string,
     ): Promise<ApiResponse<ServiceTemplate[]>> {
         const response = await api.get(
-            `${this.BASE_URL}/service-templates?category=${id}`,
+            `${this.BASE_URL}/service-templates?category=${id}&subCategory=${subCategoryId}`,
         );
         console.log(response);
         if (!response.success) {

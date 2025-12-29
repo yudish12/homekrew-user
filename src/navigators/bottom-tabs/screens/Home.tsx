@@ -38,7 +38,7 @@ import { useSelector } from "react-redux";
 import ActiveBookingsNudge from "../../../modules/home/ui/ActiveBookingNudge";
 import { MembershipStatusBadge } from "../../../modules/home/ui/MembershipBadge";
 import FeaturedServiceTemplate from "../../../modules/home/ui/FeaturedServiceTemplate";
-import { ProductsServices } from "../../../services/products";
+import { ProductsServices } from "../../../services/membership-plans/products";
 import FeaturedProducts from "../../../modules/home/ui/FeaturedProducts";
 import { ProductsComingSoon } from "../../../modules/products/ProductsComingSoon";
 import { InteriorCalculatorBanner } from "../../../components/InteriorCalculatorBanner";
@@ -193,6 +193,7 @@ const Home = () => {
             // Fetch membership plans
             const membershipResponse =
                 await MembershipPlansServices.getMembershipPlans();
+            console.log("membershipResponse", membershipResponse);
             if (membershipResponse.success && membershipResponse.data) {
                 setMemberShipDetails(membershipResponse.data);
             }
@@ -323,36 +324,6 @@ const Home = () => {
             borderRadius: 8,
         },
     ];
-
-    const renderItem = ({
-        item,
-        index,
-    }: {
-        item: MembershipPlan;
-        index: number;
-    }) => (
-        <MembershipBannerCard
-            planName={item.name}
-            description={item.description}
-            price={item.price}
-            durationInDays={item.durationInDays}
-            benefits={item.benefits}
-            variant={
-                item.name.toLowerCase() === "premium" ||
-                item.name.toLowerCase() === "gold"
-                    ? "premium"
-                    : "standard"
-            }
-            onPress={() =>
-                navigation.navigate("MembershipDetails", {
-                    screen: "MembershipDetails",
-                    params: { ...item },
-                })
-            }
-            key={index}
-            style={{ marginTop: 8 }}
-        />
-    );
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -566,20 +537,30 @@ const Home = () => {
                                 }}
                             />
                         ) : (
-                            <FlatList
-                                data={memberShipDetails}
-                                renderItem={renderItem}
-                                keyExtractor={item => item._id}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{
-                                    paddingRight: 16,
-                                    paddingVertical: 8,
-                                }}
-                                style={{
-                                    paddingHorizontal: 16,
-                                    paddingVertical: 8,
-                                }}
+                            <MembershipBannerCard
+                                planName={memberShipDetails[0].name}
+                                description={memberShipDetails[0].description}
+                                price={memberShipDetails[0].price}
+                                durationInDays={
+                                    memberShipDetails[0].durationInDays
+                                }
+                                benefits={memberShipDetails[0].benefits}
+                                variant={
+                                    memberShipDetails[0].name.toLowerCase() ===
+                                        "premium" ||
+                                    memberShipDetails[0].name.toLowerCase() ===
+                                        "value plus"
+                                        ? "premium"
+                                        : "standard"
+                                }
+                                onPress={() =>
+                                    navigation.navigate("MembershipDetails", {
+                                        screen: "MembershipDetails",
+                                        params: { ...memberShipDetails[0] },
+                                    })
+                                }
+                                key={memberShipDetails[0]._id}
+                                style={{ marginVertical: 32 }}
                             />
                         )}
                     </>

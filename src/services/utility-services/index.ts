@@ -192,4 +192,23 @@ export class UtilityServices {
             status: 200,
         };
     }
+
+    static async getAppSettings(): Promise<ApiResponse<any>> {
+        const response = await api.get(`${this.BASE_URL}/settings`);
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "App settings fetched successfully",
+            status: 200,
+        };
+    }
 }

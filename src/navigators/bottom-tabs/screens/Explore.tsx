@@ -20,7 +20,7 @@ import {
     Product,
 } from "../../../types/home-data";
 import { ServiceCategoryUtil } from "../../../services/serviceCategories";
-import { ProductsServices } from "../../../services/products";
+import { ProductsServices } from "../../../services/membership-plans/products";
 import { CustomIcon } from "../../../components/CustomIcon";
 import ServiceCard from "../../../modules/home/ui/ServiceCard";
 import SearchBar from "../../../components/SearchBar";

@@ -177,7 +177,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
                             variant="bodySmall"
                             color={COLORS.TEXT.DARK}
                         >
-                            Explore
+                            Book Now
                         </Typography>
                     </View>
                 </View>

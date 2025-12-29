@@ -9,16 +9,31 @@ import { loadFonts } from "./lib/fonts";
 import { View } from "react-native";
 import { CartInitialState } from "./redux/reducers/cart";
 import { ToastComponent } from "./components/Toast";
-import { AddressInitialState } from "./redux/reducers";
+import { AddressInitialState, AppSettingsInitialState } from "./redux/reducers";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NotificationService } from "./lib/notification-service";
+import { fetchAppSettings } from "./redux/actions";
+import { AppDispatch } from "./types";
 
 // Create the store instance
 const store = configureStore({
     auth: AuthInitialState,
     cart: CartInitialState,
     address: AddressInitialState,
+    appSettings: AppSettingsInitialState,
 });
+
+// Component to handle app initialization inside Provider
+const AppInitializer = ({ children }: { children: React.ReactNode }) => {
+    const dispatch = useDispatch<AppDispatch>();
+
+    useEffect(() => {
+        // Fetch app settings on app boot
+        dispatch(fetchAppSettings());
+    }, [dispatch]);
+
+    return <>{children}</>;
+};
 
 export default function App() {
     const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -46,9 +61,11 @@ export default function App() {
         <SafeAreaProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
                 <Provider store={store}>
-                    <AppNavigator />
-                    <StatusBar style="auto" />
-                    <ToastComponent />
+                    <AppInitializer>
+                        <AppNavigator />
+                        <StatusBar style="auto" />
+                        <ToastComponent />
+                    </AppInitializer>
                 </Provider>
             </GestureHandlerRootView>
         </SafeAreaProvider>

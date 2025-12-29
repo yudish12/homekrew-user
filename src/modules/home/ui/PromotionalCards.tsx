@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     featuredCardContainer: {
         paddingVertical: 8,
         flexDirection: "row",
-        gap: 6,
+        gap: 12,
         rowGap: 0,
         flexWrap: "wrap",
     },
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 8,
-        width: Dimensions.get("window").width / 3 - 24,
+        width: Dimensions.get("window").width / 3 - 16,
     },
     featuredCard: {
         justifyContent: "center",
         alignItems: "center",
         borderRadius: 8,
-        width: Dimensions.get("window").width / 2 - 30,
+        width: Dimensions.get("window").width / 2 - 20,
     },
     header: {
         flexDirection: "row",

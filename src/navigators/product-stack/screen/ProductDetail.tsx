@@ -23,7 +23,7 @@ import {
 } from "../../../redux/selectors/cart";
 import CartCounter from "../../../components/CartCounter";
 import { Product } from "../../../types/home-data";
-import { ProductsServices } from "../../../services/products";
+import { ProductsServices } from "../../../services/membership-plans/products";
 
 const { width } = Dimensions.get("window");
 

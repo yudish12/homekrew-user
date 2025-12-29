@@ -27,13 +27,14 @@ const ServiceDetails = () => {
         [],
     );
 
-    const { serviceId, serviceName, image, description } = useRoute()
-        .params as {
-        serviceId: string;
-        serviceName: string;
-        image: string;
-        description: string;
-    };
+    const { serviceId, subCategoryId, serviceName, image, description } =
+        useRoute().params as {
+            serviceId: string;
+            subCategoryId: string;
+            serviceName: string;
+            image: string;
+            description: string;
+        };
 
     const handleServicePress = (templateId: string) => {
         setSelectedService(templateId);
@@ -56,6 +57,7 @@ const ServiceDetails = () => {
         setLoading(true);
         const response = await ServiceCategoryUtil.getServiceTemplates(
             serviceId,
+            subCategoryId,
         );
         setServiceTemplates(response?.data ?? []);
         setLoading(false);

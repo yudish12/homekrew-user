@@ -33,6 +33,7 @@ const ServiceTemplate = () => {
     const [isImageViewVisible, setIsImageViewVisible] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [quantity, setQuantity] = useState(1);
+    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
     const handleBookNow = () => {
         // Handle booking logic
@@ -218,6 +219,7 @@ const ServiceTemplate = () => {
                             style={{
                                 flexDirection: "row",
                                 justifyContent: "space-between",
+                                alignItems: "center",
                             }}
                         >
                             <Typography
@@ -266,15 +268,51 @@ const ServiceTemplate = () => {
                                 </View>
                             )}
                         </View>
+                    </View>
+                </View>
+
+                {/* About Section */}
+                {serviceTemplate?.description && (
+                    <View style={styles.aboutSection}>
+                        <Typography
+                            variant="h4"
+                            color={COLORS.TEXT.DARK}
+                            style={styles.sectionTitle}
+                        >
+                            About this Service
+                        </Typography>
                         <Typography
                             variant="body"
                             color={COLORS.TEXT.DARK}
-                            style={styles.providerName}
+                            style={styles.description}
+                            numberOfLines={
+                                isDescriptionExpanded ? undefined : 3
+                            }
                         >
-                            {serviceTemplate?.description}
+                            {serviceTemplate.description}
                         </Typography>
+                        {serviceTemplate.description.length > 150 && (
+                            <TouchableOpacity
+                                onPress={() =>
+                                    setIsDescriptionExpanded(
+                                        !isDescriptionExpanded,
+                                    )
+                                }
+                                style={styles.readMoreButton}
+                            >
+                                <Typography
+                                    variant="body"
+                                    color={COLORS.primary}
+                                    style={styles.readMoreLink}
+                                >
+                                    {isDescriptionExpanded
+                                        ? "Read Less"
+                                        : "Read More"}
+                                </Typography>
+                            </TouchableOpacity>
+                        )}
                     </View>
-                </View>
+                )}
 
                 {/* Photo & Videos Section */}
                 <View style={styles.gallerySection}>
@@ -375,9 +413,6 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         marginBottom: 8,
     },
-    providerName: {
-        fontWeight: "400",
-    },
     ratingsContainer: {
         flexDirection: "row",
         alignItems: "center",
@@ -440,24 +475,32 @@ const styles = StyleSheet.create({
     },
     aboutSection: {
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingVertical: 20,
         backgroundColor: COLORS.WHITE,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.GREY[100],
     },
     sectionTitle: {
         fontWeight: "700",
         marginBottom: 12,
     },
     description: {
-        lineHeight: 22,
-        marginBottom: 8,
+        lineHeight: 24,
+        marginBottom: 4,
+        fontSize: 14,
+    },
+    readMoreButton: {
+        marginTop: 8,
     },
     readMoreLink: {
-        fontWeight: "500",
+        fontWeight: "600",
     },
     gallerySection: {
         paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingVertical: 20,
         backgroundColor: COLORS.WHITE,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.GREY[100],
     },
     galleryHeader: {
         flexDirection: "row",

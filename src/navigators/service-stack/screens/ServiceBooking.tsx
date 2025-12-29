@@ -358,127 +358,53 @@ export const ServiceBooking: React.FC = () => {
                         <View style={styles.section}>
                             <TouchableOpacity
                                 style={styles.membershipContainer}
-                                activeOpacity={0.95}
+                                activeOpacity={0.9}
                                 onPress={() =>
                                     navigation.navigate("MembershipDetails")
                                 }
                             >
                                 <LinearGradient
-                                    colors={[
-                                        COLORS.NAVY[800],
-                                        COLORS.NAVY[700],
-                                    ]}
+                                    colors={["#F7FAFF", COLORS.primaryLight]}
                                     start={{ x: 0, y: 0 }}
                                     end={{ x: 1, y: 1 }}
                                     style={styles.membershipGradient}
                                 >
-                                    {/* Decorative Sparkle */}
-                                    <View style={styles.membershipSparkle}>
-                                        <CustomIcon
-                                            provider="MaterialCommunityIcons"
-                                            name="star-four-points"
-                                            size={12}
-                                            color={COLORS.GOLD[500]}
-                                        />
-                                    </View>
-
-                                    {/* Popular Badge */}
-                                    <View style={styles.membershipBadge}>
-                                        <LinearGradient
-                                            colors={[
-                                                COLORS.GOLD[600],
-                                                COLORS.GOLD[400],
-                                            ]}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 0 }}
-                                            style={
-                                                styles.membershipBadgeGradient
-                                            }
+                                    {/* Header with Icon */}
+                                    <View style={styles.membershipHeader}>
+                                        <View
+                                            style={styles.membershipIconWrapper}
                                         >
                                             <CustomIcon
                                                 provider="Ionicons"
-                                                name="star"
-                                                size={10}
-                                                color={COLORS.WHITE}
+                                                name="shield-checkmark"
+                                                size={28}
+                                                color={COLORS.primary}
                                             />
-                                            <Caption
-                                                style={
-                                                    styles.membershipBadgeText
-                                                }
-                                            >
-                                                UNLOCK PREMIUM
-                                            </Caption>
-                                        </LinearGradient>
+                                        </View>
+                                        <View
+                                            style={
+                                                styles.membershipTextContainer
+                                            }
+                                        >
+                                            <H4 style={styles.membershipTitle}>
+                                                Unlock Membership Benefits
+                                            </H4>
+                                        </View>
                                     </View>
 
-                                    {/* Content */}
-                                    <View style={styles.membershipContent}>
-                                        <View style={styles.membershipHeader}>
-                                            <View
-                                                style={
-                                                    styles.membershipIconWrapper
-                                                }
-                                            >
-                                                <CustomIcon
-                                                    provider="MaterialCommunityIcons"
-                                                    name="crown"
-                                                    size={24}
-                                                    color={COLORS.GOLD[600]}
-                                                />
-                                            </View>
-                                            <View
-                                                style={
-                                                    styles.membershipTextContainer
-                                                }
-                                            >
-                                                <H4
-                                                    style={
-                                                        styles.membershipTitle
-                                                    }
-                                                >
-                                                    Premium Membership
-                                                </H4>
-                                                <Caption
-                                                    style={
-                                                        styles.membershipSubtitle
-                                                    }
-                                                >
-                                                    Save up to 40% on all
-                                                    services
-                                                </Caption>
-                                            </View>
-                                        </View>
-
-                                        {/* CTA Button */}
-                                        <View style={styles.membershipCTA}>
-                                            <LinearGradient
-                                                colors={[
-                                                    COLORS.GOLD[600],
-                                                    COLORS.GOLD[400],
-                                                ]}
-                                                style={styles.membershipButton}
-                                            >
-                                                <CustomIcon
-                                                    provider="Ionicons"
-                                                    name="rocket"
-                                                    size={16}
-                                                    color={COLORS.NAVY[800]}
-                                                />
-                                                <Body
-                                                    style={
-                                                        styles.membershipButtonText
-                                                    }
-                                                >
-                                                    View Membership Plans
-                                                </Body>
-                                                <CustomIcon
-                                                    provider="Ionicons"
-                                                    name="arrow-forward-circle"
-                                                    size={16}
-                                                    color={COLORS.NAVY[800]}
-                                                />
-                                            </LinearGradient>
-                                        </View>
+                                    {/* CTA Button */}
+                                    <View style={styles.membershipCTA}>
+                                        <Body
+                                            style={styles.membershipButtonText}
+                                        >
+                                            View All Plans
+                                        </Body>
+                                        <CustomIcon
+                                            provider="Ionicons"
+                                            name="arrow-forward"
+                                            size={18}
+                                            color={COLORS.primary}
+                                        />
                                     </View>
                                 </LinearGradient>
                             </TouchableOpacity>
@@ -792,107 +718,69 @@ const styles = StyleSheet.create({
         padding: 20,
         position: "relative",
     },
-    membershipSparkle: {
-        position: "absolute",
-        top: 16,
-        right: 16,
-        zIndex: 1,
-    },
-    membershipBadge: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 2,
-    },
     loadingContainer: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
     },
-    membershipBadgeGradient: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        gap: 4,
-    },
-    membershipBadgeText: {
-        color: COLORS.WHITE,
-        fontSize: 10,
-        fontWeight: WEIGHTS.BOLD,
-        letterSpacing: 0.5,
-    },
-    membershipContent: {
-        marginTop: 24,
-    },
     membershipHeader: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: 16,
+        marginBottom: 20,
     },
     membershipIconWrapper: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        backgroundColor: "rgba(212, 175, 55, 0.20)",
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        backgroundColor: COLORS.primary + "15",
         alignItems: "center",
         justifyContent: "center",
-        marginRight: 12,
+        marginRight: 16,
+        borderWidth: 2,
+        borderColor: COLORS.primary + "30",
     },
     membershipTextContainer: {
         flex: 1,
     },
     membershipTitle: {
-        color: COLORS.GOLD[600],
+        color: COLORS.TEXT.DARK,
         fontWeight: WEIGHTS.BOLD,
-        fontSize: 18,
+        fontSize: 17,
         marginBottom: 4,
     },
     membershipSubtitle: {
-        color: "rgba(255,255,255,0.8)",
-        fontSize: 12,
+        color: COLORS.TEXT.LIGHT,
+        fontSize: 13,
         fontWeight: WEIGHTS.MEDIUM,
     },
     membershipBenefits: {
-        marginBottom: 16,
-        gap: 10,
+        marginBottom: 20,
+        gap: 12,
     },
     membershipBenefit: {
         flexDirection: "row",
         alignItems: "center",
-    },
-    membershipCheckIcon: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        marginRight: 10,
+        gap: 10,
     },
     membershipBenefitText: {
         flex: 1,
-        color: COLORS.WHITE,
+        color: COLORS.TEXT.DARK,
         fontWeight: WEIGHTS.MEDIUM,
-        fontSize: 13,
-        lineHeight: 18,
+        fontSize: 14,
+        lineHeight: 20,
     },
     membershipCTA: {
-        marginTop: 8,
-    },
-    membershipButton: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 14,
+        paddingTop: 16,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.primary + "20",
         gap: 8,
     },
     membershipButtonText: {
-        color: COLORS.NAVY[800],
-        fontWeight: WEIGHTS.BOLD,
+        color: COLORS.primary,
+        fontWeight: WEIGHTS.SEMI_BOLD,
         fontSize: 15,
     },
 

@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity, ViewStyle } from "react-native";
+import {
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    ViewStyle,
+    Dimensions,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
@@ -396,9 +402,8 @@ const MembershipBannerCard: React.FC<MembershipBannerCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        width: 320,
-        marginRight: 16,
         borderRadius: 24,
+        marginHorizontal: 22,
         overflow: "hidden",
         transform: [{ scale: 1 }],
     },

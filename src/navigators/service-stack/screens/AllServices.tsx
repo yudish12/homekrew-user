@@ -142,6 +142,7 @@ const AllServices = () => {
 
     const handleServicePress = (
         serviceId: string,
+        subCategoryId: string,
         serviceName: string,
         image: string,
         description: string,
@@ -149,6 +150,7 @@ const AllServices = () => {
         // Navigate to service details
         navigation.navigate("ServiceDetails", {
             serviceId,
+            subCategoryId,
             serviceName,
             image,
             description,
@@ -157,6 +159,7 @@ const AllServices = () => {
 
     const handleAddPress = (
         serviceId: string,
+        subCategoryId: string,
         serviceName: string,
         image: string,
         description: string,
@@ -164,6 +167,7 @@ const AllServices = () => {
         // Add to cart logic
         navigation.navigate("ServiceDetails", {
             serviceId,
+            subCategoryId,
             serviceName,
             image,
             description,
@@ -182,6 +186,7 @@ const AllServices = () => {
             onPress={() =>
                 handleServicePress(
                     item.parentId,
+                    item._id,
                     item.name,
                     item.image,
                     item.description,
@@ -190,6 +195,7 @@ const AllServices = () => {
             onAddPress={() =>
                 handleAddPress(
                     item.parentId,
+                    item._id,
                     item.name,
                     item.image,
                     item.description,
