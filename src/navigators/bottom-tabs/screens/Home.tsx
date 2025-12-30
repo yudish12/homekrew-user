@@ -3,12 +3,10 @@ import {
     View,
     StyleSheet,
     Dimensions,
-    FlatList,
     ScrollView,
     TouchableOpacity,
     RefreshControl,
     Image,
-    StatusBar,
 } from "react-native";
 import { COLORS } from "../../../constants/ui";
 import { LinearGradient } from "expo-linear-gradient";
@@ -105,6 +103,9 @@ const Home = () => {
     const navigation = useNavigation<any>();
 
     const user = useSelector((state: RootState) => state.auth.user);
+    const selectedAddress = useSelector(
+        (state: RootState) => state.address.selectedAddress,
+    );
 
     // Calculate days remaining for active membership
     const getMembershipDaysRemaining = useCallback(() => {
@@ -362,13 +363,18 @@ const Home = () => {
                                 size={20}
                                 color={COLORS.TEXT.DARK}
                             />
-                            <Typography
-                                variant="h3"
-                                color={COLORS.TEXT.DARK}
-                                style={{ marginLeft: 6 }}
-                            >
-                                Home
-                            </Typography>
+                            <View style={{ gap: 4 }}>
+                                <Typography
+                                    variant="h3"
+                                    color={COLORS.TEXT.DARK}
+                                    style={{ marginLeft: 6 }}
+                                    numberOfLines={1}
+                                >
+                                    {selectedAddress
+                                        ? selectedAddress.city
+                                        : "Location"}
+                                </Typography>
+                            </View>
                             <CustomIcon
                                 provider="Ionicons"
                                 name="chevron-down"
@@ -414,7 +420,7 @@ const Home = () => {
                     <SearchBar
                         value={""}
                         onChangeText={() => {}}
-                        placeholder={'Search for "Lego"'}
+                        placeholder={'Search for "AC Repair"'}
                         containerStyle={styles.stickySearchBar}
                     />
                 </View>
@@ -469,15 +475,7 @@ const Home = () => {
                             })
                         }
                     />
-                ) : (
-                    <ProductsComingSoon
-                        title="Products launching soon"
-                        description="We are adding a curated collection of products very soon. Until then, explore services tailor-made for you."
-                        buttonLabel="Explore more"
-                        onButtonPress={() => navigation.navigate("Explore")}
-                        style={{ marginTop: 16 }}
-                    />
-                )}
+                ) : null}
 
                 {/* Active Bookings Nudge with Loading State */}
                 {activeBookingsLoading ? (
@@ -547,9 +545,7 @@ const Home = () => {
                                 benefits={memberShipDetails[0].benefits}
                                 variant={
                                     memberShipDetails[0].name.toLowerCase() ===
-                                        "premium" ||
-                                    memberShipDetails[0].name.toLowerCase() ===
-                                        "value plus"
+                                    "premium"
                                         ? "premium"
                                         : "standard"
                                 }

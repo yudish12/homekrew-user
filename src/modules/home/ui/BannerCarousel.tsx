@@ -135,7 +135,21 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
     }) => (
         <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => navigation.navigate(item.clickAction.value)}
+            onPress={() => {
+                const destinations = item.destination.split("/");
+                const destinationLength = destinations.length;
+                if (destinationLength === 1) {
+                    navigation.navigate(destinations[0]);
+                } else if (destinationLength === 2) {
+                    navigation.navigate("Services", {
+                        screen: "ServiceLanding",
+                        params: {
+                            serviceName: destinations[0],
+                            serviceId: destinations[1],
+                        },
+                    });
+                }
+            }}
             style={[
                 styles.bannerCard,
                 {

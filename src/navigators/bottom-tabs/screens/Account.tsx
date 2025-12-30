@@ -190,10 +190,10 @@ const Account = () => {
                             color={COLORS.TEXT.DARK}
                         />
                     }
-                    onPress={() => {}}
+                    onPress={() => navigation.navigate("ServiceBookingHistory")}
                 />
                 <QuickAction
-                    label="Help &\nsupport"
+                    label="Help & support"
                     icon={
                         <CustomIcon
                             provider="Ionicons"
@@ -237,11 +237,11 @@ const Account = () => {
                         label="Manage payment methods"
                         onPress={() => {}}
                     /> */}
-                    <ListItem
+                    {/* <ListItem
                         iconName="settings-outline"
                         label="Settings"
                         onPress={() => {}}
-                    />
+                    /> */}
                 </View>
 
                 <ReferralBanner />

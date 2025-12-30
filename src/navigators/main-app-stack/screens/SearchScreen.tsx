@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
         borderRadius: 12,
         paddingHorizontal: 16,
-        paddingVertical: 4,
+        paddingVertical: 12,
         borderWidth: 1,
         borderColor: COLORS.border.light,
     },

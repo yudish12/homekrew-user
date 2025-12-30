@@ -188,7 +188,11 @@ const ServiceTemplate = () => {
                     backButtonStyle={{ position: "static" }}
                     onPress={() => navigation.goBack()}
                 />
-                <Typography variant="h5" color={COLORS.TEXT.DARK}>
+                <Typography
+                    variant="h5"
+                    style={{ width: "60%", lineHeight: 24, marginBottom: 8 }}
+                    color={COLORS.TEXT.DARK}
+                >
                     {serviceTemplate?.title}
                 </Typography>
             </View>
@@ -226,6 +230,7 @@ const ServiceTemplate = () => {
                                 variant="h4"
                                 color={COLORS.TEXT.DARK}
                                 style={styles.serviceTitle}
+                                numberOfLines={2}
                             >
                                 {serviceTemplate?.title}
                             </Typography>
@@ -378,7 +383,7 @@ const styles = StyleSheet.create({
     serviceDetailsSection: {
         flexDirection: "column",
         paddingHorizontal: 16,
-        paddingVertical: 20,
+        paddingTop: 20,
         backgroundColor: COLORS.WHITE,
     },
     priceAndRatingRow: {
@@ -389,9 +394,12 @@ const styles = StyleSheet.create({
     quantityContainer: {
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "space-between",
+        width: "30%",
         backgroundColor: COLORS.primaryLight,
         borderRadius: 8,
         padding: 4,
+        marginBottom: 28,
     },
     quantityButton: {
         width: 24,
@@ -411,7 +419,9 @@ const styles = StyleSheet.create({
     },
     serviceTitle: {
         fontWeight: "700",
-        marginBottom: 8,
+        lineHeight: 28,
+        marginBottom: 20,
+        width: "70%",
     },
     ratingsContainer: {
         flexDirection: "row",

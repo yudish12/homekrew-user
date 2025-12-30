@@ -45,9 +45,7 @@ const MembershipPlanCard: React.FC<{
     };
 
     // Determine if premium based on name
-    const isPremium =
-        plan.name.toLowerCase() === "premium" ||
-        plan.name.toLowerCase() === "value plus";
+    const isPremium = plan.name.toLowerCase() === "premium";
     const isPopular = isPremium; // Premium is popular
     // Premium card uses dark blue + gold accents; standard matches home card
     const gradientColors = isPremium
@@ -349,7 +347,7 @@ const MembershipDetailView: React.FC<{
                             />
                             <Typography
                                 variant="caption"
-                                color={COLORS.GOLD[600]}
+                                color={COLORS.WHITE}
                                 style={styles.popularText}
                             >
                                 MOST POPULAR CHOICE
@@ -610,6 +608,7 @@ const MembershipPlansScreen: React.FC<{
 
             if (response.success && response.data) {
                 setMembershipPlans(response.data);
+                setSelectedPlan(response.data[0]);
             } else {
                 setError(
                     response.error?.message ??
@@ -629,7 +628,7 @@ const MembershipPlansScreen: React.FC<{
     };
 
     const handleBack = () => {
-        setSelectedPlan(null);
+        navigation.goBack();
     };
 
     const handleRetry = () => {
@@ -987,7 +986,7 @@ const styles = StyleSheet.create({
         top: 0,
         left: 0,
         right: 0,
-        backgroundColor: COLORS.GREEN[700],
+        backgroundColor: COLORS.GOLD[500],
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",

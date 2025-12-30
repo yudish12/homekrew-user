@@ -6,6 +6,7 @@ export interface Banner {
     imageUrl: string;
     position: number;
     isActive: boolean;
+    destination: string;
     startDate: string | null;
     endDate: string | null;
     clickAction: {

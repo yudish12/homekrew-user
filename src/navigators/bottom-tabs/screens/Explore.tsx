@@ -91,8 +91,11 @@ const Explore = () => {
 
     const handleServicePress = (categoryId: string, categoryName: string) => {
         navigation.navigate("Services", {
-            screen: "AllServices",
-            params: { categoryId, categoryName },
+            screen: "ServiceLanding",
+            params: {
+                serviceName: categoryName,
+                serviceId: categoryId,
+            },
         });
     };
 
@@ -259,11 +262,13 @@ const Explore = () => {
                         >
                             <View style={styles.productCategoryContent}>
                                 <View style={styles.productCategoryIcon}>
-                                    <CustomIcon
-                                        provider="Ionicons"
-                                        name="cube-outline"
-                                        size={24}
-                                        color={COLORS.primary}
+                                    <Image
+                                        style={{
+                                            width: 56,
+                                            height: 56,
+                                            borderRadius: "100%",
+                                        }}
+                                        source={{ uri: e.image }}
                                     />
                                 </View>
                                 <Typography

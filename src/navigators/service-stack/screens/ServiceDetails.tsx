@@ -156,9 +156,6 @@ const ServiceDetails = () => {
                     backButtonStyle={{ position: "static" }}
                     onPress={() => navigation.goBack()}
                 />
-                <Typography variant="h5" color={COLORS.TEXT.DARK}>
-                    Super saver packages
-                </Typography>
             </View>
 
             {renderBanner()}
