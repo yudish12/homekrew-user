@@ -1,7 +1,9 @@
 // Interior Calculator Constants and Pricing
 
-export type BhkType = "1BHK" | "2BHK" | "3BHK" | "3+BHK";
+export type BhkType = "1BHK" | "2BHK" | "3BHK" | "3+BHK" | "modular-kitchen";
 export type PackageType = "essential" | "comfort" | "luxury";
+export type KitchenLayoutType = "l-shaped" | "straight" | "u-shaped" | "parallel";
+export type UShapedVariant = "a" | "b" | "c";
 
 export interface RequirementItem {
     id: string;
@@ -62,6 +64,50 @@ export const BHK_OPTIONS: Array<{
         icon: "business-outline",
         description: "Spacious luxury homes",
     },
+    {
+        value: "modular-kitchen",
+        label: "Modular Kitchen",
+        icon: "restaurant",
+        description: "Custom modular kitchen solutions",
+    },
+];
+
+// Kitchen Layout Options for Step 2 (Modular Kitchen)
+export const KITCHEN_LAYOUT_OPTIONS: Array<{
+    value: KitchenLayoutType;
+    label: string;
+    icon: string;
+}> = [
+    {
+        value: "l-shaped",
+        label: "L-shaped",
+        icon: "square-outline",
+    },
+    {
+        value: "straight",
+        label: "Straight",
+        icon: "remove-outline",
+    },
+    {
+        value: "u-shaped",
+        label: "U-shaped",
+        icon: "square",
+    },
+    {
+        value: "parallel",
+        label: "Parallel",
+        icon: "code-outline",
+    },
+];
+
+// U-shaped variants
+export const U_SHAPED_VARIANTS: Array<{
+    value: UShapedVariant;
+    label: string;
+}> = [
+    { value: "a", label: "Option A" },
+    { value: "b", label: "Option B" },
+    { value: "c", label: "Option C" },
 ];
 
 // Requirements for Step 2
@@ -228,6 +274,8 @@ export const getMaxCount = (
                 return 3;
             case "3+BHK":
                 return 4;
+            case "modular-kitchen":
+                return 0; // No wardrobes for modular kitchen only
         }
     }
 
@@ -239,6 +287,12 @@ export const validateRequirements = (
     bhkType: BhkType,
     requirements: Record<string, number>,
 ): { valid: boolean; error?: string } => {
+    // For modular kitchen, kitchen layout is required instead
+    if (bhkType === "modular-kitchen") {
+        // Kitchen layout validation will be handled in the component
+        return { valid: true };
+    }
+
     // Check if at least kitchen is selected
     if (!requirements.kitchen || requirements.kitchen === 0) {
         return {

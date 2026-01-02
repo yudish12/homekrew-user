@@ -198,4 +198,40 @@ export class OrdersServices {
             status: 200,
         };
     }
+
+    static async bookConsultant(
+        bookingData: {
+            bhkType: string;
+            packageType: string;
+            kitchenLayout?: string;
+            uShapedVariant?: string;
+            date: string;
+            timeSlot: string;
+            address: string;
+            specialRequirements?: string;
+        },
+    ): Promise<ApiResponse<BookOrderResponse>> {
+        const response = await api.post(
+            `${this.BASE_URL}/payments/consultant/create-order`,
+            {
+                ...bookingData,
+                paymentMethod: "razorpay",
+            },
+        );
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Consultant booking order created successfully",
+            status: 200,
+        };
+    }
 }

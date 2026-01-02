@@ -7,22 +7,33 @@ import {
     Dimensions,
     Animated,
     ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import RazorpayCheckout from "react-native-razorpay";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
 import { CustomIcon } from "../../../components/CustomIcon";
 import { StepperProgress } from "../../../components/StepperProgress";
+import { Input } from "../../../components/Input";
 import { COLORS } from "../../../constants/ui";
 import { shadowUtils, spacingUtils } from "../../../utils/ui";
+import { RootState } from "../../../types";
 import {
     BHK_OPTIONS,
     REQUIREMENT_ITEMS,
     PACKAGE_DETAILS,
+    KITCHEN_LAYOUT_OPTIONS,
+    U_SHAPED_VARIANTS,
     BhkType,
     PackageType,
+    KitchenLayoutType,
+    UShapedVariant,
     getMaxCount,
     validateRequirements,
     calculateAllEstimates,
@@ -30,8 +41,517 @@ import {
     CALCULATOR_STORAGE_KEY,
     CalculatorResult,
 } from "../../../constants/interior-calculator";
+import { TimeSlot } from "../../../types/services/orders";
+import { OrdersServices } from "../../../services/orders";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+// Kitchen Layout Visual Components
+interface KitchenLayoutVisualProps {
+    layoutType: KitchenLayoutType;
+    variant?: UShapedVariant;
+    isSelected?: boolean;
+    size?: number;
+}
+
+const KitchenLayoutVisual: React.FC<KitchenLayoutVisualProps> = ({
+    layoutType,
+    variant,
+    isSelected = false,
+    size = 80,
+}) => {
+    const counterColor = isSelected ? "#FF6B6B" : "#FFB3BA";
+    const borderColor = isSelected ? "#FF6B6B" : "#E0E0E0";
+    const applianceColor = "#D3D3D3";
+
+    const renderLShaped = () => (
+        <View style={{ width: size, height: size, position: "relative" }}>
+            {/* Horizontal counter */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.3,
+                    left: 0,
+                    width: size * 0.7,
+                    height: size * 0.15,
+                    backgroundColor: counterColor,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                    borderRadius: 4,
+                }}
+            />
+            {/* Vertical counter */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.3,
+                    left: size * 0.55,
+                    width: size * 0.15,
+                    height: size * 0.4,
+                    backgroundColor: counterColor,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                    borderRadius: 4,
+                }}
+            />
+            {/* Sink */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.32,
+                    left: size * 0.15,
+                    width: size * 0.12,
+                    height: size * 0.11,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Stove */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.32,
+                    left: size * 0.4,
+                    width: size * 0.12,
+                    height: size * 0.11,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Appliance */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.5,
+                    left: size * 0.58,
+                    width: size * 0.1,
+                    height: size * 0.15,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+        </View>
+    );
+
+    const renderStraight = () => (
+        <View style={{ width: size, height: size, position: "relative" }}>
+            {/* Straight counter */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.4,
+                    left: size * 0.1,
+                    width: size * 0.8,
+                    height: size * 0.15,
+                    backgroundColor: counterColor,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                    borderRadius: 4,
+                }}
+            />
+            {/* Appliance */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.42,
+                    left: size * 0.15,
+                    width: size * 0.1,
+                    height: size * 0.11,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Sink */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.42,
+                    left: size * 0.4,
+                    width: size * 0.12,
+                    height: size * 0.11,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Stove */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.42,
+                    left: size * 0.7,
+                    width: size * 0.12,
+                    height: size * 0.11,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+        </View>
+    );
+
+    const renderUShaped = (variantType?: UShapedVariant) => {
+        // Variant A: Standard U with appliances on sides
+        if (variantType === "a" || !variantType) {
+            return (
+                <View style={{ width: size, height: size, position: "relative" }}>
+                    {/* Left vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: 0,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Top horizontal counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.2,
+                            width: size * 0.6,
+                            height: size * 0.15,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Right vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.8,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Appliance left */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.35,
+                            left: size * 0.05,
+                            width: size * 0.1,
+                            height: size * 0.15,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                    {/* Sink top */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.22,
+                            left: size * 0.4,
+                            width: size * 0.12,
+                            height: size * 0.11,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                    {/* Stove right */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.35,
+                            left: size * 0.85,
+                            width: size * 0.1,
+                            height: size * 0.15,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                </View>
+            );
+        }
+        // Variant B: U with appliances in center
+        if (variantType === "b") {
+            return (
+                <View style={{ width: size, height: size, position: "relative" }}>
+                    {/* Left vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: 0,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Top horizontal counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.2,
+                            width: size * 0.6,
+                            height: size * 0.15,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Right vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.8,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Sink center top */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.22,
+                            left: size * 0.44,
+                            width: size * 0.12,
+                            height: size * 0.11,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                    {/* Stove center bottom */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.5,
+                            left: size * 0.44,
+                            width: size * 0.12,
+                            height: size * 0.11,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                </View>
+            );
+        }
+        // Variant C: U with appliances distributed
+        if (variantType === "c") {
+            return (
+                <View style={{ width: size, height: size, position: "relative" }}>
+                    {/* Left vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: 0,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Top horizontal counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.2,
+                            width: size * 0.6,
+                            height: size * 0.15,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Right vertical counter */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.2,
+                            left: size * 0.8,
+                            width: size * 0.2,
+                            height: size * 0.5,
+                            backgroundColor: counterColor,
+                            borderWidth: 2,
+                            borderColor: borderColor,
+                            borderRadius: 4,
+                        }}
+                    />
+                    {/* Appliance left */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.25,
+                            left: size * 0.05,
+                            width: size * 0.1,
+                            height: size * 0.12,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                    {/* Sink top left */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.22,
+                            left: size * 0.3,
+                            width: size * 0.12,
+                            height: size * 0.11,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                    {/* Stove right */}
+                    <View
+                        style={{
+                            position: "absolute",
+                            top: size * 0.4,
+                            left: size * 0.85,
+                            width: size * 0.1,
+                            height: size * 0.12,
+                            backgroundColor: applianceColor,
+                            borderRadius: 2,
+                        }}
+                    />
+                </View>
+            );
+        }
+        return renderUShaped("a");
+    };
+
+    const renderParallel = () => (
+        <View style={{ width: size, height: size, position: "relative" }}>
+            {/* Top parallel counter */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.2,
+                    left: size * 0.1,
+                    width: size * 0.8,
+                    height: size * 0.12,
+                    backgroundColor: counterColor,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                    borderRadius: 4,
+                }}
+            />
+            {/* Bottom parallel counter */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.55,
+                    left: size * 0.1,
+                    width: size * 0.8,
+                    height: size * 0.12,
+                    backgroundColor: counterColor,
+                    borderWidth: 2,
+                    borderColor: borderColor,
+                    borderRadius: 4,
+                }}
+            />
+            {/* Appliance top */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.22,
+                    left: size * 0.15,
+                    width: size * 0.1,
+                    height: size * 0.08,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Sink top */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.22,
+                    left: size * 0.45,
+                    width: size * 0.12,
+                    height: size * 0.08,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+            {/* Stove bottom */}
+            <View
+                style={{
+                    position: "absolute",
+                    top: size * 0.57,
+                    left: size * 0.45,
+                    width: size * 0.12,
+                    height: size * 0.08,
+                    backgroundColor: applianceColor,
+                    borderRadius: 2,
+                }}
+            />
+        </View>
+    );
+
+    switch (layoutType) {
+        case "l-shaped":
+            return renderLShaped();
+        case "straight":
+            return renderStraight();
+        case "u-shaped":
+            return renderUShaped(variant);
+        case "parallel":
+            return renderParallel();
+        default:
+            return null;
+    }
+};
+
+// Helper function to generate next 7 days
+const getNext7Days = () => {
+    const dates = [];
+    const today = new Date();
+
+    for (let i = 1; i < 8; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+
+        const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+        const dayNumber = date.getDate();
+        const month = date.toLocaleDateString("en-US", { month: "short" });
+        const fullDate = date.toISOString().split("T")[0]; // YYYY-MM-DD format
+
+        dates.push({
+            id: i.toString(),
+            dayName,
+            dayNumber,
+            month,
+            fullDate,
+        });
+    }
+    return dates;
+};
+
+const timeSlots: TimeSlot[] = [
+    { id: "1", time: "08:00 AM - 10:00 AM", available: true },
+    { id: "2", time: "10:00 AM - 12:00 PM", available: true },
+    { id: "3", time: "12:00 PM - 02:00 PM", available: true },
+    { id: "4", time: "02:00 PM - 04:00 PM", available: true },
+    { id: "5", time: "04:00 PM - 06:00 PM", available: true },
+    { id: "6", time: "06:00 PM - 08:00 PM", available: true },
+    { id: "7", time: "08:00 PM - 10:00 PM", available: true },
+];
 
 interface RequirementCounterProps {
     label: string;
@@ -151,10 +671,12 @@ interface PackageCardProps {
     isPopular?: boolean;
 }
 
-const PackageCard: React.FC<PackageCardProps> = ({
+const PackageCard: React.FC<PackageCardProps & { isSelected?: boolean; onSelect?: () => void }> = ({
     packageType,
     price,
     isPopular = false,
+    isSelected = false,
+    onSelect,
 }) => {
     const details = PACKAGE_DETAILS[packageType];
     const [scaleAnim] = useState(new Animated.Value(1));
@@ -179,13 +701,18 @@ const PackageCard: React.FC<PackageCardProps> = ({
     }, [isPopular]);
 
     return (
-        <Animated.View
-            style={[
-                styles.packageCard,
-                isPopular && styles.packageCardPopular,
-                { transform: [{ scale: scaleAnim }] },
-            ]}
+        <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={onSelect}
         >
+            <Animated.View
+                style={[
+                    styles.packageCard,
+                    isPopular && styles.packageCardPopular,
+                    isSelected && styles.packageCardSelected,
+                    { transform: [{ scale: scaleAnim }] },
+                ]}
+            >
             {isPopular && (
                 <View style={styles.popularBadge}>
                     <Typography
@@ -269,7 +796,8 @@ const PackageCard: React.FC<PackageCardProps> = ({
                     color={isPopular ? COLORS.WHITE : COLORS.primary}
                 />
             </TouchableOpacity> */}
-        </Animated.View>
+            </Animated.View>
+        </TouchableOpacity>
     );
 };
 
@@ -285,6 +813,18 @@ export const InteriorCalculator: React.FC = () => {
         studyUnit: 1,
         crockeryUnit: 1,
     });
+    const [selectedKitchenLayout, setSelectedKitchenLayout] = useState<KitchenLayoutType | null>(null);
+    const [selectedUShapedVariant, setSelectedUShapedVariant] = useState<UShapedVariant | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
+    const [dates] = useState(getNext7Days());
+    const [selectedDate, setSelectedDate] = useState<string>(dates[0]?.fullDate || "");
+    const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+    const [specialRequirements, setSpecialRequirements] = useState<string>("");
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+    const { selectedAddress } = useSelector(
+        (state: RootState) => state.address,
+    );
 
     const scrollToStep = (stepIndex: number) => {
         flatListRef.current?.scrollToIndex({
@@ -326,7 +866,20 @@ export const InteriorCalculator: React.FC = () => {
     };
 
     const handleStep2Continue = () => {
-        if (selectedBhk) {
+        if (selectedBhk === "modular-kitchen") {
+            // For modular kitchen, kitchen layout is required
+            if (!selectedKitchenLayout) {
+                Alert.alert("Required", "Please select a kitchen layout");
+                return;
+            }
+            // For U-shaped, variant is required
+            if (selectedKitchenLayout === "u-shaped" && !selectedUShapedVariant) {
+                Alert.alert("Required", "Please select a U-shaped variant");
+                return;
+            }
+            scrollToStep(2);
+            saveCalculation();
+        } else if (selectedBhk) {
             const validation = validateRequirements(selectedBhk, requirements);
             if (validation.valid) {
                 scrollToStep(2);
@@ -354,8 +907,78 @@ export const InteriorCalculator: React.FC = () => {
         }
     };
 
-    const handleBookConsultation = () => {
-        navigation.goBack();
+    const handleStep3Continue = () => {
+        if (!selectedPackage) {
+            Alert.alert("Required", "Please select a package");
+            return;
+        }
+        scrollToStep(3);
+    };
+
+    const handleBookConsultant = async () => {
+        if (!selectedDate || !selectedTimeSlot || !selectedAddress) {
+            Alert.alert("Required", "Please fill all required fields");
+            return;
+        }
+
+        if (!selectedBhk || !selectedPackage) {
+            Alert.alert("Required", "Please complete all previous steps");
+            return;
+        }
+
+        try {
+            setIsProcessingPayment(true);
+
+            const bookingData = {
+                bhkType: selectedBhk,
+                packageType: selectedPackage,
+                kitchenLayout: selectedKitchenLayout || undefined,
+                uShapedVariant: selectedUShapedVariant || undefined,
+                date: selectedDate,
+                timeSlot: selectedTimeSlot,
+                address: selectedAddress._id || "",
+                specialRequirements: specialRequirements || undefined,
+            };
+
+            const response = await OrdersServices.bookConsultant(bookingData);
+
+            if (response.success && response.data?.razorpayOrder) {
+                const options = {
+                    key: "rzp_test_M1Ad7casmGNZTV", // Replace with your Razorpay key
+                    amount: (response.data.razorpayOrder.amount ?? 0) / 100,
+                    currency: "INR",
+                    theme: {
+                        color: COLORS.primary,
+                        type: "light",
+                    },
+                    order_id: response.data.razorpayOrder.id ?? "",
+                    name: "Book Consultant",
+                    description: "Payment for interior design consultant booking",
+                };
+                
+                try {
+                    const razorpayResponse = await RazorpayCheckout.open(options);
+                    // Handle payment success
+                    Alert.alert("Success", "Consultant booked successfully!", [
+                        {
+                            text: "OK",
+                            onPress: () => navigation.goBack(),
+                        },
+                    ]);
+                } catch (razorpayError: any) {
+                    if (razorpayError.code !== "BAD_REQUEST_ERROR") {
+                        Alert.alert("Error", "Payment was cancelled or failed. Please try again.");
+                    }
+                }
+            } else {
+                Alert.alert("Error", response.message || "Failed to create booking order");
+            }
+        } catch (error: any) {
+            Alert.alert("Error", "An error occurred. Please try again.");
+            console.error("Booking error:", error);
+        } finally {
+            setIsProcessingPayment(false);
+        }
     };
 
     const handleRecalculate = () => {
@@ -489,113 +1112,257 @@ export const InteriorCalculator: React.FC = () => {
         </View>
     );
 
-    // Step 2: Requirements
-    const renderStep2 = () => (
-        <View style={styles.stepContainer}>
-            <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
-                showsVerticalScrollIndicator={false}
-            >
-                {selectedBhk && (
-                    <View style={styles.bhkBadge}>
+    // Step 2: Requirements or Kitchen Layout
+    const renderStep2 = () => {
+        if (selectedBhk === "modular-kitchen") {
+            return (
+                <View style={styles.stepContainer}>
+                    <ScrollView
+                        style={styles.scrollView}
+                        contentContainerStyle={styles.scrollContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Typography variant="h4" style={styles.title}>
+                            Select Kitchen Layout
+                        </Typography>
+                        <Typography
+                            variant="body"
+                            color={COLORS.TEXT.LIGHT}
+                            style={styles.description}
+                        >
+                            Choose your preferred kitchen layout design
+                        </Typography>
+
+                        <View style={styles.kitchenLayoutContainer}>
+                            {KITCHEN_LAYOUT_OPTIONS.map(layout => {
+                                const isSelected = selectedKitchenLayout === layout.value;
+                                return (
+                                    <TouchableOpacity
+                                        key={layout.value}
+                                        style={[
+                                            styles.kitchenLayoutCard,
+                                            isSelected && styles.kitchenLayoutCardSelected,
+                                        ]}
+                                        onPress={() => {
+                                            setSelectedKitchenLayout(layout.value);
+                                            if (layout.value !== "u-shaped") {
+                                                setSelectedUShapedVariant(null);
+                                            }
+                                        }}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={styles.kitchenLayoutVisualContainer}>
+                                            <KitchenLayoutVisual
+                                                layoutType={layout.value}
+                                                isSelected={isSelected}
+                                                size={100}
+                                            />
+                                        </View>
+                                        <Typography
+                                            variant="body"
+                                            color={isSelected ? COLORS.WHITE : COLORS.TEXT.DARK}
+                                            style={styles.kitchenLayoutLabel}
+                                        >
+                                            {layout.label}
+                                        </Typography>
+                                        {isSelected && (
+                                            <View style={styles.kitchenLayoutCheckmark}>
+                                                <CustomIcon
+                                                    provider="Ionicons"
+                                                    name="checkmark-circle"
+                                                    size={20}
+                                                    color={COLORS.WHITE}
+                                                />
+                                            </View>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        {selectedKitchenLayout === "u-shaped" && (
+                            <View style={styles.uShapedVariantsContainer}>
+                                <Typography variant="h5" style={styles.uShapedTitle}>
+                                    Select U-shaped Variant
+                                </Typography>
+                                <View style={styles.uShapedVariantsGrid}>
+                                    {U_SHAPED_VARIANTS.map(variant => {
+                                        const isSelected = selectedUShapedVariant === variant.value;
+                                        return (
+                                            <TouchableOpacity
+                                                key={variant.value}
+                                                style={[
+                                                    styles.uShapedVariantCard,
+                                                    isSelected && styles.uShapedVariantCardSelected,
+                                                ]}
+                                                onPress={() => setSelectedUShapedVariant(variant.value)}
+                                                activeOpacity={0.7}
+                                            >
+                                                <View style={styles.uShapedVariantVisualContainer}>
+                                                    <KitchenLayoutVisual
+                                                        layoutType="u-shaped"
+                                                        variant={variant.value}
+                                                        isSelected={isSelected}
+                                                        size={80}
+                                                    />
+                                                </View>
+                                                <Typography
+                                                    variant="body"
+                                                    color={isSelected ? COLORS.WHITE : COLORS.TEXT.DARK}
+                                                    style={styles.uShapedVariantLabel}
+                                                >
+                                                    {variant.label}
+                                                </Typography>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            </View>
+                        )}
+                    </ScrollView>
+
+                    <View style={styles.footer}>
+                        <Button
+                            title="Back"
+                            onPress={() => scrollToStep(0)}
+                            variant="outline"
+                            style={styles.backButton}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="arrow-back"
+                                    size={20}
+                                    color={COLORS.TEXT.DARK}
+                                />
+                            }
+                            iconPosition="extreme-left"
+                        />
+                        <Button
+                            title="Get Estimate"
+                            onPress={handleStep2Continue}
+                            style={styles.continueButton}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="calculator"
+                                    size={20}
+                                    color={COLORS.WHITE}
+                                />
+                            }
+                            iconPosition="extreme-right"
+                        />
+                    </View>
+                </View>
+            );
+        }
+
+        return (
+            <View style={styles.stepContainer}>
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {selectedBhk && (
+                        <View style={styles.bhkBadge}>
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="home"
+                                size={16}
+                                color={COLORS.primary}
+                            />
+                            <Typography
+                                variant="bodySmall"
+                                color={COLORS.primary}
+                                style={styles.bhkText}
+                            >
+                                {selectedBhk}
+                            </Typography>
+                        </View>
+                    )}
+
+                    <Typography variant="h4" style={styles.title}>
+                        What do you need?
+                    </Typography>
+                    <Typography
+                        variant="body"
+                        color={COLORS.TEXT.LIGHT}
+                        style={styles.description}
+                    >
+                        Select the interior elements for your home
+                    </Typography>
+
+                    <View style={styles.requirementsContainer}>
+                        {REQUIREMENT_ITEMS.map(item => (
+                            <RequirementCounter
+                                key={item.id}
+                                label={item.label}
+                                icon={item.icon}
+                                count={requirements[item.id] || 0}
+                                maxCount={
+                                    selectedBhk
+                                        ? getMaxCount(item.id, selectedBhk)
+                                        : item.maxCount
+                                }
+                                note={item.note}
+                                onIncrement={() => handleIncrement(item.id)}
+                                onDecrement={() => handleDecrement(item.id)}
+                            />
+                        ))}
+                    </View>
+
+                    <View style={styles.infoBox}>
                         <CustomIcon
                             provider="Ionicons"
-                            name="home"
-                            size={16}
+                            name="information-circle"
+                            size={20}
                             color={COLORS.primary}
                         />
                         <Typography
-                            variant="bodySmall"
-                            color={COLORS.primary}
-                            style={styles.bhkText}
+                            variant="caption"
+                            color={COLORS.TEXT.DARK}
+                            style={styles.infoText}
                         >
-                            {selectedBhk}
+                            Kitchen is mandatory. Adjust other requirements as
+                            needed for your {selectedBhk}.
                         </Typography>
                     </View>
-                )}
+                </ScrollView>
 
-                <Typography variant="h4" style={styles.title}>
-                    What do you need?
-                </Typography>
-                <Typography
-                    variant="body"
-                    color={COLORS.TEXT.LIGHT}
-                    style={styles.description}
-                >
-                    Select the interior elements for your home
-                </Typography>
-
-                <View style={styles.requirementsContainer}>
-                    {REQUIREMENT_ITEMS.map(item => (
-                        <RequirementCounter
-                            key={item.id}
-                            label={item.label}
-                            icon={item.icon}
-                            count={requirements[item.id] || 0}
-                            maxCount={
-                                selectedBhk
-                                    ? getMaxCount(item.id, selectedBhk)
-                                    : item.maxCount
-                            }
-                            note={item.note}
-                            onIncrement={() => handleIncrement(item.id)}
-                            onDecrement={() => handleDecrement(item.id)}
-                        />
-                    ))}
-                </View>
-
-                <View style={styles.infoBox}>
-                    <CustomIcon
-                        provider="Ionicons"
-                        name="information-circle"
-                        size={20}
-                        color={COLORS.primary}
+                <View style={styles.footer}>
+                    <Button
+                        title="Back"
+                        onPress={() => scrollToStep(0)}
+                        variant="outline"
+                        style={styles.backButton}
+                        icon={
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="arrow-back"
+                                size={20}
+                                color={COLORS.TEXT.DARK}
+                            />
+                        }
+                        iconPosition="extreme-left"
                     />
-                    <Typography
-                        variant="caption"
-                        color={COLORS.TEXT.DARK}
-                        style={styles.infoText}
-                    >
-                        Kitchen is mandatory. Adjust other requirements as
-                        needed for your {selectedBhk}.
-                    </Typography>
+                    <Button
+                        title="Get Estimate"
+                        onPress={handleStep2Continue}
+                        style={styles.continueButton}
+                        icon={
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="calculator"
+                                size={20}
+                                color={COLORS.WHITE}
+                            />
+                        }
+                        iconPosition="extreme-right"
+                    />
                 </View>
-            </ScrollView>
-
-            <View style={styles.footer}>
-                <Button
-                    title="Back"
-                    onPress={() => scrollToStep(0)}
-                    variant="outline"
-                    style={styles.backButton}
-                    icon={
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="arrow-back"
-                            size={20}
-                            color={COLORS.TEXT.DARK}
-                        />
-                    }
-                    iconPosition="extreme-left"
-                />
-                <Button
-                    title="Get Estimate"
-                    onPress={handleStep2Continue}
-                    style={styles.continueButton}
-                    icon={
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="calculator"
-                            size={20}
-                            color={COLORS.WHITE}
-                        />
-                    }
-                    iconPosition="extreme-right"
-                />
             </View>
-        </View>
-    );
+        );
+    };
 
     // Step 3: Estimates
     const renderStep3 = () => (
@@ -619,36 +1386,77 @@ export const InteriorCalculator: React.FC = () => {
                             color={COLORS.TEXT.DARK}
                             style={styles.summaryTitle}
                         >
-                            Your {selectedBhk} Requirements
+                            {selectedBhk === "modular-kitchen" 
+                                ? "Your Modular Kitchen Selection"
+                                : `Your ${selectedBhk} Requirements`}
                         </Typography>
                     </View>
                     <View style={styles.summaryContent}>
-                        {getRequirementSummary().map(item => (
-                            <View key={item.id} style={styles.summaryItem}>
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name={item.icon}
-                                    size={18}
-                                    color={COLORS.GREY[400]}
-                                />
-                                <Typography
-                                    variant="bodySmall"
-                                    color={COLORS.TEXT.DARK}
-                                    style={styles.summaryItemText}
-                                >
-                                    {item.label}
-                                </Typography>
-                                <View style={styles.summaryItemCount}>
+                        {selectedBhk === "modular-kitchen" ? (
+                            <>
+                                {selectedKitchenLayout && (
+                                    <View style={styles.summaryItem}>
+                                        <CustomIcon
+                                            provider="Ionicons"
+                                            name="restaurant-outline"
+                                            size={18}
+                                            color={COLORS.GREY[400]}
+                                        />
+                                        <Typography
+                                            variant="bodySmall"
+                                            color={COLORS.TEXT.DARK}
+                                            style={styles.summaryItemText}
+                                        >
+                                            Layout: {KITCHEN_LAYOUT_OPTIONS.find(l => l.value === selectedKitchenLayout)?.label}
+                                        </Typography>
+                                    </View>
+                                )}
+                                {selectedKitchenLayout === "u-shaped" && selectedUShapedVariant && (
+                                    <View style={styles.summaryItem}>
+                                        <CustomIcon
+                                            provider="Ionicons"
+                                            name="options-outline"
+                                            size={18}
+                                            color={COLORS.GREY[400]}
+                                        />
+                                        <Typography
+                                            variant="bodySmall"
+                                            color={COLORS.TEXT.DARK}
+                                            style={styles.summaryItemText}
+                                        >
+                                            Variant: {U_SHAPED_VARIANTS.find(v => v.value === selectedUShapedVariant)?.label}
+                                        </Typography>
+                                    </View>
+                                )}
+                            </>
+                        ) : (
+                            getRequirementSummary().map(item => (
+                                <View key={item.id} style={styles.summaryItem}>
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name={item.icon}
+                                        size={18}
+                                        color={COLORS.GREY[400]}
+                                    />
                                     <Typography
                                         variant="bodySmall"
-                                        color={COLORS.primary}
-                                        style={styles.summaryCountText}
+                                        color={COLORS.TEXT.DARK}
+                                        style={styles.summaryItemText}
                                     >
-                                        ×{item.count}
+                                        {item.label}
                                     </Typography>
+                                    <View style={styles.summaryItemCount}>
+                                        <Typography
+                                            variant="bodySmall"
+                                            color={COLORS.primary}
+                                            style={styles.summaryCountText}
+                                        >
+                                            ×{item.count}
+                                        </Typography>
+                                    </View>
                                 </View>
-                            </View>
-                        ))}
+                            ))
+                        )}
                     </View>
                 </View>
 
@@ -668,15 +1476,21 @@ export const InteriorCalculator: React.FC = () => {
                         <PackageCard
                             packageType="essential"
                             price={estimates.essential}
+                            isSelected={selectedPackage === "essential"}
+                            onSelect={() => setSelectedPackage("essential")}
                         />
                         <PackageCard
                             packageType="comfort"
                             price={estimates.comfort}
                             isPopular
+                            isSelected={selectedPackage === "comfort"}
+                            onSelect={() => setSelectedPackage("comfort")}
                         />
                         <PackageCard
                             packageType="luxury"
                             price={estimates.luxury}
+                            isSelected={selectedPackage === "luxury"}
+                            onSelect={() => setSelectedPackage("luxury")}
                         />
                     </View>
                 )}
@@ -717,17 +1531,268 @@ export const InteriorCalculator: React.FC = () => {
                 />
                 <Button
                     title="Continue"
-                    onPress={handleBookConsultation}
+                    onPress={handleStep3Continue}
+                    disabled={!selectedPackage}
                     style={styles.continueButton}
                 />
             </View>
         </View>
     );
 
+    // Step 4: Slot Selection
+    const renderStep4 = () => {
+        const formatAddress = (address: any): string => {
+            if (!address) return "";
+            return `${address.line1}, ${address.line2 ? address.line2 + ", " : ""}${address.street}, ${address.city}, ${address.state} ${address.postalCode}`;
+        };
+
+        const renderDateItem = ({ item }: { item: any }) => {
+            const isSelected = selectedDate === item.fullDate;
+            return (
+                <TouchableOpacity
+                    style={[
+                        styles.dateItem,
+                        isSelected && styles.selectedDateItem,
+                    ]}
+                    onPress={() => setSelectedDate(item.fullDate)}
+                    activeOpacity={0.7}
+                >
+                    <Typography
+                        variant="caption"
+                        color={isSelected ? COLORS.WHITE : COLORS.TEXT.LIGHT}
+                        style={styles.dayName}
+                    >
+                        {item.dayName}
+                    </Typography>
+                    <Typography
+                        variant="h5"
+                        color={isSelected ? COLORS.WHITE : COLORS.TEXT.DARK}
+                        style={styles.dayNumber}
+                    >
+                        {item.dayNumber}
+                    </Typography>
+                    <Typography
+                        variant="caption"
+                        color={isSelected ? COLORS.WHITE : COLORS.TEXT.LIGHT}
+                        style={styles.monthText}
+                    >
+                        {item.month}
+                    </Typography>
+                </TouchableOpacity>
+            );
+        };
+
+        const renderTimeSlot = ({ item }: { item: TimeSlot }) => {
+            const isSelected = selectedTimeSlot === item.time;
+            const isAvailable = item.available;
+
+            return (
+                <TouchableOpacity
+                    style={[
+                        styles.timeSlotItem,
+                        isSelected && styles.selectedTimeSlot,
+                        !isAvailable && styles.unavailableTimeSlot,
+                    ]}
+                    onPress={() => isAvailable && setSelectedTimeSlot(item.time)}
+                    disabled={!isAvailable}
+                    activeOpacity={0.7}
+                >
+                    <Typography
+                        variant="bodySmall"
+                        color={isSelected ? COLORS.WHITE : (!isAvailable ? COLORS.GREY[400] : COLORS.TEXT.DARK)}
+                    >
+                        {item.time}
+                    </Typography>
+                </TouchableOpacity>
+            );
+        };
+
+        return (
+            <View style={styles.stepContainer}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                    style={{ flex: 1 }}
+                >
+                    <ScrollView
+                        style={styles.scrollView}
+                        contentContainerStyle={styles.scrollContent}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <Typography variant="h4" style={styles.title}>
+                            Select Date & Time
+                        </Typography>
+                        <Typography
+                            variant="body"
+                            color={COLORS.TEXT.LIGHT}
+                            style={styles.description}
+                        >
+                            Choose your preferred date, time slot, and service location
+                        </Typography>
+
+                        {/* Address Selection */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="location-outline"
+                                    size={20}
+                                    color={COLORS.primary}
+                                />
+                                <Typography variant="h5" style={styles.sectionTitle}>
+                                    Service Address
+                                </Typography>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.addAddressButton}
+                                onPress={() => navigation.navigate("AllAddress")}
+                                activeOpacity={0.7}
+                            >
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="add-circle-outline"
+                                    size={24}
+                                    color={COLORS.primary}
+                                />
+                                {!selectedAddress ? (
+                                    <Typography
+                                        variant="bodySmall"
+                                        color={COLORS.primary}
+                                        style={styles.addAddressText}
+                                    >
+                                        Choose an address
+                                    </Typography>
+                                ) : (
+                                    <Typography
+                                        variant="bodySmall"
+                                        numberOfLines={2}
+                                        color={COLORS.TEXT.DARK}
+                                        style={styles.addAddressText}
+                                    >
+                                        {formatAddress(selectedAddress)}
+                                    </Typography>
+                                )}
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="chevron-forward"
+                                    size={24}
+                                    color={COLORS.GREY[400]}
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Date Selection */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="calendar-outline"
+                                    size={20}
+                                    color={COLORS.primary}
+                                />
+                                <Typography variant="h5" style={styles.sectionTitle}>
+                                    Select Date
+                                </Typography>
+                            </View>
+                            <FlatList
+                                data={dates}
+                                renderItem={renderDateItem}
+                                keyExtractor={item => item.id}
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={styles.datesList}
+                            />
+                        </View>
+
+                        {/* Time Slot Selection */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="time-outline"
+                                    size={20}
+                                    color={COLORS.primary}
+                                />
+                                <Typography variant="h5" style={styles.sectionTitle}>
+                                    Select Time Slot
+                                </Typography>
+                            </View>
+                            <FlatList
+                                data={timeSlots}
+                                renderItem={renderTimeSlot}
+                                keyExtractor={item => item.id}
+                                numColumns={2}
+                                columnWrapperStyle={styles.timeSlotsRow}
+                                contentContainerStyle={styles.timeSlotsList}
+                            />
+                        </View>
+
+                        {/* Special Requirements */}
+                        <View style={styles.section}>
+                            <View style={styles.sectionHeader}>
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="document-text-outline"
+                                    size={20}
+                                    color={COLORS.primary}
+                                />
+                                <Typography variant="h5" style={styles.sectionTitle}>
+                                    Special Requirements
+                                </Typography>
+                            </View>
+                            <Input
+                                placeholder="Any special instructions or requirements..."
+                                value={specialRequirements}
+                                onChangeText={setSpecialRequirements}
+                                multiline={true}
+                                numberOfLines={4}
+                                inputStyle={styles.requirementsInput}
+                            />
+                        </View>
+                    </ScrollView>
+
+                    <View style={styles.footer}>
+                        <Button
+                            title="Back"
+                            onPress={() => scrollToStep(2)}
+                            variant="outline"
+                            style={styles.backButton}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="arrow-back"
+                                    size={20}
+                                    color={COLORS.TEXT.DARK}
+                                />
+                            }
+                            iconPosition="extreme-left"
+                        />
+                        <Button
+                            title="Book a Consultant"
+                            onPress={handleBookConsultant}
+                            disabled={!selectedDate || !selectedTimeSlot || !selectedAddress || isProcessingPayment}
+                            style={styles.continueButton}
+                            loading={isProcessingPayment}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="calendar"
+                                    size={20}
+                                    color={COLORS.WHITE}
+                                />
+                            }
+                            iconPosition="extreme-right"
+                        />
+                    </View>
+                </KeyboardAvoidingView>
+            </View>
+        );
+    };
+
     const steps = [
         { key: "step1", component: renderStep1 },
         { key: "step2", component: renderStep2 },
         { key: "step3", component: renderStep3 },
+        { key: "step4", component: renderStep4 },
     ];
 
     return (
@@ -755,8 +1820,8 @@ export const InteriorCalculator: React.FC = () => {
             {/* Stepper */}
             <StepperProgress
                 currentStep={currentStep}
-                totalSteps={3}
-                stepLabels={["Property", "Requirements", "Estimate"]}
+                totalSteps={4}
+                stepLabels={["Property", "Requirements", "Estimate", "Booking"]}
             />
 
             {/* FlatList with steps */}
@@ -1095,5 +2160,177 @@ const styles = StyleSheet.create({
     },
     continueButton: {
         flex: 1,
+    },
+    // Kitchen Layout Styles
+    kitchenLayoutContainer: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: spacingUtils.md,
+        marginBottom: spacingUtils.lg,
+    },
+    kitchenLayoutCard: {
+        width: (SCREEN_WIDTH - spacingUtils.md * 3) / 2,
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: COLORS.border.light,
+        backgroundColor: COLORS.WHITE,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: spacingUtils.md,
+        paddingTop: spacingUtils.lg,
+        paddingBottom: spacingUtils.lg,
+        position: "relative",
+        minHeight: 160,
+        ...shadowUtils.getShadow("small"),
+    },
+    kitchenLayoutCardSelected: {
+        borderColor: "#FF6B6B",
+        borderWidth: 3,
+        backgroundColor: COLORS.WHITE,
+    },
+    kitchenLayoutVisualContainer: {
+        marginBottom: spacingUtils.sm,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    kitchenLayoutLabel: {
+        fontWeight: "600",
+        textAlign: "center",
+    },
+    kitchenLayoutCheckmark: {
+        position: "absolute",
+        top: 8,
+        right: 8,
+    },
+    uShapedVariantsContainer: {
+        marginTop: spacingUtils.lg,
+        paddingTop: spacingUtils.lg,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.border.light,
+    },
+    uShapedTitle: {
+        fontWeight: "600",
+        marginBottom: spacingUtils.md,
+    },
+    uShapedVariantsGrid: {
+        flexDirection: "row",
+        gap: spacingUtils.md,
+    },
+    uShapedVariantCard: {
+        flex: 1,
+        padding: spacingUtils.md,
+        paddingTop: spacingUtils.lg,
+        paddingBottom: spacingUtils.lg,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: COLORS.border.light,
+        backgroundColor: COLORS.WHITE,
+        alignItems: "center",
+        minHeight: 140,
+        ...shadowUtils.getShadow("small"),
+    },
+    uShapedVariantCardSelected: {
+        borderColor: "#FF6B6B",
+        borderWidth: 3,
+        backgroundColor: COLORS.WHITE,
+    },
+    uShapedVariantVisualContainer: {
+        marginBottom: spacingUtils.sm,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    uShapedVariantLabel: {
+        marginTop: spacingUtils.xs,
+        fontWeight: "600",
+    },
+    packageCardSelected: {
+        borderColor: COLORS.primary,
+        borderWidth: 3,
+        backgroundColor: COLORS.primaryLight + "20",
+    },
+    // Step 4 Styles
+    section: {
+        marginBottom: spacingUtils.xl,
+    },
+    sectionHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: spacingUtils.md,
+        gap: 8,
+    },
+    sectionTitle: {
+        fontWeight: "600",
+        color: COLORS.TEXT.DARK,
+    },
+    addAddressButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: COLORS.primaryLight,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        borderRadius: 12,
+        padding: spacingUtils.md,
+        borderStyle: "dashed",
+    },
+    addAddressText: {
+        flex: 1,
+        marginLeft: spacingUtils.sm,
+        fontWeight: "500",
+    },
+    datesList: {
+        paddingHorizontal: 4,
+    },
+    dateItem: {
+        backgroundColor: COLORS.WHITE,
+        borderWidth: 1,
+        borderColor: COLORS.border.light,
+        borderRadius: 12,
+        paddingVertical: spacingUtils.md,
+        paddingHorizontal: spacingUtils.lg,
+        alignItems: "center",
+        marginHorizontal: 4,
+        minWidth: 70,
+    },
+    selectedDateItem: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    dayName: {
+        marginBottom: 4,
+    },
+    dayNumber: {
+        marginBottom: 2,
+    },
+    monthText: {
+        fontSize: 10,
+    },
+    timeSlotsList: {
+        paddingHorizontal: 4,
+    },
+    timeSlotsRow: {
+        justifyContent: "space-between",
+    },
+    timeSlotItem: {
+        width: (SCREEN_WIDTH - spacingUtils.md * 3) / 2,
+        backgroundColor: COLORS.WHITE,
+        borderWidth: 1,
+        borderColor: COLORS.border.light,
+        borderRadius: 10,
+        paddingVertical: spacingUtils.md,
+        paddingHorizontal: spacingUtils.sm,
+        alignItems: "center",
+        marginBottom: spacingUtils.sm,
+    },
+    selectedTimeSlot: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
+    },
+    unavailableTimeSlot: {
+        backgroundColor: COLORS.GREY[100],
+        borderColor: COLORS.GREY[200],
+    },
+    requirementsInput: {
+        textAlignVertical: "top",
+        minHeight: 100,
     },
 });
