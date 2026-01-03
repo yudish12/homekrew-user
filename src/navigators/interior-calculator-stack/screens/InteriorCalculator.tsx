@@ -1112,14 +1112,14 @@ export const InteriorCalculator: React.FC = () => {
 
             <View style={styles.footer}>
                 <Button
-                    title="Recalculate"
-                    onPress={handleRecalculate}
+                    title="Back"
+                    onPress={() => scrollToStep(1)}
                     variant="outline"
                     style={styles.backButton}
                     icon={
                         <CustomIcon
                             provider="Ionicons"
-                            name="refresh"
+                            name="arrow-back"
                             size={20}
                             color={COLORS.TEXT.DARK}
                         />
