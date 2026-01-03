@@ -266,7 +266,7 @@ const Explore = () => {
                                         style={{
                                             width: 56,
                                             height: 56,
-                                            borderRadius: "100%",
+                                            borderRadius: 100000,
                                         }}
                                         source={{ uri: e.image }}
                                     />

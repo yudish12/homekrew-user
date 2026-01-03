@@ -15,7 +15,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import RazorpayCheckout from "react-native-razorpay";
 import { SafeAreaView } from "../../../components/SafeAreaView";
 import { Typography } from "../../../components/Typography";
 import { Button } from "../../../components/Button";
@@ -71,9 +70,9 @@ interface KitchenLayoutVisualProps {
 // Image sources for kitchen layouts
 const kitchenLayoutImages = {
     "l-shaped": require("../../../../assets/images/kitchen-layouts/l-shaped.png"),
-    "straight": require("../../../../assets/images/kitchen-layouts/straight.png"),
+    straight: require("../../../../assets/images/kitchen-layouts/straight.png"),
     "u-shaped": require("../../../../assets/images/kitchen-layouts/u-shaped.png"),
-    "parallel": require("../../../../assets/images/kitchen-layouts/parallel.png"),
+    parallel: require("../../../../assets/images/kitchen-layouts/parallel.png"),
 };
 
 const KitchenLayoutVisual: React.FC<KitchenLayoutVisualProps> = ({
@@ -252,7 +251,9 @@ interface PackageCardProps {
     isPopular?: boolean;
 }
 
-const PackageCard: React.FC<PackageCardProps & { isSelected?: boolean; onSelect?: () => void }> = ({
+const PackageCard: React.FC<
+    PackageCardProps & { isSelected?: boolean; onSelect?: () => void }
+> = ({
     packageType,
     price,
     isPopular = false,
@@ -282,10 +283,7 @@ const PackageCard: React.FC<PackageCardProps & { isSelected?: boolean; onSelect?
     }, [isPopular]);
 
     return (
-        <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={onSelect}
-        >
+        <TouchableOpacity activeOpacity={0.7} onPress={onSelect}>
             <Animated.View
                 style={[
                     styles.packageCard,
@@ -295,68 +293,68 @@ const PackageCard: React.FC<PackageCardProps & { isSelected?: boolean; onSelect?
                     { transform: [{ scale: scaleAnim }] },
                 ]}
             >
-            {isPopular && (
-                <View style={styles.popularBadge}>
-                    <Typography
-                        variant="caption"
-                        color={COLORS.WHITE}
-                        style={styles.popularText}
-                    >
-                        {details.badge}
-                    </Typography>
-                </View>
-            )}
+                {isPopular && (
+                    <View style={styles.popularBadge}>
+                        <Typography
+                            variant="caption"
+                            color={COLORS.WHITE}
+                            style={styles.popularText}
+                        >
+                            {details.badge}
+                        </Typography>
+                    </View>
+                )}
 
-            <View style={styles.packageHeader}>
-                <View
-                    style={[
-                        styles.packageIconContainer,
-                        { backgroundColor: details.color + "20" },
-                    ]}
-                >
-                    <CustomIcon
-                        provider="Ionicons"
-                        name={
-                            packageType === "essential"
-                                ? "home-outline"
-                                : packageType === "comfort"
-                                ? "home"
-                                : "diamond-outline"
-                        }
-                        size={28}
-                        color={details.color}
-                    />
-                </View>
-                <View style={styles.packageTitleContainer}>
-                    <Typography
-                        variant="h5"
-                        color={COLORS.TEXT.DARK}
-                        style={styles.packageTitle}
+                <View style={styles.packageHeader}>
+                    <View
+                        style={[
+                            styles.packageIconContainer,
+                            { backgroundColor: details.color + "20" },
+                        ]}
                     >
-                        {details.label}
-                    </Typography>
-                    <Typography
-                        variant="caption"
-                        color={COLORS.TEXT.LIGHT}
-                        style={styles.packageDescription}
-                    >
-                        {details.description}
-                    </Typography>
+                        <CustomIcon
+                            provider="Ionicons"
+                            name={
+                                packageType === "essential"
+                                    ? "home-outline"
+                                    : packageType === "comfort"
+                                    ? "home"
+                                    : "diamond-outline"
+                            }
+                            size={28}
+                            color={details.color}
+                        />
+                    </View>
+                    <View style={styles.packageTitleContainer}>
+                        <Typography
+                            variant="h5"
+                            color={COLORS.TEXT.DARK}
+                            style={styles.packageTitle}
+                        >
+                            {details.label}
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            color={COLORS.TEXT.LIGHT}
+                            style={styles.packageDescription}
+                        >
+                            {details.description}
+                        </Typography>
+                    </View>
                 </View>
-            </View>
 
-            <View style={styles.priceContainer}>
-                <Typography
-                    variant="h3"
-                    style={[styles.price, { color: details.color }]}
-                >
-                    {formatIndianPrice(price)}
-                </Typography>
-                <Typography variant="caption" color={COLORS.TEXT.LIGHT}>
-                    Estimated cost
-                </Typography>
-            </View>
-            {/* 
+                <View style={styles.priceContainer}>
+                    <Typography
+                        variant="h3"
+                        style={[styles.price, { color: details.color }]}
+                    >
+                        {formatIndianPrice(price)}
+                    </Typography>
+                    <Typography variant="caption" color={COLORS.TEXT.LIGHT}>
+                        Estimated cost
+                    </Typography>
+                </View>
+                {/* 
             <TouchableOpacity
                 style={[
                     styles.viewDetailsButton,
@@ -395,13 +393,16 @@ export const InteriorCalculator: React.FC = () => {
         studyUnit: 1,
         crockeryUnit: 1,
     });
-    const [selectedKitchenLayout, setSelectedKitchenLayout] = useState<KitchenLayoutType | null>(null);
-    const [kitchenDimensions, setKitchenDimensions] = useState<Record<string, string>>({
+    const [selectedKitchenLayout, setSelectedKitchenLayout] =
+        useState<KitchenLayoutType | null>(null);
+    const [kitchenDimensions, setKitchenDimensions] = useState<
+        Record<string, string>
+    >({
         "1": "3",
         "2": "8",
         "3": "3",
     });
-    
+
     // Reset dimensions when layout changes
     useEffect(() => {
         if (selectedKitchenLayout) {
@@ -410,15 +411,21 @@ export const InteriorCalculator: React.FC = () => {
                 const newDimensions: Record<string, string> = {};
                 sides.forEach((side, index) => {
                     // Keep existing value if it exists, otherwise set default
-                    newDimensions[side] = prev[side] || (index === 0 ? "12" : index === 1 ? "8" : "3");
+                    newDimensions[side] =
+                        prev[side] ||
+                        (index === 0 ? "12" : index === 1 ? "8" : "3");
                 });
                 return newDimensions;
             });
         }
     }, [selectedKitchenLayout]);
-    const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(
+        null,
+    );
     const [dates] = useState(getNext7Days());
-    const [selectedDate, setSelectedDate] = useState<string>(dates[0]?.fullDate || "");
+    const [selectedDate, setSelectedDate] = useState<string>(
+        dates[0]?.fullDate || "",
+    );
     const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
     const [specialRequirements, setSpecialRequirements] = useState<string>("");
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -478,7 +485,12 @@ export const InteriorCalculator: React.FC = () => {
             const layoutSides = getLayoutSides(selectedKitchenLayout);
             const allDimensionsEntered = layoutSides.every(side => {
                 const value = kitchenDimensions[side];
-                return value && value.trim() !== "" && !isNaN(Number(value)) && Number(value) > 0;
+                return (
+                    value &&
+                    value.trim() !== "" &&
+                    !isNaN(Number(value)) &&
+                    Number(value) > 0
+                );
             });
             if (!allDimensionsEntered) {
                 Alert.alert("Required", "Please enter all dimensions");
@@ -558,7 +570,9 @@ export const InteriorCalculator: React.FC = () => {
             };
 
             // Map kitchen layout to API format
-            const getKitchenLayout = (layout: KitchenLayoutType | null): string => {
+            const getKitchenLayout = (
+                layout: KitchenLayoutType | null,
+            ): string => {
                 switch (layout) {
                     case "l-shaped":
                         return "L_SHAPE";
@@ -634,7 +648,9 @@ export const InteriorCalculator: React.FC = () => {
 
             // Prepare user data (common for both BHK and modular kitchen)
             const userData = {
-                name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
+                name:
+                    `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+                    "User",
                 email: user.email || "",
                 phone: user.phoneNumber || "",
                 whatsappOptIn: true, // Default to true, can be made configurable
@@ -675,19 +691,31 @@ export const InteriorCalculator: React.FC = () => {
             }
 
             // Log the request body for debugging
-            console.log("Calculator Submit Request Body:", JSON.stringify(calculatorData, null, 2));
+            console.log(
+                "Calculator Submit Request Body:",
+                JSON.stringify(calculatorData, null, 2),
+            );
 
-            const response = await OrdersServices.submitCalculator(calculatorData);
+            const response = await OrdersServices.submitCalculator(
+                calculatorData,
+            );
 
             if (response.success) {
-                Alert.alert("Success", "Consultant booking submitted successfully!", [
-                    {
-                        text: "OK",
-                        onPress: () => navigation.goBack(),
-                    },
-                ]);
+                Alert.alert(
+                    "Success",
+                    "Consultant booking submitted successfully!",
+                    [
+                        {
+                            text: "OK",
+                            onPress: () => navigation.goBack(),
+                        },
+                    ],
+                );
             } else {
-                Alert.alert("Error", response.message || "Failed to submit booking");
+                Alert.alert(
+                    "Error",
+                    response.message || "Failed to submit booking",
+                );
             }
         } catch (error: any) {
             Alert.alert("Error", "An error occurred. Please try again.");
@@ -851,20 +879,28 @@ export const InteriorCalculator: React.FC = () => {
 
                         <View style={styles.kitchenLayoutContainer}>
                             {KITCHEN_LAYOUT_OPTIONS.map(layout => {
-                                const isSelected = selectedKitchenLayout === layout.value;
+                                const isSelected =
+                                    selectedKitchenLayout === layout.value;
                                 return (
                                     <TouchableOpacity
                                         key={layout.value}
                                         style={[
                                             styles.kitchenLayoutCard,
-                                            isSelected && styles.kitchenLayoutCardSelected,
+                                            isSelected &&
+                                                styles.kitchenLayoutCardSelected,
                                         ]}
                                         onPress={() => {
-                                            setSelectedKitchenLayout(layout.value);
+                                            setSelectedKitchenLayout(
+                                                layout.value,
+                                            );
                                         }}
                                         activeOpacity={0.7}
                                     >
-                                        <View style={styles.kitchenLayoutVisualContainer}>
+                                        <View
+                                            style={
+                                                styles.kitchenLayoutVisualContainer
+                                            }
+                                        >
                                             <KitchenLayoutVisual
                                                 layoutType={layout.value}
                                                 isSelected={isSelected}
@@ -872,13 +908,21 @@ export const InteriorCalculator: React.FC = () => {
                                         </View>
                                         <Typography
                                             variant="body"
-                                            color={isSelected ? COLORS.primary : COLORS.TEXT.DARK}
+                                            color={
+                                                isSelected
+                                                    ? COLORS.primary
+                                                    : COLORS.TEXT.DARK
+                                            }
                                             style={styles.kitchenLayoutLabel}
                                         >
                                             {layout.label}
                                         </Typography>
                                         {isSelected && (
-                                            <View style={styles.kitchenLayoutCheckmark}>
+                                            <View
+                                                style={
+                                                    styles.kitchenLayoutCheckmark
+                                                }
+                                            >
                                                 <CustomIcon
                                                     provider="Ionicons"
                                                     name="checkmark-circle"
@@ -895,34 +939,63 @@ export const InteriorCalculator: React.FC = () => {
                         {selectedKitchenLayout && (
                             <View style={styles.dimensionsContainer}>
                                 <View style={styles.dimensionsBanner}>
-                                    <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionsBannerText}>
+                                    <Typography
+                                        variant="body"
+                                        color={COLORS.TEXT.DARK}
+                                        style={styles.dimensionsBannerText}
+                                    >
                                         Set the size as per your requirements
                                     </Typography>
                                 </View>
                                 <View style={styles.dimensionsInputsContainer}>
-                                    {getLayoutSides(selectedKitchenLayout).map((side) => (
-                                        <View key={side} style={styles.dimensionInputRow}>
-                                            <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionLabel}>
-                                                {side}
-                                            </Typography>
-                                            <Input
-                                                type="number"
-                                                value={kitchenDimensions[side] || ""}
-                                                onChangeText={(text) => {
-                                                    setKitchenDimensions(prev => ({
-                                                        ...prev,
-                                                        [side]: text,
-                                                    }));
-                                                }}
-                                                containerStyle={styles.dimensionInputContainer}
-                                                inputContainerStyle={styles.dimensionInputBox}
-                                                keyboardType="numeric"
-                                            />
-                                            <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionUnit}>
-                                                ft.
-                                            </Typography>
-                                        </View>
-                                    ))}
+                                    {getLayoutSides(selectedKitchenLayout).map(
+                                        side => (
+                                            <View
+                                                key={side}
+                                                style={styles.dimensionInputRow}
+                                            >
+                                                <Typography
+                                                    variant="body"
+                                                    color={COLORS.TEXT.DARK}
+                                                    style={
+                                                        styles.dimensionLabel
+                                                    }
+                                                >
+                                                    {side}
+                                                </Typography>
+                                                <Input
+                                                    type="number"
+                                                    value={
+                                                        kitchenDimensions[
+                                                            side
+                                                        ] || ""
+                                                    }
+                                                    onChangeText={text => {
+                                                        setKitchenDimensions(
+                                                            prev => ({
+                                                                ...prev,
+                                                                [side]: text,
+                                                            }),
+                                                        );
+                                                    }}
+                                                    containerStyle={
+                                                        styles.dimensionInputContainer
+                                                    }
+                                                    inputContainerStyle={
+                                                        styles.dimensionInputBox
+                                                    }
+                                                    keyboardType="numeric"
+                                                />
+                                                <Typography
+                                                    variant="body"
+                                                    color={COLORS.TEXT.DARK}
+                                                    style={styles.dimensionUnit}
+                                                >
+                                                    ft.
+                                                </Typography>
+                                            </View>
+                                        ),
+                                    )}
                                 </View>
                             </View>
                         )}
@@ -1093,7 +1166,7 @@ export const InteriorCalculator: React.FC = () => {
                             color={COLORS.TEXT.DARK}
                             style={styles.summaryTitle}
                         >
-                            {selectedBhk === "modular-kitchen" 
+                            {selectedBhk === "modular-kitchen"
                                 ? "Your Modular Kitchen Selection"
                                 : `Your ${selectedBhk} Requirements`}
                         </Typography>
@@ -1114,27 +1187,48 @@ export const InteriorCalculator: React.FC = () => {
                                             color={COLORS.TEXT.DARK}
                                             style={styles.summaryItemText}
                                         >
-                                            Layout: {KITCHEN_LAYOUT_OPTIONS.find(l => l.value === selectedKitchenLayout)?.label}
+                                            Layout:{" "}
+                                            {
+                                                KITCHEN_LAYOUT_OPTIONS.find(
+                                                    l =>
+                                                        l.value ===
+                                                        selectedKitchenLayout,
+                                                )?.label
+                                            }
                                         </Typography>
                                     </View>
                                 )}
-                                {selectedKitchenLayout && Object.keys(kitchenDimensions).length > 0 && (
-                                    <View style={styles.summaryItem}>
-                                        <CustomIcon
-                                            provider="Ionicons"
-                                            name="resize-outline"
-                                            size={18}
-                                            color={COLORS.GREY[400]}
-                                        />
-                                        <Typography
-                                            variant="bodySmall"
-                                            color={COLORS.TEXT.DARK}
-                                            style={styles.summaryItemText}
-                                        >
-                                            Dimensions: {getLayoutSides(selectedKitchenLayout).map(side => `${side}: ${kitchenDimensions[side] || 0}ft`).join(", ")}
-                                        </Typography>
-                                    </View>
-                                )}
+                                {selectedKitchenLayout &&
+                                    Object.keys(kitchenDimensions).length >
+                                        0 && (
+                                        <View style={styles.summaryItem}>
+                                            <CustomIcon
+                                                provider="Ionicons"
+                                                name="resize-outline"
+                                                size={18}
+                                                color={COLORS.GREY[400]}
+                                            />
+                                            <Typography
+                                                variant="bodySmall"
+                                                color={COLORS.TEXT.DARK}
+                                                style={styles.summaryItemText}
+                                            >
+                                                Dimensions:{" "}
+                                                {getLayoutSides(
+                                                    selectedKitchenLayout,
+                                                )
+                                                    .map(
+                                                        side =>
+                                                            `${side}: ${
+                                                                kitchenDimensions[
+                                                                    side
+                                                                ] || 0
+                                                            }ft`,
+                                                    )
+                                                    .join(", ")}
+                                            </Typography>
+                                        </View>
+                                    )}
                             </>
                         ) : (
                             getRequirementSummary().map(item => (
@@ -1250,7 +1344,11 @@ export const InteriorCalculator: React.FC = () => {
     const renderStep4 = () => {
         const formatAddress = (address: any): string => {
             if (!address) return "";
-            return `${address.line1}, ${address.line2 ? address.line2 + ", " : ""}${address.street}, ${address.city}, ${address.state} ${address.postalCode}`;
+            return `${address.line1}, ${
+                address.line2 ? address.line2 + ", " : ""
+            }${address.street}, ${address.city}, ${address.state} ${
+                address.postalCode
+            }`;
         };
 
         const renderDateItem = (item: any) => {
@@ -1300,13 +1398,21 @@ export const InteriorCalculator: React.FC = () => {
                         isSelected && styles.selectedTimeSlot,
                         !isAvailable && styles.unavailableTimeSlot,
                     ]}
-                    onPress={() => isAvailable && setSelectedTimeSlot(item.time)}
+                    onPress={() =>
+                        isAvailable && setSelectedTimeSlot(item.time)
+                    }
                     disabled={!isAvailable}
                     activeOpacity={0.7}
                 >
                     <Typography
                         variant="bodySmall"
-                        color={isSelected ? COLORS.WHITE : (!isAvailable ? COLORS.GREY[400] : COLORS.TEXT.DARK)}
+                        color={
+                            isSelected
+                                ? COLORS.WHITE
+                                : !isAvailable
+                                ? COLORS.GREY[400]
+                                : COLORS.TEXT.DARK
+                        }
                     >
                         {item.time}
                     </Typography>
@@ -1333,7 +1439,8 @@ export const InteriorCalculator: React.FC = () => {
                             color={COLORS.TEXT.LIGHT}
                             style={styles.description}
                         >
-                            Choose your preferred date, time slot, and service location
+                            Choose your preferred date, time slot, and service
+                            location
                         </Typography>
 
                         {/* Address Selection */}
@@ -1345,13 +1452,18 @@ export const InteriorCalculator: React.FC = () => {
                                     size={20}
                                     color={COLORS.primary}
                                 />
-                                <Typography variant="h5" style={styles.sectionTitle}>
+                                <Typography
+                                    variant="h5"
+                                    style={styles.sectionTitle}
+                                >
                                     Service Address
                                 </Typography>
                             </View>
                             <TouchableOpacity
                                 style={styles.addAddressButton}
-                                onPress={() => navigation.navigate("AllAddress")}
+                                onPress={() =>
+                                    navigation.navigate("AllAddress")
+                                }
                                 activeOpacity={0.7}
                             >
                                 <CustomIcon
@@ -1396,13 +1508,19 @@ export const InteriorCalculator: React.FC = () => {
                                     size={20}
                                     color={COLORS.primary}
                                 />
-                                <Typography variant="h5" style={styles.sectionTitle}>
+                                <Typography
+                                    variant="h5"
+                                    style={styles.sectionTitle}
+                                >
                                     Select Date
                                 </Typography>
                             </View>
                             <View style={styles.datesContainer}>
-                                {dates.map((item) => (
-                                    <View key={item.id} style={styles.dateItemWrapper}>
+                                {dates.map(item => (
+                                    <View
+                                        key={item.id}
+                                        style={styles.dateItemWrapper}
+                                    >
                                         {renderDateItem(item)}
                                     </View>
                                 ))}
@@ -1418,7 +1536,10 @@ export const InteriorCalculator: React.FC = () => {
                                     size={20}
                                     color={COLORS.primary}
                                 />
-                                <Typography variant="h5" style={styles.sectionTitle}>
+                                <Typography
+                                    variant="h5"
+                                    style={styles.sectionTitle}
+                                >
                                     Select Time Slot
                                 </Typography>
                             </View>
@@ -1441,7 +1562,10 @@ export const InteriorCalculator: React.FC = () => {
                                     size={20}
                                     color={COLORS.primary}
                                 />
-                                <Typography variant="h5" style={styles.sectionTitle}>
+                                <Typography
+                                    variant="h5"
+                                    style={styles.sectionTitle}
+                                >
                                     Special Requirements
                                 </Typography>
                             </View>
@@ -1475,7 +1599,12 @@ export const InteriorCalculator: React.FC = () => {
                         <Button
                             title="Book a Consultant"
                             onPress={handleBookConsultant}
-                            disabled={!selectedDate || !selectedTimeSlot || !selectedAddress || isProcessingPayment}
+                            disabled={
+                                !selectedDate ||
+                                !selectedTimeSlot ||
+                                !selectedAddress ||
+                                isProcessingPayment
+                            }
                             style={styles.continueButton}
                             loading={isProcessingPayment}
                             icon={
@@ -1957,7 +2086,7 @@ const styles = StyleSheet.create({
         fontWeight: "600",
     },
     dimensionsContainer: {
-        marginTop: spacingUtils.lg,
+        marginTop: spacingUtils.xs,
         paddingTop: spacingUtils.lg,
         borderTopWidth: 1,
         borderTopColor: COLORS.border.light,
