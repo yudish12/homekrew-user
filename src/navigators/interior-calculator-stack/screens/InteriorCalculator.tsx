@@ -11,6 +11,7 @@ import {
     Platform,
     Alert,
     Image,
+    Keyboard,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
@@ -27,6 +28,7 @@ import { RootState } from "../../../types";
 import {
     BHK_OPTIONS,
     REQUIREMENT_ITEMS,
+    ROOM_ITEMS,
     PACKAGE_DETAILS,
     KITCHEN_LAYOUT_OPTIONS,
     BhkType,
@@ -41,6 +43,9 @@ import {
 } from "../../../constants/interior-calculator";
 import { TimeSlot } from "../../../types/services/orders";
 import { OrdersServices } from "../../../services/orders";
+import RazorpayCheckout from "react-native-razorpay";
+import { showErrorToast, showSuccessToast } from "../../../components/Toast";
+import { ErrorModal, SuccessModal } from "../../../components/Modal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -48,7 +53,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const getLayoutSides = (layoutType: KitchenLayoutType | null): string[] => {
     switch (layoutType) {
         case "l-shaped":
-            return ["1", "2", "3"];
+            return ["1", "2"];
         case "straight":
             return ["1"];
         case "u-shaped":
@@ -132,6 +137,97 @@ const timeSlots: TimeSlot[] = [
     { id: "6", time: "06:00 PM - 08:00 PM", available: true },
     { id: "7", time: "08:00 PM - 10:00 PM", available: true },
 ];
+
+interface RoomSelectionProps {
+    label: string;
+    icon: string;
+    count: number;
+    maxCount: number;
+    onIncrement: () => void;
+    onDecrement: () => void;
+}
+
+const RoomSelection: React.FC<RoomSelectionProps> = ({
+    label,
+    icon,
+    count,
+    maxCount,
+    onIncrement,
+    onDecrement,
+}) => {
+    const isMaxReached = count >= maxCount;
+    const hasSelection = count > 0;
+
+    return (
+        <View style={styles.requirementCard}>
+            <View style={styles.requirementLeft}>
+                <View style={styles.requirementIconContainer}>
+                    <CustomIcon
+                        provider="Ionicons"
+                        name={icon}
+                        size={24}
+                        color={hasSelection ? COLORS.primary : COLORS.GREY[400]}
+                    />
+                </View>
+                <View style={styles.requirementTextContainer}>
+                    <Typography
+                        variant="body"
+                        color={COLORS.TEXT.DARK}
+                        style={styles.requirementLabel}
+                    >
+                        {label}
+                    </Typography>
+                </View>
+            </View>
+
+            <View style={styles.counterContainer}>
+                <TouchableOpacity
+                    style={[
+                        styles.counterButton,
+                        count === 0 && styles.counterButtonDisabled,
+                    ]}
+                    onPress={onDecrement}
+                    disabled={count === 0}
+                    activeOpacity={0.7}
+                >
+                    <CustomIcon
+                        provider="Ionicons"
+                        name="remove"
+                        size={20}
+                        color={count === 0 ? COLORS.GREY[400] : COLORS.WHITE}
+                    />
+                </TouchableOpacity>
+
+                <View style={styles.countDisplay}>
+                    <Typography
+                        variant="body"
+                        color={COLORS.TEXT.DARK}
+                        style={styles.countText}
+                    >
+                        {count}
+                    </Typography>
+                </View>
+
+                <TouchableOpacity
+                    style={[
+                        styles.counterButton,
+                        isMaxReached && styles.counterButtonDisabled,
+                    ]}
+                    onPress={onIncrement}
+                    disabled={isMaxReached}
+                    activeOpacity={0.7}
+                >
+                    <CustomIcon
+                        provider="Ionicons"
+                        name="add"
+                        size={20}
+                        color={isMaxReached ? COLORS.GREY[400] : COLORS.WHITE}
+                    />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+};
 
 interface RequirementCounterProps {
     label: string;
@@ -382,8 +478,11 @@ const PackageCard: React.FC<
 };
 
 export const InteriorCalculator: React.FC = () => {
+    const [isSuccessModalVisible, setIsSuccessModalVisible] = useState(false);
+    const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
     const navigation = useNavigation<any>();
     const flatListRef = useRef<FlatList>(null);
+    const scrollViewRef = useRef<ScrollView>(null);
     const [currentStep, setCurrentStep] = useState(0);
     const [selectedBhk, setSelectedBhk] = useState<BhkType | null>(null);
     const [requirements, setRequirements] = useState<Record<string, number>>({
@@ -392,6 +491,13 @@ export const InteriorCalculator: React.FC = () => {
         entertainmentUnit: 1,
         studyUnit: 1,
         crockeryUnit: 1,
+    });
+    const [selectedRooms, setSelectedRooms] = useState<Record<string, number>>({
+        livingRoom: 1,
+        kitchen: 1,
+        bedroom: 1,
+        bathroom: 1,
+        dining: 1,
     });
     const [selectedKitchenLayout, setSelectedKitchenLayout] =
         useState<KitchenLayoutType | null>(null);
@@ -419,6 +525,31 @@ export const InteriorCalculator: React.FC = () => {
             });
         }
     }, [selectedKitchenLayout]);
+
+    // Handle keyboard visibility for modular kitchen inputs
+    useEffect(() => {
+        const keyboardWillShow = Keyboard.addListener(
+            Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+            e => {
+                setKeyboardHeight(e.endCoordinates.height);
+                // Scroll to bottom when keyboard appears
+                setTimeout(() => {
+                    scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 100);
+            },
+        );
+        const keyboardWillHide = Keyboard.addListener(
+            Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+            () => {
+                setKeyboardHeight(0);
+            },
+        );
+
+        return () => {
+            keyboardWillShow.remove();
+            keyboardWillHide.remove();
+        };
+    }, []);
     const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(
         null,
     );
@@ -429,6 +560,7 @@ export const InteriorCalculator: React.FC = () => {
     const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
     const [specialRequirements, setSpecialRequirements] = useState<string>("");
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
 
     const { selectedAddress } = useSelector(
         (state: RootState) => state.address,
@@ -449,6 +581,72 @@ export const InteriorCalculator: React.FC = () => {
 
     const handleBhkSelect = (bhkType: BhkType) => {
         setSelectedBhk(bhkType);
+        // Reset rooms when BHK type changes (default quantities)
+        if (bhkType !== "modular-kitchen") {
+            setSelectedRooms({
+                livingRoom: 1,
+                kitchen: 1,
+                bedroom: getBedroomCountFromBhk(bhkType),
+                bathroom: getBathroomCountFromBhk(bhkType),
+                dining: 1,
+            });
+        }
+    };
+
+    // Get bedroom count based on BHK type
+    const getBedroomCountFromBhk = (bhkType: BhkType): number => {
+        switch (bhkType) {
+            case "1BHK":
+                return 1;
+            case "2BHK":
+                return 2;
+            case "3BHK":
+                return 3;
+            case "3+BHK":
+                return 4;
+            default:
+                return 1;
+        }
+    };
+
+    // Get bathroom count based on BHK type (typically bedrooms + 1)
+    const getBathroomCountFromBhk = (bhkType: BhkType): number => {
+        const bedrooms = getBedroomCountFromBhk(bhkType);
+        return bedrooms + 1;
+    };
+
+    // Get max count for a room based on BHK type
+    const getRoomMaxCount = (roomId: string, bhkType: BhkType): number => {
+        switch (roomId) {
+            case "livingRoom":
+                return 1;
+            case "kitchen":
+                return 1;
+            case "bedroom":
+                return getBedroomCountFromBhk(bhkType);
+            case "bathroom":
+                return getBathroomCountFromBhk(bhkType);
+            case "dining":
+                return 1;
+            default:
+                return 1;
+        }
+    };
+
+    const handleRoomIncrement = (roomId: string) => {
+        if (!selectedBhk) return;
+        const maxCount = getRoomMaxCount(roomId, selectedBhk);
+        setSelectedRooms(prev => ({
+            ...prev,
+            [roomId]: Math.min((prev[roomId] || 0) + 1, maxCount),
+        }));
+    };
+
+    const handleRoomDecrement = (roomId: string) => {
+        setSelectedRooms(prev => ({
+            ...prev,
+            [roomId]: Math.max((prev[roomId] || 0) - 1, 0),
+        }));
     };
 
     const handleStep1Continue = () => {
@@ -499,18 +697,26 @@ export const InteriorCalculator: React.FC = () => {
             scrollToStep(2);
             saveCalculation();
         } else if (selectedBhk) {
-            const validation = validateRequirements(selectedBhk, requirements);
-            if (validation.valid) {
-                scrollToStep(2);
-                saveCalculation();
+            // For BHK types, validate that at least one room has count > 0
+            const hasSelectedRooms = Object.values(selectedRooms).some(
+                count => count > 0,
+            );
+            if (!hasSelectedRooms) {
+                Alert.alert("Required", "Please select at least one room");
+                return;
             }
+            scrollToStep(2);
+            saveCalculation();
         }
     };
 
     const saveCalculation = async () => {
         if (!selectedBhk) return;
         try {
-            const estimates = calculateAllEstimates(requirements);
+            const estimates =
+                selectedBhk === "modular-kitchen"
+                    ? calculateAllEstimates(selectedBhk, kitchenDimensions)
+                    : calculateAllEstimates(selectedBhk);
             const result: CalculatorResult = {
                 bhkType: selectedBhk,
                 requirements,
@@ -679,11 +885,15 @@ export const InteriorCalculator: React.FC = () => {
                     bhkType: getBhkNumber(selectedBhk),
                     bhkSize: getBhkSize(selectedBhk),
                     rooms: {
-                        livingRoom: 1,
-                        kitchen: requirements.kitchen || 1,
-                        bedroom: getBedroomCount(selectedBhk),
-                        bathroom: getBathroomCount(selectedBhk),
-                        dining: 1,
+                        livingRoom: selectedRooms.livingRoom || 1,
+                        kitchen: selectedRooms.kitchen || 1,
+                        bedroom:
+                            selectedRooms.bedroom ||
+                            getBedroomCount(selectedBhk),
+                        bathroom:
+                            selectedRooms.bathroom ||
+                            getBathroomCount(selectedBhk),
+                        dining: selectedRooms.dining || 1,
                     },
                     homePackage: getPackageType(selectedPackage),
                     user: userData,
@@ -700,22 +910,28 @@ export const InteriorCalculator: React.FC = () => {
                 calculatorData,
             );
 
-            if (response.success) {
-                Alert.alert(
-                    "Success",
-                    "Consultant booking submitted successfully!",
-                    [
-                        {
-                            text: "OK",
-                            onPress: () => navigation.goBack(),
-                        },
-                    ],
-                );
-            } else {
-                Alert.alert(
-                    "Error",
-                    response.message || "Failed to submit booking",
-                );
+            if (response.success && response.data) {
+                RazorpayCheckout.open({
+                    order_id: response.data.razorpayOrder.id,
+                    amount: response.data.razorpayOrder.amount,
+                    currency: "INR",
+                    key: response.data.razorpayConfig.key,
+                    theme: {
+                        color: COLORS.primary,
+                    },
+                    name: "Consultant Booking",
+                    description: "Payment for consultant booking",
+                })
+                    .then(data => {
+                        setIsSuccessModalVisible(true);
+                        setTimeout(() => {
+                            navigation.goBack();
+                            setIsSuccessModalVisible(false);
+                        }, 7500);
+                    })
+                    .catch(error => {
+                        setIsErrorModalVisible(true);
+                    });
             }
         } catch (error: any) {
             Alert.alert("Error", "An error occurred. Please try again.");
@@ -735,9 +951,26 @@ export const InteriorCalculator: React.FC = () => {
             studyUnit: 1,
             crockeryUnit: 1,
         });
+        setSelectedRooms({
+            livingRoom: 1,
+            kitchen: 1,
+            bedroom: 1,
+            bathroom: 1,
+            dining: 1,
+        });
     };
 
     const getRequirementSummary = () => {
+        // For BHK types, return selected rooms with quantities
+        if (selectedBhk && selectedBhk !== "modular-kitchen") {
+            return ROOM_ITEMS.filter(room => selectedRooms[room.id] > 0).map(
+                room => ({
+                    ...room,
+                    count: selectedRooms[room.id] || 0,
+                }),
+            );
+        }
+        // Legacy support for modular kitchen or other cases
         return REQUIREMENT_ITEMS.filter(
             item => requirements[item.id] && requirements[item.id] > 0,
         ).map(item => ({
@@ -746,7 +979,11 @@ export const InteriorCalculator: React.FC = () => {
         }));
     };
 
-    const estimates = selectedBhk ? calculateAllEstimates(requirements) : null;
+    const estimates = selectedBhk
+        ? selectedBhk === "modular-kitchen"
+            ? calculateAllEstimates(selectedBhk, kitchenDimensions)
+            : calculateAllEstimates(selectedBhk)
+        : null;
 
     // Step 1: BHK Selection
     const renderStep1 = () => (
@@ -837,21 +1074,23 @@ export const InteriorCalculator: React.FC = () => {
             </ScrollView>
 
             <View style={styles.footer}>
-                <Button
-                    title="Continue"
-                    onPress={handleStep1Continue}
-                    disabled={!selectedBhk}
-                    fullWidth
-                    icon={
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="arrow-forward"
-                            size={20}
-                            color={COLORS.WHITE}
-                        />
-                    }
-                    iconPosition="extreme-right"
-                />
+                <View style={styles.footerButtons}>
+                    <Button
+                        title="Continue"
+                        onPress={handleStep1Continue}
+                        disabled={!selectedBhk}
+                        style={styles.continueButton}
+                        icon={
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="arrow-forward"
+                                size={20}
+                                color={COLORS.WHITE}
+                            />
+                        }
+                        iconPosition="extreme-right"
+                    />
+                </View>
             </View>
         </View>
     );
@@ -862,9 +1101,21 @@ export const InteriorCalculator: React.FC = () => {
             return (
                 <View style={styles.stepContainer}>
                     <ScrollView
+                        ref={scrollViewRef}
                         style={styles.scrollView}
-                        contentContainerStyle={styles.scrollContent}
+                        contentContainerStyle={[
+                            styles.scrollContent,
+                            {
+                                paddingBottom:
+                                    keyboardHeight > 0
+                                        ? keyboardHeight - 40
+                                        : spacingUtils.xl,
+                            },
+                        ]}
                         showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="interactive"
+                        scrollEnabled={true}
                     >
                         <Typography variant="h4" style={styles.title}>
                             Select Kitchen Layout
@@ -978,6 +1229,17 @@ export const InteriorCalculator: React.FC = () => {
                                                             }),
                                                         );
                                                     }}
+                                                    onFocus={() => {
+                                                        // Scroll to show the input when focused
+                                                        setTimeout(() => {
+                                                            scrollViewRef.current?.scrollToEnd(
+                                                                {
+                                                                    animated:
+                                                                        true,
+                                                                },
+                                                            );
+                                                        }, 300);
+                                                    }}
                                                     containerStyle={
                                                         styles.dimensionInputContainer
                                                     }
@@ -1002,35 +1264,37 @@ export const InteriorCalculator: React.FC = () => {
                     </ScrollView>
 
                     <View style={styles.footer}>
-                        <Button
-                            title="Back"
-                            onPress={() => scrollToStep(0)}
-                            variant="outline"
-                            style={styles.backButton}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="arrow-back"
-                                    size={20}
-                                    color={COLORS.TEXT.DARK}
-                                />
-                            }
-                            iconPosition="extreme-left"
-                        />
-                        <Button
-                            title="Get Estimate"
-                            onPress={handleStep2Continue}
-                            style={styles.continueButton}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="calculator"
-                                    size={20}
-                                    color={COLORS.WHITE}
-                                />
-                            }
-                            iconPosition="extreme-right"
-                        />
+                        <View style={styles.footerButtons}>
+                            <Button
+                                title="Back"
+                                onPress={() => scrollToStep(0)}
+                                variant="outline"
+                                style={styles.backButton}
+                                icon={
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name="arrow-back"
+                                        size={20}
+                                        color={COLORS.TEXT.DARK}
+                                    />
+                                }
+                                iconPosition="extreme-left"
+                            />
+                            <Button
+                                title="Get Estimate"
+                                onPress={handleStep2Continue}
+                                style={styles.continueButton}
+                                icon={
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name="calculator"
+                                        size={20}
+                                        color={COLORS.WHITE}
+                                    />
+                                }
+                                iconPosition="extreme-right"
+                            />
+                        </View>
                     </View>
                 </View>
             );
@@ -1062,83 +1326,68 @@ export const InteriorCalculator: React.FC = () => {
                     )}
 
                     <Typography variant="h4" style={styles.title}>
-                        What do you need?
+                        Select Rooms
                     </Typography>
                     <Typography
                         variant="body"
                         color={COLORS.TEXT.LIGHT}
                         style={styles.description}
                     >
-                        Select the interior elements for your home
+                        Choose the rooms you want to include in your interior
+                        design
                     </Typography>
 
-                    <View style={styles.requirementsContainer}>
-                        {REQUIREMENT_ITEMS.map(item => (
-                            <RequirementCounter
-                                key={item.id}
-                                label={item.label}
-                                icon={item.icon}
-                                count={requirements[item.id] || 0}
+                    <View style={styles.roomsContainer}>
+                        {ROOM_ITEMS.map(room => (
+                            <RoomSelection
+                                key={room.id}
+                                label={room.label}
+                                icon={room.icon}
+                                count={selectedRooms[room.id] || 0}
                                 maxCount={
                                     selectedBhk
-                                        ? getMaxCount(item.id, selectedBhk)
-                                        : item.maxCount
+                                        ? getRoomMaxCount(room.id, selectedBhk)
+                                        : 1
                                 }
-                                note={item.note}
-                                onIncrement={() => handleIncrement(item.id)}
-                                onDecrement={() => handleDecrement(item.id)}
+                                onIncrement={() => handleRoomIncrement(room.id)}
+                                onDecrement={() => handleRoomDecrement(room.id)}
                             />
                         ))}
-                    </View>
-
-                    <View style={styles.infoBox}>
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="information-circle"
-                            size={20}
-                            color={COLORS.primary}
-                        />
-                        <Typography
-                            variant="caption"
-                            color={COLORS.TEXT.DARK}
-                            style={styles.infoText}
-                        >
-                            Kitchen is mandatory. Adjust other requirements as
-                            needed for your {selectedBhk}.
-                        </Typography>
                     </View>
                 </ScrollView>
 
                 <View style={styles.footer}>
-                    <Button
-                        title="Back"
-                        onPress={() => scrollToStep(0)}
-                        variant="outline"
-                        style={styles.backButton}
-                        icon={
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="arrow-back"
-                                size={20}
-                                color={COLORS.TEXT.DARK}
-                            />
-                        }
-                        iconPosition="extreme-left"
-                    />
-                    <Button
-                        title="Get Estimate"
-                        onPress={handleStep2Continue}
-                        style={styles.continueButton}
-                        icon={
-                            <CustomIcon
-                                provider="Ionicons"
-                                name="calculator"
-                                size={20}
-                                color={COLORS.WHITE}
-                            />
-                        }
-                        iconPosition="extreme-right"
-                    />
+                    <View style={styles.footerButtons}>
+                        <Button
+                            title="Back"
+                            onPress={() => scrollToStep(0)}
+                            variant="outline"
+                            style={styles.backButton}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="arrow-back"
+                                    size={20}
+                                    color={COLORS.TEXT.DARK}
+                                />
+                            }
+                            iconPosition="extreme-left"
+                        />
+                        <Button
+                            title="Get Estimate"
+                            onPress={handleStep2Continue}
+                            style={styles.continueButton}
+                            icon={
+                                <CustomIcon
+                                    provider="Ionicons"
+                                    name="calculator"
+                                    size={20}
+                                    color={COLORS.WHITE}
+                                />
+                            }
+                            iconPosition="extreme-right"
+                        />
+                    </View>
                 </View>
             </View>
         );
@@ -1315,27 +1564,29 @@ export const InteriorCalculator: React.FC = () => {
             </ScrollView>
 
             <View style={styles.footer}>
-                <Button
-                    title="Back"
-                    onPress={() => scrollToStep(1)}
-                    variant="outline"
-                    style={styles.backButton}
-                    icon={
-                        <CustomIcon
-                            provider="Ionicons"
-                            name="arrow-back"
-                            size={20}
-                            color={COLORS.TEXT.DARK}
-                        />
-                    }
-                    iconPosition="extreme-left"
-                />
-                <Button
-                    title="Continue"
-                    onPress={handleStep3Continue}
-                    disabled={!selectedPackage}
-                    style={styles.continueButton}
-                />
+                <View style={styles.footerButtons}>
+                    <Button
+                        title="Back"
+                        onPress={() => scrollToStep(1)}
+                        variant="outline"
+                        style={styles.backButton}
+                        icon={
+                            <CustomIcon
+                                provider="Ionicons"
+                                name="arrow-back"
+                                size={20}
+                                color={COLORS.TEXT.DARK}
+                            />
+                        }
+                        iconPosition="extreme-left"
+                    />
+                    <Button
+                        title="Continue"
+                        onPress={handleStep3Continue}
+                        disabled={!selectedPackage}
+                        style={styles.continueButton}
+                    />
+                </View>
             </View>
         </View>
     );
@@ -1581,42 +1832,59 @@ export const InteriorCalculator: React.FC = () => {
                     </ScrollView>
 
                     <View style={styles.footer}>
-                        <Button
-                            title="Back"
-                            onPress={() => scrollToStep(2)}
-                            variant="outline"
-                            style={styles.backButton}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="arrow-back"
-                                    size={20}
-                                    color={COLORS.TEXT.DARK}
-                                />
-                            }
-                            iconPosition="extreme-left"
-                        />
-                        <Button
-                            title="Book a Consultant"
-                            onPress={handleBookConsultant}
-                            disabled={
-                                !selectedDate ||
-                                !selectedTimeSlot ||
-                                !selectedAddress ||
-                                isProcessingPayment
-                            }
-                            style={styles.continueButton}
-                            loading={isProcessingPayment}
-                            icon={
-                                <CustomIcon
-                                    provider="Ionicons"
-                                    name="calendar"
-                                    size={20}
-                                    color={COLORS.WHITE}
-                                />
-                            }
-                            iconPosition="extreme-right"
-                        />
+                        <View style={styles.consultationPriceContainer}>
+                            <Typography
+                                variant="caption"
+                                color={COLORS.TEXT.LIGHT}
+                                style={styles.consultationPriceLabel}
+                            >
+                                Consultation Fee
+                            </Typography>
+                            <Typography
+                                variant="h4"
+                                style={styles.consultationPriceAmount}
+                            >
+                                ₹199
+                            </Typography>
+                        </View>
+                        <View style={styles.footerButtons}>
+                            <Button
+                                title="Back"
+                                onPress={() => scrollToStep(2)}
+                                variant="outline"
+                                style={styles.backButton}
+                                icon={
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name="arrow-back"
+                                        size={20}
+                                        color={COLORS.TEXT.DARK}
+                                    />
+                                }
+                                iconPosition="extreme-left"
+                            />
+                            <Button
+                                title="Book a Consultant"
+                                onPress={handleBookConsultant}
+                                disabled={
+                                    !selectedDate ||
+                                    !selectedTimeSlot ||
+                                    !selectedAddress ||
+                                    isProcessingPayment
+                                }
+                                style={styles.continueButton}
+                                loading={isProcessingPayment}
+                                icon={
+                                    <CustomIcon
+                                        provider="Ionicons"
+                                        name="calendar"
+                                        size={20}
+                                        color={COLORS.WHITE}
+                                    />
+                                }
+                                iconPosition="extreme-right"
+                            />
+                        </View>
                     </View>
                 </KeyboardAvoidingView>
             </View>
@@ -1631,51 +1899,72 @@ export const InteriorCalculator: React.FC = () => {
     ];
 
     return (
-        <SafeAreaView style={{ ...styles.container, paddingTop: 20 }}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={handleClose}
-                    style={styles.closeButton}
-                    activeOpacity={0.7}
-                >
-                    <CustomIcon
-                        provider="Ionicons"
-                        name="close"
-                        size={28}
-                        color={COLORS.TEXT.DARK}
-                    />
-                </TouchableOpacity>
-                <Typography variant="h5" style={styles.headerTitle}>
-                    Interior Calculator
-                </Typography>
-                <View style={{ width: 28 }} />
-            </View>
+        <>
+            <SafeAreaView style={{ ...styles.container, paddingTop: 20 }}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        onPress={handleClose}
+                        style={styles.closeButton}
+                        activeOpacity={0.7}
+                    >
+                        <CustomIcon
+                            provider="Ionicons"
+                            name="close"
+                            size={28}
+                            color={COLORS.TEXT.DARK}
+                        />
+                    </TouchableOpacity>
+                    <Typography variant="h5" style={styles.headerTitle}>
+                        Interior Calculator
+                    </Typography>
+                    <View style={{ width: 28 }} />
+                </View>
 
-            {/* Stepper */}
-            <StepperProgress
-                currentStep={currentStep}
-                totalSteps={4}
-                stepLabels={["Property", "Requirements", "Estimate", "Booking"]}
-            />
+                {/* Stepper */}
+                <StepperProgress
+                    currentStep={currentStep}
+                    totalSteps={4}
+                    stepLabels={[
+                        "Property",
+                        "Requirements",
+                        "Estimate",
+                        "Booking",
+                    ]}
+                />
 
-            {/* FlatList with steps */}
-            <FlatList
-                ref={flatListRef}
-                data={steps}
-                horizontal
-                pagingEnabled
-                scrollEnabled={false}
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={item => item.key}
-                renderItem={({ item }) => item.component()}
-                getItemLayout={(data, index) => ({
-                    length: SCREEN_WIDTH,
-                    offset: SCREEN_WIDTH * index,
-                    index,
-                })}
+                {/* FlatList with steps */}
+                <FlatList
+                    ref={flatListRef}
+                    data={steps}
+                    horizontal
+                    pagingEnabled
+                    scrollEnabled={false}
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={item => item.key}
+                    renderItem={({ item }) => item.component()}
+                    getItemLayout={(data, index) => ({
+                        length: SCREEN_WIDTH,
+                        offset: SCREEN_WIDTH * index,
+                        index,
+                    })}
+                />
+            </SafeAreaView>
+            <SuccessModal
+                visible={isSuccessModalVisible}
+                onClose={() => {
+                    setIsSuccessModalVisible(false);
+                }}
+                title="Payment Successful"
+                message="Your payment has been processed successfully. Please wait for the consultant to contact you."
             />
-        </SafeAreaView>
+            <ErrorModal
+                visible={isErrorModalVisible}
+                onClose={() => setIsErrorModalVisible(false)}
+                title="Payment Failed"
+                message="Something went wrong. Please try again."
+            />
+        </>
     );
 };
 
@@ -1780,6 +2069,59 @@ const styles = StyleSheet.create({
     requirementsContainer: {
         gap: spacingUtils.md,
         marginBottom: spacingUtils.lg,
+    },
+    roomsContainer: {
+        gap: spacingUtils.md,
+        marginBottom: spacingUtils.lg,
+    },
+    roomCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: spacingUtils.md,
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: COLORS.border.light,
+        backgroundColor: COLORS.WHITE,
+        ...shadowUtils.getShadow("small"),
+    },
+    roomCardSelected: {
+        borderColor: COLORS.primary,
+        backgroundColor: COLORS.primaryLight,
+    },
+    roomLeft: {
+        flexDirection: "row",
+        alignItems: "center",
+        flex: 1,
+    },
+    roomIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: COLORS.GREY[100],
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: spacingUtils.sm,
+    },
+    roomIconContainerSelected: {
+        backgroundColor: COLORS.primary,
+    },
+    roomLabel: {
+        fontWeight: "600",
+    },
+    roomCheckbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: COLORS.border.light,
+        backgroundColor: COLORS.WHITE,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    roomCheckboxSelected: {
+        backgroundColor: COLORS.primary,
+        borderColor: COLORS.primary,
     },
     requirementCard: {
         flexDirection: "row",
@@ -1988,11 +2330,28 @@ const styles = StyleSheet.create({
     },
     // Footer
     footer: {
-        flexDirection: "row",
         padding: spacingUtils.md,
         borderTopWidth: 1,
         borderTopColor: COLORS.border.light,
         backgroundColor: COLORS.WHITE,
+    },
+    consultationPriceContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingVertical: spacingUtils.sm,
+        paddingHorizontal: spacingUtils.xs,
+        marginBottom: spacingUtils.sm,
+    },
+    consultationPriceLabel: {
+        fontWeight: "500",
+    },
+    consultationPriceAmount: {
+        fontWeight: "700",
+        color: COLORS.primary,
+    },
+    footerButtons: {
+        flexDirection: "row",
         gap: spacingUtils.sm,
     },
     backButton: {

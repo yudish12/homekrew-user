@@ -2,7 +2,11 @@
 
 export type BhkType = "1BHK" | "2BHK" | "3BHK" | "3+BHK" | "modular-kitchen";
 export type PackageType = "essential" | "comfort" | "luxury";
-export type KitchenLayoutType = "l-shaped" | "straight" | "u-shaped" | "parallel";
+export type KitchenLayoutType =
+    | "l-shaped"
+    | "straight"
+    | "u-shaped"
+    | "parallel";
 export type UShapedVariant = "a" | "b" | "c";
 
 export interface RequirementItem {
@@ -41,6 +45,12 @@ export const BHK_OPTIONS: Array<{
     description: string;
 }> = [
     {
+        value: "modular-kitchen",
+        label: "Modular Kitchen",
+        icon: "restaurant",
+        description: "Custom modular kitchen solutions",
+    },
+    {
         value: "1BHK",
         label: "1 BHK",
         icon: "home-outline",
@@ -64,12 +74,6 @@ export const BHK_OPTIONS: Array<{
         icon: "business-outline",
         description: "Spacious luxury homes",
     },
-    {
-        value: "modular-kitchen",
-        label: "Modular Kitchen",
-        icon: "restaurant",
-        description: "Custom modular kitchen solutions",
-    },
 ];
 
 // Kitchen Layout Options for Step 2 (Modular Kitchen)
@@ -79,14 +83,14 @@ export const KITCHEN_LAYOUT_OPTIONS: Array<{
     icon: string;
 }> = [
     {
-        value: "l-shaped",
-        label: "L-shaped",
-        icon: "square-outline",
-    },
-    {
         value: "straight",
         label: "Straight",
         icon: "remove-outline",
+    },
+    {
+        value: "l-shaped",
+        label: "L-shaped",
+        icon: "square-outline",
     },
     {
         value: "u-shaped",
@@ -110,7 +114,42 @@ export const U_SHAPED_VARIANTS: Array<{
     { value: "c", label: "Option C" },
 ];
 
-// Requirements for Step 2
+// Room Items for BHK types
+export interface RoomItem {
+    id: string;
+    label: string;
+    icon: string;
+}
+
+export const ROOM_ITEMS: RoomItem[] = [
+    {
+        id: "livingRoom",
+        label: "Living Room",
+        icon: "home-outline",
+    },
+    {
+        id: "kitchen",
+        label: "Kitchen",
+        icon: "restaurant-outline",
+    },
+    {
+        id: "bedroom",
+        label: "Bedroom",
+        icon: "bed-outline",
+    },
+    {
+        id: "bathroom",
+        label: "Bathroom",
+        icon: "water-outline",
+    },
+    {
+        id: "dining",
+        label: "Dining",
+        icon: "restaurant",
+    },
+];
+
+// Requirements for Step 2 (Legacy - kept for backward compatibility)
 export const REQUIREMENT_ITEMS: RequirementItem[] = [
     {
         id: "kitchen",
@@ -145,41 +184,48 @@ export const REQUIREMENT_ITEMS: RequirementItem[] = [
     },
 ];
 
-// Pricing Structure (in INR Lakhs)
-// Essential Package - For homes to be rented out
-const ESSENTIAL_PRICING: PackagePricing = {
-    kitchen: 150000, // ₹1.5 Lakh
-    wardrobe: 74539, // ₹74,539
-    entertainmentUnit: 50000, // ₹50,000
-    studyUnit: 45000, // ₹45,000
-    crockeryUnit: 40000, // ₹40,000
-    otherInteriors: 110000, // ₹1.1 Lakh base
+// Fixed BHK Pricing Structure (in INR)
+// Based on BHK type and package
+export const BHK_PRICING: Record<
+    BhkType,
+    {
+        essential: number;
+        comfort: number;
+        luxury: number;
+    }
+> = {
+    "1BHK": {
+        essential: 250000, // ₹2.5 Lakh
+        comfort: 350000, // ₹3.5 Lakh
+        luxury: 450000, // ₹4.5 Lakh
+    },
+    "2BHK": {
+        essential: 350000, // ₹3.5 Lakh
+        comfort: 550000, // ₹5.5 Lakh
+        luxury: 750000, // ₹7.5 Lakh
+    },
+    "3BHK": {
+        essential: 550000, // ₹5.5 Lakh
+        comfort: 750000, // ₹7.5 Lakh
+        luxury: 950000, // ₹9.5 Lakh
+    },
+    "3+BHK": {
+        essential: 750000, // ₹7.5 Lakh
+        comfort: 950000, // ₹9.5 Lakh
+        luxury: 1150000, // ₹11.5 Lakh
+    },
+    "modular-kitchen": {
+        essential: 0, // Will be calculated based on sq ft
+        comfort: 0, // Will be calculated based on sq ft
+        luxury: 0, // Will be calculated based on sq ft
+    },
 };
 
-// Comfort Package - For first-time homeowners (POPULAR)
-const COMFORT_PRICING: PackagePricing = {
-    kitchen: 220000, // ₹2.2 Lakh
-    wardrobe: 93519, // ₹93,519
-    entertainmentUnit: 70000, // ₹70,000
-    studyUnit: 65000, // ₹65,000
-    crockeryUnit: 55000, // ₹55,000
-    otherInteriors: 170000, // ₹1.7 Lakh base
-};
-
-// Luxury Package - Best of design and style
-const LUXURY_PRICING: PackagePricing = {
-    kitchen: 270000, // ₹2.7 Lakh
-    wardrobe: 110000, // ₹1.1 Lakh
-    entertainmentUnit: 85000, // ₹85,000
-    studyUnit: 80000, // ₹80,000
-    crockeryUnit: 70000, // ₹70,000
-    otherInteriors: 190000, // ₹1.9 Lakh base
-};
-
-export const PACKAGE_PRICING = {
-    essential: ESSENTIAL_PRICING,
-    comfort: COMFORT_PRICING,
-    luxury: LUXURY_PRICING,
+// Kitchen per square foot pricing (in INR per sq ft)
+export const KITCHEN_SQFT_PRICING = {
+    essential: 1400, // Basic - ₹1,400 per sq ft
+    comfort: 1600, // Standard - ₹1,600 per sq ft
+    luxury: 1800, // Premium - ₹1,800 per sq ft
 };
 
 // Package Details for Step 3
@@ -210,35 +256,48 @@ export const PACKAGE_DETAILS: Record<
     },
 };
 
-// Calculate total price for a package
-export const calculatePackagePrice = (
-    packageType: PackageType,
-    requirements: Record<string, number>,
+// Calculate total kitchen square footage from dimensions
+export const calculateKitchenSqFt = (
+    kitchenDimensions: Record<string, string>,
 ): number => {
-    const pricing = PACKAGE_PRICING[packageType];
-    let total = pricing.otherInteriors;
-
-    Object.entries(requirements).forEach(([key, count]) => {
-        if (count > 0 && key in pricing) {
-            total += pricing[key as keyof PackagePricing] * count;
+    let totalSqFt = 0;
+    Object.values(kitchenDimensions).forEach(dimension => {
+        const value = parseFloat(dimension || "0");
+        if (!isNaN(value) && value > 0) {
+            totalSqFt += value;
         }
     });
-
-    return total;
+    return totalSqFt * 3 * 2;
 };
 
-// Calculate all estimates
+// Calculate all estimates based on BHK type or modular kitchen
 export const calculateAllEstimates = (
-    requirements: Record<string, number>,
+    bhkType: BhkType,
+    kitchenDimensions?: Record<string, string>,
 ): {
     essential: number;
     comfort: number;
     luxury: number;
 } => {
+    // For modular kitchen, calculate based on square footage
+    if (bhkType === "modular-kitchen") {
+        const totalSqFt = kitchenDimensions
+            ? calculateKitchenSqFt(kitchenDimensions)
+            : 0;
+
+        return {
+            essential: totalSqFt * KITCHEN_SQFT_PRICING.essential,
+            comfort: totalSqFt * KITCHEN_SQFT_PRICING.comfort,
+            luxury: totalSqFt * KITCHEN_SQFT_PRICING.luxury,
+        };
+    }
+
+    // For BHK types, use fixed pricing
+    const pricing = BHK_PRICING[bhkType];
     return {
-        essential: calculatePackagePrice("essential", requirements),
-        comfort: calculatePackagePrice("comfort", requirements),
-        luxury: calculatePackagePrice("luxury", requirements),
+        essential: pricing.essential,
+        comfort: pricing.comfort,
+        luxury: pricing.luxury,
     };
 };
 
