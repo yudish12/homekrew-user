@@ -30,11 +30,9 @@ import {
     REQUIREMENT_ITEMS,
     PACKAGE_DETAILS,
     KITCHEN_LAYOUT_OPTIONS,
-    U_SHAPED_VARIANTS,
     BhkType,
     PackageType,
     KitchenLayoutType,
-    UShapedVariant,
     getMaxCount,
     validateRequirements,
     calculateAllEstimates,
@@ -47,10 +45,25 @@ import { OrdersServices } from "../../../services/orders";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// Helper function to get sides for each layout type
+const getLayoutSides = (layoutType: KitchenLayoutType | null): string[] => {
+    switch (layoutType) {
+        case "l-shaped":
+            return ["A", "B", "C"];
+        case "straight":
+            return ["A"];
+        case "u-shaped":
+            return ["A", "B", "C"];
+        case "parallel":
+            return ["A", "B"];
+        default:
+            return [];
+    }
+};
+
 // Kitchen Layout Visual Components
 interface KitchenLayoutVisualProps {
     layoutType: KitchenLayoutType;
-    variant?: UShapedVariant;
     isSelected?: boolean;
     size?: number;
 }
@@ -65,7 +78,6 @@ const kitchenLayoutImages = {
 
 const KitchenLayoutVisual: React.FC<KitchenLayoutVisualProps> = ({
     layoutType,
-    variant,
     isSelected = false,
     size = 120,
 }) => {
@@ -383,7 +395,26 @@ export const InteriorCalculator: React.FC = () => {
         crockeryUnit: 1,
     });
     const [selectedKitchenLayout, setSelectedKitchenLayout] = useState<KitchenLayoutType | null>(null);
-    const [selectedUShapedVariant, setSelectedUShapedVariant] = useState<UShapedVariant | null>(null);
+    const [kitchenDimensions, setKitchenDimensions] = useState<Record<string, string>>({
+        A: "3",
+        B: "8",
+        C: "3",
+    });
+    
+    // Reset dimensions when layout changes
+    useEffect(() => {
+        if (selectedKitchenLayout) {
+            const sides = getLayoutSides(selectedKitchenLayout);
+            setKitchenDimensions(prev => {
+                const newDimensions: Record<string, string> = {};
+                sides.forEach((side, index) => {
+                    // Keep existing value if it exists, otherwise set default
+                    newDimensions[side] = prev[side] || (index === 0 ? "3" : index === 1 ? "8" : "3");
+                });
+                return newDimensions;
+            });
+        }
+    }, [selectedKitchenLayout]);
     const [selectedPackage, setSelectedPackage] = useState<PackageType | null>(null);
     const [dates] = useState(getNext7Days());
     const [selectedDate, setSelectedDate] = useState<string>(dates[0]?.fullDate || "");
@@ -441,9 +472,14 @@ export const InteriorCalculator: React.FC = () => {
                 Alert.alert("Required", "Please select a kitchen layout");
                 return;
             }
-            // For U-shaped, variant is required
-            if (selectedKitchenLayout === "u-shaped" && !selectedUShapedVariant) {
-                Alert.alert("Required", "Please select a U-shaped variant");
+            // Validate dimensions are entered
+            const layoutSides = getLayoutSides(selectedKitchenLayout);
+            const allDimensionsEntered = layoutSides.every(side => {
+                const value = kitchenDimensions[side];
+                return value && value.trim() !== "" && !isNaN(Number(value)) && Number(value) > 0;
+            });
+            if (!allDimensionsEntered) {
+                Alert.alert("Required", "Please enter all dimensions");
                 return;
             }
             scrollToStep(2);
@@ -502,7 +538,7 @@ export const InteriorCalculator: React.FC = () => {
                 bhkType: selectedBhk,
                 packageType: selectedPackage,
                 kitchenLayout: selectedKitchenLayout || undefined,
-                uShapedVariant: selectedUShapedVariant || undefined,
+                kitchenDimensions: kitchenDimensions,
                 date: selectedDate,
                 timeSlot: selectedTimeSlot,
                 address: selectedAddress._id || "",
@@ -714,9 +750,6 @@ export const InteriorCalculator: React.FC = () => {
                                         ]}
                                         onPress={() => {
                                             setSelectedKitchenLayout(layout.value);
-                                            if (layout.value !== "u-shaped") {
-                                                setSelectedUShapedVariant(null);
-                                            }
                                         }}
                                         activeOpacity={0.7}
                                     >
@@ -748,41 +781,37 @@ export const InteriorCalculator: React.FC = () => {
                             })}
                         </View>
 
-                        {selectedKitchenLayout === "u-shaped" && (
-                            <View style={styles.uShapedVariantsContainer}>
-                                <Typography variant="h5" style={styles.uShapedTitle}>
-                                    Select U-shaped Variant
-                                </Typography>
-                                <View style={styles.uShapedVariantsGrid}>
-                                    {U_SHAPED_VARIANTS.map(variant => {
-                                        const isSelected = selectedUShapedVariant === variant.value;
-                                        return (
-                                            <TouchableOpacity
-                                                key={variant.value}
-                                                style={[
-                                                    styles.uShapedVariantCard,
-                                                    isSelected && styles.uShapedVariantCardSelected,
-                                                ]}
-                                                onPress={() => setSelectedUShapedVariant(variant.value)}
-                                                activeOpacity={0.7}
-                                            >
-                                                <View style={styles.uShapedVariantVisualContainer}>
-                                                    <KitchenLayoutVisual
-                                                        layoutType="u-shaped"
-                                                        variant={variant.value}
-                                                        isSelected={isSelected}
-                                                    />
-                                                </View>
-                                                <Typography
-                                                    variant="body"
-                                                    color={isSelected ? COLORS.primary : COLORS.TEXT.DARK}
-                                                    style={styles.uShapedVariantLabel}
-                                                >
-                                                    {variant.label}
-                                                </Typography>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
+                        {selectedKitchenLayout && (
+                            <View style={styles.dimensionsContainer}>
+                                <View style={styles.dimensionsBanner}>
+                                    <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionsBannerText}>
+                                        Set the size as per your requirements
+                                    </Typography>
+                                </View>
+                                <View style={styles.dimensionsInputsContainer}>
+                                    {getLayoutSides(selectedKitchenLayout).map((side) => (
+                                        <View key={side} style={styles.dimensionInputRow}>
+                                            <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionLabel}>
+                                                {side}
+                                            </Typography>
+                                            <Input
+                                                type="number"
+                                                value={kitchenDimensions[side] || ""}
+                                                onChangeText={(text) => {
+                                                    setKitchenDimensions(prev => ({
+                                                        ...prev,
+                                                        [side]: text,
+                                                    }));
+                                                }}
+                                                containerStyle={styles.dimensionInputContainer}
+                                                inputContainerStyle={styles.dimensionInputBox}
+                                                keyboardType="numeric"
+                                            />
+                                            <Typography variant="body" color={COLORS.TEXT.DARK} style={styles.dimensionUnit}>
+                                                ft.
+                                            </Typography>
+                                        </View>
+                                    ))}
                                 </View>
                             </View>
                         )}
@@ -978,11 +1007,11 @@ export const InteriorCalculator: React.FC = () => {
                                         </Typography>
                                     </View>
                                 )}
-                                {selectedKitchenLayout === "u-shaped" && selectedUShapedVariant && (
+                                {selectedKitchenLayout && Object.keys(kitchenDimensions).length > 0 && (
                                     <View style={styles.summaryItem}>
                                         <CustomIcon
                                             provider="Ionicons"
-                                            name="options-outline"
+                                            name="resize-outline"
                                             size={18}
                                             color={COLORS.GREY[400]}
                                         />
@@ -991,7 +1020,7 @@ export const InteriorCalculator: React.FC = () => {
                                             color={COLORS.TEXT.DARK}
                                             style={styles.summaryItemText}
                                         >
-                                            Variant: {U_SHAPED_VARIANTS.find(v => v.value === selectedUShapedVariant)?.label}
+                                            Dimensions: {getLayoutSides(selectedKitchenLayout).map(side => `${side}: ${kitchenDimensions[side] || 0}ft`).join(", ")}
                                         </Typography>
                                     </View>
                                 )}
@@ -1811,6 +1840,48 @@ const styles = StyleSheet.create({
     uShapedVariantLabel: {
         marginTop: spacingUtils.xs,
         fontWeight: "600",
+    },
+    dimensionsContainer: {
+        marginTop: spacingUtils.lg,
+        paddingTop: spacingUtils.lg,
+        borderTopWidth: 1,
+        borderTopColor: COLORS.border.light,
+    },
+    dimensionsBanner: {
+        backgroundColor: "#FFF9E6",
+        padding: spacingUtils.md,
+        borderRadius: 8,
+        marginBottom: spacingUtils.md,
+        alignItems: "center",
+    },
+    dimensionsBannerText: {
+        textAlign: "center",
+    },
+    dimensionsInputsContainer: {
+        gap: spacingUtils.md,
+    },
+    dimensionInputRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacingUtils.md,
+        width: "100%",
+    },
+    dimensionLabel: {
+        fontWeight: "600",
+        width: 30,
+        textAlign: "left",
+    },
+    dimensionInputContainer: {
+        flex: 1,
+        marginBottom: 0,
+    },
+    dimensionInputBox: {
+        marginBottom: 0,
+    },
+    dimensionUnit: {
+        fontWeight: "500",
+        width: 30,
+        textAlign: "left",
     },
     packageCardSelected: {
         borderColor: COLORS.primary,
