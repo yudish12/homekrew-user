@@ -289,7 +289,8 @@ const PackageCard: React.FC<PackageCardProps & { isSelected?: boolean; onSelect?
             <Animated.View
                 style={[
                     styles.packageCard,
-                    isPopular && styles.packageCardPopular,
+                    // Only apply popular styling if not selected
+                    isPopular && !isSelected && styles.packageCardPopular,
                     isSelected && styles.packageCardSelected,
                     { transform: [{ scale: scaleAnim }] },
                 ]}
@@ -1678,8 +1679,13 @@ const styles = StyleSheet.create({
         position: "relative",
     },
     packageCardPopular: {
-        borderColor: COLORS.primary,
-        borderWidth: 3,
+        padding: spacingUtils.md,
+        borderRadius: 16,
+        borderWidth: 2,
+        borderColor: COLORS.border.light,
+        backgroundColor: COLORS.WHITE,
+        ...shadowUtils.getShadow("medium"),
+        position: "relative",
     },
     popularBadge: {
         position: "absolute",
