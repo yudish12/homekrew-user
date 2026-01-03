@@ -10,6 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     Alert,
+    Image,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useSelector } from "react-redux";
@@ -54,468 +55,36 @@ interface KitchenLayoutVisualProps {
     size?: number;
 }
 
+// Image sources for kitchen layouts
+const kitchenLayoutImages = {
+    "l-shaped": require("../../../../assets/images/kitchen-layouts/l-shaped.png"),
+    "straight": require("../../../../assets/images/kitchen-layouts/straight.png"),
+    "u-shaped": require("../../../../assets/images/kitchen-layouts/u-shaped.png"),
+    "parallel": require("../../../../assets/images/kitchen-layouts/parallel.png"),
+};
+
 const KitchenLayoutVisual: React.FC<KitchenLayoutVisualProps> = ({
     layoutType,
     variant,
     isSelected = false,
-    size = 80,
+    size = 120,
 }) => {
-    const counterColor = isSelected ? "#FF6B6B" : "#FFB3BA";
-    const borderColor = isSelected ? "#FF6B6B" : "#E0E0E0";
-    const applianceColor = "#D3D3D3";
+    const imageSource = kitchenLayoutImages[layoutType];
 
-    const renderLShaped = () => (
-        <View style={{ width: size, height: size, position: "relative" }}>
-            {/* Horizontal counter */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.3,
-                    left: 0,
-                    width: size * 0.7,
-                    height: size * 0.15,
-                    backgroundColor: counterColor,
-                    borderWidth: 2,
-                    borderColor: borderColor,
-                    borderRadius: 4,
-                }}
-            />
-            {/* Vertical counter */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.3,
-                    left: size * 0.55,
-                    width: size * 0.15,
-                    height: size * 0.4,
-                    backgroundColor: counterColor,
-                    borderWidth: 2,
-                    borderColor: borderColor,
-                    borderRadius: 4,
-                }}
-            />
-            {/* Sink */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.32,
-                    left: size * 0.15,
-                    width: size * 0.12,
-                    height: size * 0.11,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Stove */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.32,
-                    left: size * 0.4,
-                    width: size * 0.12,
-                    height: size * 0.11,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Appliance */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.5,
-                    left: size * 0.58,
-                    width: size * 0.1,
-                    height: size * 0.15,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-        </View>
-    );
-
-    const renderStraight = () => (
-        <View style={{ width: size, height: size, position: "relative" }}>
-            {/* Straight counter */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.4,
-                    left: size * 0.1,
-                    width: size * 0.8,
-                    height: size * 0.15,
-                    backgroundColor: counterColor,
-                    borderWidth: 2,
-                    borderColor: borderColor,
-                    borderRadius: 4,
-                }}
-            />
-            {/* Appliance */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.42,
-                    left: size * 0.15,
-                    width: size * 0.1,
-                    height: size * 0.11,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Sink */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.42,
-                    left: size * 0.4,
-                    width: size * 0.12,
-                    height: size * 0.11,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Stove */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.42,
-                    left: size * 0.7,
-                    width: size * 0.12,
-                    height: size * 0.11,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-        </View>
-    );
-
-    const renderUShaped = (variantType?: UShapedVariant) => {
-        // Variant A: Standard U with appliances on sides
-        if (variantType === "a" || !variantType) {
-            return (
-                <View style={{ width: size, height: size, position: "relative" }}>
-                    {/* Left vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: 0,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Top horizontal counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.2,
-                            width: size * 0.6,
-                            height: size * 0.15,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Right vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.8,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Appliance left */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.35,
-                            left: size * 0.05,
-                            width: size * 0.1,
-                            height: size * 0.15,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                    {/* Sink top */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.22,
-                            left: size * 0.4,
-                            width: size * 0.12,
-                            height: size * 0.11,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                    {/* Stove right */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.35,
-                            left: size * 0.85,
-                            width: size * 0.1,
-                            height: size * 0.15,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                </View>
-            );
-        }
-        // Variant B: U with appliances in center
-        if (variantType === "b") {
-            return (
-                <View style={{ width: size, height: size, position: "relative" }}>
-                    {/* Left vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: 0,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Top horizontal counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.2,
-                            width: size * 0.6,
-                            height: size * 0.15,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Right vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.8,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Sink center top */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.22,
-                            left: size * 0.44,
-                            width: size * 0.12,
-                            height: size * 0.11,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                    {/* Stove center bottom */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.5,
-                            left: size * 0.44,
-                            width: size * 0.12,
-                            height: size * 0.11,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                </View>
-            );
-        }
-        // Variant C: U with appliances distributed
-        if (variantType === "c") {
-            return (
-                <View style={{ width: size, height: size, position: "relative" }}>
-                    {/* Left vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: 0,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Top horizontal counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.2,
-                            width: size * 0.6,
-                            height: size * 0.15,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Right vertical counter */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.2,
-                            left: size * 0.8,
-                            width: size * 0.2,
-                            height: size * 0.5,
-                            backgroundColor: counterColor,
-                            borderWidth: 2,
-                            borderColor: borderColor,
-                            borderRadius: 4,
-                        }}
-                    />
-                    {/* Appliance left */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.25,
-                            left: size * 0.05,
-                            width: size * 0.1,
-                            height: size * 0.12,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                    {/* Sink top left */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.22,
-                            left: size * 0.3,
-                            width: size * 0.12,
-                            height: size * 0.11,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                    {/* Stove right */}
-                    <View
-                        style={{
-                            position: "absolute",
-                            top: size * 0.4,
-                            left: size * 0.85,
-                            width: size * 0.1,
-                            height: size * 0.12,
-                            backgroundColor: applianceColor,
-                            borderRadius: 2,
-                        }}
-                    />
-                </View>
-            );
-        }
-        return renderUShaped("a");
-    };
-
-    const renderParallel = () => (
-        <View style={{ width: size, height: size, position: "relative" }}>
-            {/* Top parallel counter */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.2,
-                    left: size * 0.1,
-                    width: size * 0.8,
-                    height: size * 0.12,
-                    backgroundColor: counterColor,
-                    borderWidth: 2,
-                    borderColor: borderColor,
-                    borderRadius: 4,
-                }}
-            />
-            {/* Bottom parallel counter */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.55,
-                    left: size * 0.1,
-                    width: size * 0.8,
-                    height: size * 0.12,
-                    backgroundColor: counterColor,
-                    borderWidth: 2,
-                    borderColor: borderColor,
-                    borderRadius: 4,
-                }}
-            />
-            {/* Appliance top */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.22,
-                    left: size * 0.15,
-                    width: size * 0.1,
-                    height: size * 0.08,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Sink top */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.22,
-                    left: size * 0.45,
-                    width: size * 0.12,
-                    height: size * 0.08,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-            {/* Stove bottom */}
-            <View
-                style={{
-                    position: "absolute",
-                    top: size * 0.57,
-                    left: size * 0.45,
-                    width: size * 0.12,
-                    height: size * 0.08,
-                    backgroundColor: applianceColor,
-                    borderRadius: 2,
-                }}
-            />
-        </View>
-    );
-
-    switch (layoutType) {
-        case "l-shaped":
-            return renderLShaped();
-        case "straight":
-            return renderStraight();
-        case "u-shaped":
-            return renderUShaped(variant);
-        case "parallel":
-            return renderParallel();
-        default:
-            return null;
+    if (!imageSource) {
+        return null;
     }
+
+    return (
+        <Image
+            source={imageSource}
+            style={{
+                width: "100%",
+                height: "100%",
+                resizeMode: "contain",
+            }}
+        />
+    );
 };
 
 // Helper function to generate next 7 days
@@ -1155,12 +724,11 @@ export const InteriorCalculator: React.FC = () => {
                                             <KitchenLayoutVisual
                                                 layoutType={layout.value}
                                                 isSelected={isSelected}
-                                                size={100}
                                             />
                                         </View>
                                         <Typography
                                             variant="body"
-                                            color={isSelected ? COLORS.WHITE : COLORS.TEXT.DARK}
+                                            color={isSelected ? COLORS.primary : COLORS.TEXT.DARK}
                                             style={styles.kitchenLayoutLabel}
                                         >
                                             {layout.label}
@@ -1171,7 +739,7 @@ export const InteriorCalculator: React.FC = () => {
                                                     provider="Ionicons"
                                                     name="checkmark-circle"
                                                     size={20}
-                                                    color={COLORS.WHITE}
+                                                    color={COLORS.primary}
                                                 />
                                             </View>
                                         )}
@@ -1203,12 +771,11 @@ export const InteriorCalculator: React.FC = () => {
                                                         layoutType="u-shaped"
                                                         variant={variant.value}
                                                         isSelected={isSelected}
-                                                        size={80}
                                                     />
                                                 </View>
                                                 <Typography
                                                     variant="body"
-                                                    color={isSelected ? COLORS.WHITE : COLORS.TEXT.DARK}
+                                                    color={isSelected ? COLORS.primary : COLORS.TEXT.DARK}
                                                     style={styles.uShapedVariantLabel}
                                                 >
                                                     {variant.label}
@@ -2175,20 +1742,19 @@ const styles = StyleSheet.create({
         borderColor: COLORS.border.light,
         backgroundColor: COLORS.WHITE,
         alignItems: "center",
-        justifyContent: "center",
-        padding: spacingUtils.md,
-        paddingTop: spacingUtils.lg,
-        paddingBottom: spacingUtils.lg,
+        justifyContent: "flex-start",
+        padding: spacingUtils.xs,
         position: "relative",
-        minHeight: 160,
+        minHeight: 180,
         ...shadowUtils.getShadow("small"),
     },
     kitchenLayoutCardSelected: {
-        borderColor: "#FF6B6B",
+        borderColor: COLORS.primary,
         borderWidth: 3,
-        backgroundColor: COLORS.WHITE,
     },
     kitchenLayoutVisualContainer: {
+        width: "100%",
+        height: 120,
         marginBottom: spacingUtils.sm,
         alignItems: "center",
         justifyContent: "center",
@@ -2220,21 +1786,24 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: spacingUtils.md,
         paddingTop: spacingUtils.lg,
-        paddingBottom: spacingUtils.lg,
+        paddingBottom: spacingUtils.md,
         borderRadius: 12,
         borderWidth: 2,
         borderColor: COLORS.border.light,
         backgroundColor: COLORS.WHITE,
         alignItems: "center",
-        minHeight: 140,
+        justifyContent: "flex-start",
+        minHeight: 160,
         ...shadowUtils.getShadow("small"),
     },
     uShapedVariantCardSelected: {
-        borderColor: "#FF6B6B",
+        borderColor: COLORS.primary,
         borderWidth: 3,
-        backgroundColor: COLORS.WHITE,
+        backgroundColor: COLORS.primaryLight,
     },
     uShapedVariantVisualContainer: {
+        width: "100%",
+        height: 100,
         marginBottom: spacingUtils.sm,
         alignItems: "center",
         justifyContent: "center",
