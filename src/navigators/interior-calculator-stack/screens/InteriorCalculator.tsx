@@ -49,13 +49,13 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const getLayoutSides = (layoutType: KitchenLayoutType | null): string[] => {
     switch (layoutType) {
         case "l-shaped":
-            return ["A", "B", "C"];
+            return ["1", "2", "3"];
         case "straight":
-            return ["A"];
+            return ["1"];
         case "u-shaped":
-            return ["A", "B", "C"];
+            return ["1", "2", "3"];
         case "parallel":
-            return ["A", "B"];
+            return ["1", "2"];
         default:
             return [];
     }
@@ -396,9 +396,9 @@ export const InteriorCalculator: React.FC = () => {
     });
     const [selectedKitchenLayout, setSelectedKitchenLayout] = useState<KitchenLayoutType | null>(null);
     const [kitchenDimensions, setKitchenDimensions] = useState<Record<string, string>>({
-        A: "3",
-        B: "8",
-        C: "3",
+        "1": "3",
+        "2": "8",
+        "3": "3",
     });
     
     // Reset dimensions when layout changes
@@ -409,7 +409,7 @@ export const InteriorCalculator: React.FC = () => {
                 const newDimensions: Record<string, string> = {};
                 sides.forEach((side, index) => {
                     // Keep existing value if it exists, otherwise set default
-                    newDimensions[side] = prev[side] || (index === 0 ? "3" : index === 1 ? "8" : "3");
+                    newDimensions[side] = prev[side] || (index === 0 ? "12" : index === 1 ? "8" : "3");
                 });
                 return newDimensions;
             });
