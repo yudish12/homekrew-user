@@ -1143,7 +1143,7 @@ export const InteriorCalculator: React.FC = () => {
             return `${address.line1}, ${address.line2 ? address.line2 + ", " : ""}${address.street}, ${address.city}, ${address.state} ${address.postalCode}`;
         };
 
-        const renderDateItem = ({ item }: { item: any }) => {
+        const renderDateItem = (item: any) => {
             const isSelected = selectedDate === item.fullDate;
             return (
                 <TouchableOpacity
@@ -1290,14 +1290,13 @@ export const InteriorCalculator: React.FC = () => {
                                     Select Date
                                 </Typography>
                             </View>
-                            <FlatList
-                                data={dates}
-                                renderItem={renderDateItem}
-                                keyExtractor={item => item.id}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={styles.datesList}
-                            />
+                            <View style={styles.datesContainer}>
+                                {dates.map((item) => (
+                                    <View key={item.id} style={styles.dateItemWrapper}>
+                                        {renderDateItem(item)}
+                                    </View>
+                                ))}
+                            </View>
                         </View>
 
                         {/* Time Slot Selection */}
@@ -1923,32 +1922,43 @@ const styles = StyleSheet.create({
         marginLeft: spacingUtils.sm,
         fontWeight: "500",
     },
-    datesList: {
-        paddingHorizontal: 4,
+    datesContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        paddingVertical: spacingUtils.sm,
+        gap: spacingUtils.sm,
+    },
+    dateItemWrapper: {
+        flex: 1,
     },
     dateItem: {
         backgroundColor: COLORS.WHITE,
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: COLORS.border.light,
         borderRadius: 12,
         paddingVertical: spacingUtils.md,
-        paddingHorizontal: spacingUtils.lg,
+        paddingHorizontal: spacingUtils.xs,
         alignItems: "center",
-        marginHorizontal: 4,
-        minWidth: 70,
+        justifyContent: "center",
+        minHeight: 90,
     },
     selectedDateItem: {
         backgroundColor: COLORS.primary,
         borderColor: COLORS.primary,
+        borderWidth: 2,
     },
     dayName: {
         marginBottom: 4,
+        textTransform: "uppercase",
+        fontWeight: "500",
     },
     dayNumber: {
         marginBottom: 2,
+        fontWeight: "700",
     },
     monthText: {
-        fontSize: 10,
+        fontSize: 11,
+        fontWeight: "500",
     },
     timeSlotsList: {
         paddingHorizontal: 4,
