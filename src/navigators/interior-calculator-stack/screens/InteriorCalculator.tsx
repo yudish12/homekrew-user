@@ -426,6 +426,7 @@ export const InteriorCalculator: React.FC = () => {
     const { selectedAddress } = useSelector(
         (state: RootState) => state.address,
     );
+    const user = useSelector((state: RootState) => state.auth.user);
 
     const scrollToStep = (stepIndex: number) => {
         flatListRef.current?.scrollToIndex({
@@ -532,52 +533,161 @@ export const InteriorCalculator: React.FC = () => {
             return;
         }
 
+        if (!user) {
+            Alert.alert("Error", "Please login to continue");
+            return;
+        }
+
         try {
             setIsProcessingPayment(true);
 
-            const bookingData = {
-                bhkType: selectedBhk,
-                packageType: selectedPackage,
-                kitchenLayout: selectedKitchenLayout || undefined,
-                kitchenDimensions: kitchenDimensions,
-                date: selectedDate,
-                timeSlot: selectedTimeSlot,
-                address: selectedAddress._id || "",
-                specialRequirements: specialRequirements || undefined,
+            // Map BHK type to number
+            const getBhkNumber = (bhkType: BhkType): number => {
+                switch (bhkType) {
+                    case "1BHK":
+                        return 1;
+                    case "2BHK":
+                        return 2;
+                    case "3BHK":
+                        return 3;
+                    case "3+BHK":
+                        return 4;
+                    default:
+                        return 3; // Default for modular-kitchen
+                }
             };
 
-            const response = await OrdersServices.bookConsultant(bookingData);
-
-            if (response.success && response.data?.razorpayOrder) {
-                const options = {
-                    key: "rzp_test_M1Ad7casmGNZTV", // Replace with your Razorpay key
-                    amount: (response.data.razorpayOrder.amount ?? 0) / 100,
-                    currency: "INR",
-                    theme: {
-                        color: COLORS.primary,
-                        type: "light",
-                    },
-                    order_id: response.data.razorpayOrder.id ?? "",
-                    name: "Book Consultant",
-                    description: "Payment for interior design consultant booking",
-                };
-                
-                try {
-                    const razorpayResponse = await RazorpayCheckout.open(options);
-                    // Handle payment success
-                    Alert.alert("Success", "Consultant booked successfully!", [
-                        {
-                            text: "OK",
-                            onPress: () => navigation.goBack(),
-                        },
-                    ]);
-                } catch (razorpayError: any) {
-                    if (razorpayError.code !== "BAD_REQUEST_ERROR") {
-                        Alert.alert("Error", "Payment was cancelled or failed. Please try again.");
-                    }
+            // Map kitchen layout to API format
+            const getKitchenLayout = (layout: KitchenLayoutType | null): string => {
+                switch (layout) {
+                    case "l-shaped":
+                        return "L_SHAPE";
+                    case "u-shaped":
+                        return "U_SHAPE";
+                    case "straight":
+                        return "STRAIGHT";
+                    case "parallel":
+                        return "PARALLEL";
+                    default:
+                        return "STRAIGHT";
                 }
+            };
+
+            // Map package type to API format
+            // Backend enum: ['ESSENTIALS', 'PREMIUM', 'LUXURY']
+            const getPackageType = (packageType: PackageType): string => {
+                switch (packageType) {
+                    case "essential":
+                        return "ESSENTIALS";
+                    case "comfort":
+                        return "PREMIUM"; // "comfort" maps to "PREMIUM" in backend
+                    case "luxury":
+                        return "LUXURY";
+                    default:
+                        return "ESSENTIALS";
+                }
+            };
+
+            // Get bedroom count from BHK type
+            const getBedroomCount = (bhkType: BhkType): number => {
+                return getBhkNumber(bhkType);
+            };
+
+            // Get bathroom count (typically bedrooms + 1 or same as bedrooms)
+            const getBathroomCount = (bhkType: BhkType): number => {
+                const bedrooms = getBedroomCount(bhkType);
+                return bedrooms + 1;
+            };
+
+            // Map kitchen dimensions
+            const getKitchenMeasurements = (): Record<string, number> => {
+                const measurements: Record<string, number> = {};
+                const sides = getLayoutSides(selectedKitchenLayout);
+                sides.forEach((side, index) => {
+                    const value = kitchenDimensions[side];
+                    if (value) {
+                        // Convert "1", "2", "3" to "a", "b", "c"
+                        const letterKey = String.fromCharCode(97 + index); // 0 -> 'a', 1 -> 'b', 2 -> 'c'
+                        measurements[letterKey] = parseFloat(value) || 0;
+                    }
+                });
+                return measurements;
+            };
+
+            // Determine BHK size based on BHK type
+            const getBhkSize = (bhkType: BhkType): string => {
+                switch (bhkType) {
+                    case "1BHK":
+                        return "SMALL";
+                    case "2BHK":
+                        return "SMALL";
+                    case "3BHK":
+                        return "MEDIUM";
+                    case "3+BHK":
+                        return "LARGE";
+                    case "modular-kitchen":
+                        return "SMALL";
+                    default:
+                        return "SMALL";
+                }
+            };
+
+            // Prepare user data (common for both BHK and modular kitchen)
+            const userData = {
+                name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User",
+                email: user.email || "",
+                phone: user.phoneNumber || "",
+                whatsappOptIn: true, // Default to true, can be made configurable
+                city: selectedAddress?.city || "",
+            };
+
+            // Prepare calculator data - different structure for BHK vs modular kitchen
+            let calculatorData: any;
+
+            if (selectedBhk === "modular-kitchen") {
+                // For modular kitchen: only kitchen, homePackage, and user
+                calculatorData = {
+                    ...(selectedKitchenLayout && {
+                        kitchen: {
+                            layout: getKitchenLayout(selectedKitchenLayout),
+                            measurements: getKitchenMeasurements(),
+                            package: getPackageType(selectedPackage),
+                        },
+                    }),
+                    homePackage: getPackageType(selectedPackage),
+                    user: userData,
+                };
             } else {
-                Alert.alert("Error", response.message || "Failed to create booking order");
+                // For BHK: bhkType, bhkSize, rooms, homePackage, and user (NO kitchen)
+                calculatorData = {
+                    bhkType: getBhkNumber(selectedBhk),
+                    bhkSize: getBhkSize(selectedBhk),
+                    rooms: {
+                        livingRoom: 1,
+                        kitchen: requirements.kitchen || 1,
+                        bedroom: getBedroomCount(selectedBhk),
+                        bathroom: getBathroomCount(selectedBhk),
+                        dining: 1,
+                    },
+                    homePackage: getPackageType(selectedPackage),
+                    user: userData,
+                };
+            }
+
+            // Log the request body for debugging
+            console.log("Calculator Submit Request Body:", JSON.stringify(calculatorData, null, 2));
+
+            const response = await OrdersServices.submitCalculator(calculatorData);
+
+            if (response.success) {
+                Alert.alert("Success", "Consultant booking submitted successfully!", [
+                    {
+                        text: "OK",
+                        onPress: () => navigation.goBack(),
+                    },
+                ]);
+            } else {
+                Alert.alert("Error", response.message || "Failed to submit booking");
             }
         } catch (error: any) {
             Alert.alert("Error", "An error occurred. Please try again.");

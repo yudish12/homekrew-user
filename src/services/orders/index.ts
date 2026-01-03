@@ -234,4 +234,58 @@ export class OrdersServices {
             status: 200,
         };
     }
+
+    static async submitCalculator(
+        calculatorData: {
+            // For BHK selection
+            bhkType?: number;
+            bhkSize?: string;
+            rooms?: {
+                livingRoom: number;
+                kitchen: number;
+                bedroom: number;
+                bathroom: number;
+                dining: number;
+            };
+            // For modular kitchen selection
+            kitchen?: {
+                layout: string;
+                measurements: Record<string, number>;
+                package: string;
+            };
+            // Common fields
+            homePackage: string;
+            user: {
+                name: string;
+                email: string;
+                phone: string;
+                whatsappOptIn: boolean;
+                city: string;
+            };
+        },
+    ): Promise<ApiResponse<any>> {
+        // Log request body for debugging
+        console.log("API Request URL:", `${this.BASE_URL}/calculator/submit`);
+        console.log("API Request Body:", JSON.stringify(calculatorData, null, 2));
+        
+        const response = await api.post(
+            `${this.BASE_URL}/calculator/submit`,
+            calculatorData,
+        );
+        if (!response.success) {
+            return {
+                success: false,
+                error: response.error,
+                data: response.data,
+                message: response.message,
+                status: response.status,
+            };
+        }
+        return {
+            success: true,
+            data: response.data,
+            message: "Calculator submitted successfully",
+            status: 200,
+        };
+    }
 }
