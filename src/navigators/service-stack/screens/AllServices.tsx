@@ -259,7 +259,7 @@ const AllServices = () => {
                 <SearchBar
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    placeholder="Example: Milk Powder"
+                    placeholder="Example: Ac Installation"
                     containerStyle={styles.searchBar}
                 />
             </View>
