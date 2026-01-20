@@ -279,7 +279,7 @@ export const ServiceBooking: React.FC = () => {
         const bookingData: BookingData = {
             serviceId: params.serviceTemplateId,
             serviceTemplate: params.serviceTemplateId,
-            date: selectedDate,
+            date: new Date(selectedDate).toISOString(),
             timeSlot: selectedTimeSlot,
             address: selectedAddress._id || "",
             quantity: params.quantity,

@@ -78,9 +78,7 @@ const ServiceDetailCard: React.FC<ServiceDetailCardProps> = ({
                         reviews)
                     </Text>
                 </View>
-            </View>
-
-            <View style={styles.cardBody}>
+                <View style={styles.cardBody}>
                 <View style={styles.priceSection}>
                     <View style={styles.priceRow}>
                         <Text style={styles.currentPrice}>{basePrice}</Text>
@@ -132,6 +130,9 @@ const ServiceDetailCard: React.FC<ServiceDetailCardProps> = ({
                     </TouchableOpacity>
                 </View> */}
             </View>
+            </View>
+
+            
 
             {image && (
                 <Image
@@ -168,6 +169,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "flex-start",
         marginBottom: 8,
+        width: "60%",
         gap: 8,
     },
     title: {
@@ -201,8 +203,8 @@ const styles = StyleSheet.create({
         color: COLORS.TEXT.DARK,
     },
     cardBody: {
-        paddingHorizontal: 16,
         paddingBottom: 16,
+        marginTop: 12
     },
     priceSection: {
         marginBottom: 12,
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         right: 16,
         top: 16,
-        width: 120,
+        width: "35%",
         height: 80,
         borderRadius: 8,
     },

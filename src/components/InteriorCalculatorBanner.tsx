@@ -65,26 +65,40 @@ export const InteriorCalculatorBanner: React.FC = () => {
                             <CustomIcon
                                 provider="Ionicons"
                                 name="calculator-outline"
-                                size={28}
+                                size={24}
                                 color={COLORS.WHITE}
                             />
                         </View>
                         <View style={styles.textContainer}>
                             {previousCalculation ? (
-                                <>
+                                <View>
                                     <Typography
                                         variant="bodySmall"
                                         color={COLORS.WHITE}
-                                        style={styles.subtitle}
+                                        style={styles.bhkLine}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
                                     >
-                                        {previousCalculation.bhkType} •{" "}
-                                        {formatIndianPrice(
-                                            previousCalculation.estimates
-                                                .comfort,
-                                        )}{" "}
-                                        onwards
+                                        {previousCalculation.bhkType}
                                     </Typography>
-                                </>
+                                    <Typography
+                                        variant="bodySmall"
+                                        color={COLORS.WHITE}
+                                        style={styles.priceLine}
+                                        numberOfLines={1}
+                                        ellipsizeMode="tail"
+                                    >
+                                        {`${
+                                            previousCalculation?.estimates
+                                                ?.comfort != null
+                                                ? formatIndianPrice(
+                                                      previousCalculation
+                                                          .estimates.comfort,
+                                                  )
+                                                : "-"
+                                        } onwards`}
+                                    </Typography>
+                                </View>
                             ) : (
                                 <>
                                     <Typography
@@ -146,6 +160,7 @@ const styles = StyleSheet.create({
     },
     contentWrapper: {
         flexDirection: "row",
+        flex:1,
         alignItems: "center",
         justifyContent: "space-between",
         zIndex: 2,
@@ -157,8 +172,8 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     iconContainer: {
-        width: 50,
-        height: 50,
+        width: 45,
+        height: 45,
         borderRadius: 25,
         backgroundColor: "rgba(255, 255, 255, 0.2)",
         alignItems: "center",
@@ -175,6 +190,15 @@ const styles = StyleSheet.create({
     subtitle: {
         opacity: 0.95,
         lineHeight: 18,
+    },
+    bhkLine: {
+        opacity: 0.98,
+        lineHeight: 18,
+    },
+    priceLine: {
+        opacity: 0.95,
+        lineHeight: 18,
+        marginTop: 2,
     },
     rightSection: {
         alignItems: "flex-end",

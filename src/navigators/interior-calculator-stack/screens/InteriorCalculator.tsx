@@ -2020,7 +2020,6 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: COLORS.border.light,
         backgroundColor: COLORS.WHITE,
-        ...shadowUtils.getShadow("small"),
     },
     optionCardSelected: {
         borderColor: COLORS.primary,

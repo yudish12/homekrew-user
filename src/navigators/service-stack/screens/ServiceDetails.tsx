@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 20,
         marginHorizontal: 16,
-        marginTop: 16,
+        marginTop: 8,
         marginBottom: 8,
         borderRadius: 12,
         overflow: "hidden",
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
         color: COLORS.GREY[500],
     },
     bannerImage: {
-        width: 160,
+        width: "40%",
         height: 100,
         borderRadius: 8,
     },
