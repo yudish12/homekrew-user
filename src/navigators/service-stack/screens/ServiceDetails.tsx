@@ -98,11 +98,6 @@ const ServiceDetails = () => {
               )} per AC`
             : undefined;
 
-        const packBadge =
-            item.images && item.images.length > 1
-                ? `${item.images.length} ACs PACK`
-                : undefined;
-
         return (
             <ServiceDetailCard
                 title={item.title}
@@ -113,7 +108,6 @@ const ServiceDetails = () => {
                 duration={duration?.toString() || undefined}
                 pricePerUnit={undefined}
                 description={item.description}
-                packBadge={packBadge}
                 image={item.image}
                 onPress={() => handleServicePress(item._id)}
                 onAddPress={() => handleAddPress(item._id)}
