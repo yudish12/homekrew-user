@@ -17,6 +17,10 @@ import {
     BodySmall,
 } from "../../../components/Typography";
 import { COLORS } from "../../../constants/ui";
+import {
+    RAZORPAY_KEY_ID,
+    isRazorpayUserCancelled,
+} from "../../../constants/razorpay";
 import { Button, OutlineButton } from "../../../components/Button";
 import { CustomIcon } from "../../../components/CustomIcon";
 import { AddressCard } from "../../../components/AddressCard";
@@ -646,7 +650,7 @@ const PostBooking: React.FC = () => {
             );
             if (resp.success) {
                 const options = {
-                    key: "rzp_test_M1Ad7casmGNZTV",
+                    key: RAZORPAY_KEY_ID,
                     amount: (resp.data?.razorpayOrder?.amount ?? 0) / 100,
                     currency: "INR",
                     theme: {
@@ -658,7 +662,28 @@ const PostBooking: React.FC = () => {
                     description:
                         "Payment to buy products delivered right at your registered address ",
                 };
-                const data = await RazorpayCheckout.open(options);
+                try {
+                    await RazorpayCheckout.open(options);
+                } catch (paymentError: unknown) {
+                    if (isRazorpayUserCancelled(paymentError)) {
+                        return;
+                    }
+                    const msg =
+                        typeof paymentError === "object" &&
+                        paymentError !== null &&
+                        "description" in paymentError
+                            ? String(
+                                  (paymentError as { description?: string })
+                                      .description,
+                              )
+                            : "Something went wrong. Please try again.";
+                    showErrorToast("Error", msg, {
+                        onDismiss: () => {
+                            console.log("Error toast dismissed");
+                        },
+                    });
+                    return;
+                }
                 showSuccessToast(
                     "Payment successful",
                     "Your payment has been processed successfully. Please rate the vendor for your booking.",

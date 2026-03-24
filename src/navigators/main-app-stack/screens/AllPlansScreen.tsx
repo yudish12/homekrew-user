@@ -22,6 +22,10 @@ import { showErrorToast, showSuccessToast } from "../../../components/Toast";
 import { setUser } from "../../../redux/actions/auth";
 import { User } from "../../../types/user";
 import { useDispatch } from "react-redux";
+import {
+    RAZORPAY_KEY_ID,
+    isRazorpayUserCancelled,
+} from "../../../constants/razorpay";
 
 // Enhanced Membership Card Component for List View
 const MembershipPlanCard: React.FC<{
@@ -256,22 +260,35 @@ const MembershipDetailView: React.FC<{
 
     const handleBuyNow = async () => {
         setBuyLoading(true);
-        const response = await MembershipPlansServices.buyMembershipPlan(
-            plan?._id ?? "",
-        );
-        if (response.success) {
-            await RazorpayCheckout.open({
-                key: "rzp_test_M1Ad7casmGNZTV",
-                amount: (response.data?.amount ?? 0) / 100,
-                currency: "INR",
-                theme: {
-                    color: COLORS.primary,
-                },
-                order_id: response.data?.id ?? "",
-                name: "Buy Products",
-                description:
-                    "Payment to buy products delivered right at your registered address ",
-            });
+        try {
+            const response = await MembershipPlansServices.buyMembershipPlan(
+                plan?._id ?? "",
+            );
+            if (!response.success) {
+                showErrorToast(response.error?.message ?? "Failed to buy plan");
+                return;
+            }
+
+            try {
+                await RazorpayCheckout.open({
+                    key: RAZORPAY_KEY_ID,
+                    amount: (response.data?.amount ?? 0) / 100,
+                    currency: "INR",
+                    theme: {
+                        color: COLORS.primary,
+                    },
+                    order_id: response.data?.id ?? "",
+                    name: "Buy Products",
+                    description:
+                        "Payment to buy products delivered right at your registered address ",
+                });
+            } catch (paymentError: unknown) {
+                if (!isRazorpayUserCancelled(paymentError)) {
+                    const msg = "Payment failed";
+                    showErrorToast(msg);
+                }
+                return;
+            }
 
             const authResp = await AuthServices.selfVerification();
             if (authResp.success) {
@@ -284,15 +301,13 @@ const MembershipDetailView: React.FC<{
                 });
             }
 
-            setBuyLoading(false);
             showSuccessToast("Plan purchased successfully");
             setTimeout(() => {
                 navigation.navigate("MainApp");
             }, 1000);
-            // Default implementation - you can add your payment navigation here
-            // navigation.navigate('PaymentScreen', { plan: selectedPlan });
-        } else {
-            showErrorToast(response.error?.message ?? "Failed to buy plan");
+        } catch {
+            showErrorToast("Something went wrong. Please try again.");
+        } finally {
             setBuyLoading(false);
         }
     };

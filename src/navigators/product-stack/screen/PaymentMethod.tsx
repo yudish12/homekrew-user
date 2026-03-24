@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { COLORS, WEIGHTS } from "../../../constants//ui";
+import { COLORS, WEIGHTS } from "../../../constants/ui";
 import RazorpayCheckout from "react-native-razorpay";
+import {
+    RAZORPAY_KEY_ID,
+    isRazorpayUserCancelled,
+} from "../../../constants/razorpay";
 import {
     Typography,
     H3,
@@ -115,7 +119,7 @@ const PaymentMethod: React.FC = () => {
 
             if (selectedMethod === "razorpay") {
                 const options = {
-                    key: "rzp_test_M1Ad7casmGNZTV",
+                    key: RAZORPAY_KEY_ID,
                     amount: (response.data?.razorpayOrder?.amount ?? 0) / 100,
                     currency: "INR",
                     theme: {
@@ -127,11 +131,18 @@ const PaymentMethod: React.FC = () => {
                     description:
                         "Payment to buy products delivered right at your registered address ",
                 };
-                const data = await RazorpayCheckout.open(options);
+                try {
+                    await RazorpayCheckout.open(options);
+                } catch (paymentError: unknown) {
+                    if (isRazorpayUserCancelled(paymentError)) {
+                        return;
+                    }
+                    setShowErrorModal(true);
+                    return;
+                }
             }
             setShowSuccessModal(true);
-            setIsProcessing(false);
-        } catch (error) {
+        } catch {
             setShowErrorModal(true);
         } finally {
             setIsProcessing(false);
